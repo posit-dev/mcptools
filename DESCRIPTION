@@ -21,3 +21,5 @@ RoxygenNote: 7.3.2
 Imports: 
     btw
 SystemRequirements: Node.js (>= 18.0.0)
+URL: https://github.com/simonpcouch/rmcp
+BugReports: https://github.com/simonpcouch/rmcp/issues
