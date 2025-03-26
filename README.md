@@ -59,4 +59,4 @@ application. For example:
 
 ## Example
 
-<img src="../../../../../private/var/folders/6c/w21prsj167b_x82q4_s45t340000gn/T/RtmptR9xT2/temp_libpathdaed11dc5b90/rmcp/figs/rmcp.gif" alt="A screencast of a chat with Claude. I ask 'Do I have any R packages installed with the word flights in the name?' and, after searching through the documentation of my currently installed R packages, Claude mentions two that I have installed." width="100%" />
+<img src="https://github.com/user-attachments/assets/8cefbc28-f046-4dfa-af63-b8eb85bb16b0" alt="A screencast of a chat with Claude. I ask 'Do I have any R packages installed with the word flights in the name?' and, after searching through the documentation of my currently installed R packages, Claude mentions two that I have installed." width="100%" />
