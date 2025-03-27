@@ -5,7 +5,7 @@
     Output
       In a terminal, run:
       
-      claude mcp add -s "user" r-mcp node /Users/simoncouch/Documents/rrr/rmcp/inst/node/dist/index.js
+      claude mcp add -s "user" r-mcp node node/dist/index.js
 
 # mcp_config produces correct Claude Desktop output for macOS
 
@@ -19,7 +19,7 @@
         "mcpServers": {
           "r-mcp": {
             "command": "node",
-            "args": ["/Users/simoncouch/Documents/rrr/rmcp/inst/node/dist/index.js"]
+            "args": ["node/dist/index.js"]
           }
         }
       }
@@ -36,7 +36,7 @@
         "mcpServers": {
           "r-mcp": {
             "command": "node",
-            "args": ["/Users/simoncouch/Documents/rrr/rmcp/inst/node/dist/index.js"]
+            "args": ["node/dist/index.js"]
           }
         }
       }

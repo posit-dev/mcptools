@@ -84,3 +84,5 @@ is_linux <- function() {
 is_windows <- function() {
   identical(.Platform$OS.type, "windows")
 }
+
+system.file <- NULL
