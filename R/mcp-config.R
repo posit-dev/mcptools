@@ -4,6 +4,9 @@
 #' This function provides instructions to configure rmcp with LLM-enabled
 #' tools like Claude Code or Claude Desktop.
 #' 
+#' @param which The name of the application to configure with rmcp. Currently,
+#' one of "Claude Code" or "Claude Desktop".
+#' 
 #' @returns 
 #' A character vector containing the MCP configuration 
 #' instructions, invisibly. The function also prints the configuration to 
@@ -14,6 +17,8 @@
 #' 
 #' mcp_config("Claude Desktop")
 #' 
+# quiet R CMD check note about unused import
+#' @importFrom btw btw
 #' @export
 mcp_config <- function(which = c("Claude Code", "Claude Desktop")) {
   which <- match.arg(which, choices = c("Claude Code", "Claude Desktop"))

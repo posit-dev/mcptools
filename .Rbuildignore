@@ -7,3 +7,4 @@
 ^docs$
 ^pkgdown$
 ^\.github$
+inst/node/node_modules

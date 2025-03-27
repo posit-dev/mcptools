@@ -1,3 +1,9 @@
+# TODO: just make the paths resilient to tempdirs, either by transforming
+# the snapshot or mocking system.file
+skip_on_ci()
+skip_on_cran()
+skip_if(nzchar(Sys.getenv("_R_CHECK_PACKAGE_NAME_", "")), "in R CMD check")
+
 test_that("mcp_config produces correct Claude Code output", {
   expect_snapshot(mcp_config("Claude Code"))
 })

@@ -6,6 +6,10 @@
 \usage{
 mcp_config(which = c("Claude Code", "Claude Desktop"))
 }
+\arguments{
+\item{which}{The name of the application to configure with rmcp. Currently,
+one of "Claude Code" or "Claude Desktop".}
+}
 \value{
 A character vector containing the MCP configuration
 instructions, invisibly. The function also prints the configuration to
