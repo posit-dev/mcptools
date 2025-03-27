@@ -23,5 +23,6 @@ Imports:
     cli,
     rlang
 SystemRequirements: Node.js (>= 18.0.0)
-URL: https://github.com/simonpcouch/rmcp
+URL: https://github.com/simonpcouch/rmcp, https://simonpcouch.github.io/rmcp/
 BugReports: https://github.com/simonpcouch/rmcp/issues
+Config/Needs/website: tidyverse/tidytemplate
