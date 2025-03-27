@@ -2,19 +2,22 @@
 % Please edit documentation in R/mcp-config.R
 \name{mcp_config}
 \alias{mcp_config}
-\title{Generate model context protocol configuration}
+\title{Generate Model Context Protocol (MCP) configuration}
 \usage{
-mcp_config()
+mcp_config(which = c("Claude Code", "Claude Desktop"))
 }
 \value{
-A character vector containing the MCP configuration JSON, invisibly. The
-function also prints the configuration to the console.
+A character vector containing the MCP configuration
+instructions, invisibly. The function also prints the configuration to
+the console.
 }
 \description{
-This function provides the \code{.json} needed to configure rmcp with LLM-enabled
-tools like Claude Code or Claude for Desktop.
+This function provides instructions to configure rmcp with LLM-enabled
+tools like Claude Code or Claude Desktop.
 }
 \examples{
-mcp_config()
+mcp_config("Claude Code")
+
+mcp_config("Claude Desktop")
 
 }

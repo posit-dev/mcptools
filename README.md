@@ -1,4 +1,3 @@
-
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # rmcp
@@ -29,33 +28,33 @@ applications.
 
 You can install the development version of rmcp like so:
 
-``` r
-pak::pak("simonpcouch/rmcp")
-```
+    pak::pak("simonpcouch/rmcp")
 
-rmcp can be hooked up to any application that supports MCP. To do so,
-use `mcp_config()` to generate the config for your machine:
+rmcp can be hooked up to any application that supports MCP. Use
+`mcp_config()` to generate the config for your machine for common
+applications. For example, **Claude Code**:
 
-``` r
-library(rmcp)
+    library(rmcp)
 
-mcp_config()
-#> {
-#>   "mcpServers": {
-#>     "r-mcp": {
-#>       "command": "node",
-#>       "args": ["/Users/simoncouch/Documents/rrr/rmcp/inst/node/dist/index.js"]
-#>     }
-#>   }
-#> }
-```
+    mcp_config("Claude Code")
+    #> In a terminal, run:
+    #> 
+    #> claude mcp add -s "user" r-mcp node /Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js
 
-Then, paste that output into the relevant configuration file for your
-application. For example:
+Or, **Claude Desktop**:
 
-- Claude Code: `~/.config/anthropic/mcp-config.json`
-- Claude for Desktop (on macOS):
-  `~/Library/Application Support/Claude/claude_desktop_config.json`
+    mcp_config("Claude Desktop")
+    #> Run `file.edit(~/Library/Application Support/Claude/claude_desktop_config.json)`
+    #> 
+    #> Then, paste the following:
+    #> {
+    #>   "mcpServers": {
+    #>     "r-mcp": {
+    #>       "command": "node",
+    #>       "args": ["/Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js"]
+    #>     }
+    #>   }
+    #> }
 
 ## Example
 
