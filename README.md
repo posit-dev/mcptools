@@ -39,7 +39,7 @@ applications. For example, **Claude Code**:
     mcp_config("Claude Code")
     #> In a terminal, run:
     #> 
-    #> claude mcp add -s "user" r-mcp node /Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js
+    #> claude mcp add -s "user" r-mcp node /Users/simoncouch/Documents/rrr/rmcp/inst/node/dist/index.js
 
 Or, **Claude Desktop**:
 
@@ -51,11 +51,11 @@ Or, **Claude Desktop**:
     #>   "mcpServers": {
     #>     "r-mcp": {
     #>       "command": "node",
-    #>       "args": ["/Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js"]
+    #>       "args": ["/Users/simoncouch/Documents/rrr/rmcp/inst/node/dist/index.js"]
     #>     }
     #>   }
     #> }
 
 ## Example
 
-<img src="https://github.com/user-attachments/assets/8cefbc28-f046-4dfa-af63-b8eb85bb16b0" alt="A screencast of a chat with Claude. I ask 'Do I have any R packages installed with the word flights in the name?' and, after searching through the documentation of my currently installed R packages, Claude mentions two that I have installed." width="100%" />
+<img src="https://github.com/user-attachments/assets/b2acf605-eca5-41d8-a56e-199995cde97c" alt="A screencast of a chat with Claude. I ask 'Do I have any R packages installed that could help me download flight data?' and, after searching through the documentation of my currently installed R packages, Claude writes R code to download flights data for me." width="100%" />
