@@ -22,6 +22,9 @@ tools like Claude Code or Claude Desktop.
 \examples{
 mcp_config("Claude Code")
 
-mcp_config("Claude Desktop")
+# Claude Desktop currently isn't available on Linux
+if (!identical(tolower(Sys.info()[["sysname"]]), "linux")) {
+  mcp_config("Claude Desktop")
+}
 
 }

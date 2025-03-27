@@ -15,7 +15,10 @@
 #' @examples
 #' mcp_config("Claude Code")
 #' 
-#' mcp_config("Claude Desktop")
+#' # Claude Desktop currently isn't available on Linux
+#' if (!identical(tolower(Sys.info()[["sysname"]]), "linux")) {
+#'   mcp_config("Claude Desktop")
+#' }
 #' 
 # quiet R CMD check note about unused import
 #' @importFrom btw btw
