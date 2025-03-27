@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN status](https://www.r-pkg.org/badges/version/rmcp)](https://CRAN.R-project.org/package=rmcp)
+[![R-CMD-check](https://github.com/simonpcouch/rmcp/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/rmcp/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of rmcp is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with rmcp can peruse package documentation and learn to use R packages even if they weren't included in their training data.

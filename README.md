@@ -8,6 +8,7 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/rmcp)](https://CRAN.R-project.org/package=rmcp)
+[![R-CMD-check](https://github.com/simonpcouch/rmcp/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/rmcp/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of rmcp is to enable LLM-enabled tools like Claude Code to
