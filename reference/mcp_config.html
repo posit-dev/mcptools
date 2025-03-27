@@ -67,8 +67,10 @@ the console.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> claude mcp add -s "user" r-mcp node /home/runner/work/_temp/Library/rmcp/node/dist/index.js</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">mcp_config</span><span class="op">(</span><span class="st">"Claude Desktop"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mcp_config_claude_desktop():</span> Claude Desktop isn't available on Linux.</span>
+<span class="r-in"><span><span class="co"># Claude Desktop currently isn't available on Linux</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.info.html" class="external-link">Sys.info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[[</span><span class="st">"sysname"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="st">"linux"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu">mcp_config</span><span class="op">(</span><span class="st">"Claude Desktop"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
