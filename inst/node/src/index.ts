@@ -143,36 +143,24 @@ server.setRequestHandler(toolsCallSchema, async (request) => {
     switch (name) {
       case "list_installed_packages":
         result = await executeR(`
-          if (!requireNamespace("btw", quietly = TRUE)) {
-            install.packages("btw")
-          }
           cat(btw::btw_tool_get_installed_packages())
         `);
         break;
         
       case "get_package_help_topics":
         result = await executeR(`
-          if (!requireNamespace("btw", quietly = TRUE)) {
-            install.packages("btw")
-          }
           cat(btw::btw_tool_get_package_help_topics("${args.package_name}"))
         `);
         break;
         
       case "get_help_page":
         result = await executeR(`
-          if (!requireNamespace("btw", quietly = TRUE)) {
-            install.packages("btw")
-          }
           cat(btw::btw_tool_get_help_page("${args.package_name}", "${args.topic}"))
         `);
         break;
         
       case "get_package_vignettes":
         result = await executeR(`
-          if (!requireNamespace("btw", quietly = TRUE)) {
-            install.packages("btw")
-          }
           cat(btw::btw_tool_get_available_vignettes_in_package("${args.package_name}"))
         `);
         break;
@@ -180,9 +168,6 @@ server.setRequestHandler(toolsCallSchema, async (request) => {
       case "get_vignette":
         const vignetteName = args.vignette_name || args.package_name;
         result = await executeR(`
-          if (!requireNamespace("btw", quietly = TRUE)) {
-            install.packages("btw")
-          }
           cat(btw::btw_tool_get_vignette_from_package("${args.package_name}", "${vignetteName}"))
         `);
         break;
