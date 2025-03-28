@@ -59,4 +59,4 @@ Or, **Claude Desktop**:
 
 ## Example
 
-<img src="https://github.com/user-attachments/assets/b2acf605-eca5-41d8-a56e-199995cde97c" alt="A screencast of a chat with Claude. I ask 'Do I have any R packages installed that could help me download flight data?' and, after searching through the documentation of my currently installed R packages, Claude writes R code to download flights data for me." width="100%" />
+<img src="https://github.com/user-attachments/assets/821ea3d6-4e30-46d6-ab9b-301276af2c35" alt="A screencast of a chat with Claude. I ask 'Using the R packages I have installed, write code to download data on flights in/out of Chicago airports in 2024.' and, after searching through the documentation of my currently installed R packages, Claude writes R code to do so." width="100%" />
