@@ -66,7 +66,7 @@
 <span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">mcp_config</span>(<span class="st">"Claude Code"</span>)</span>
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; In a terminal, run:</span></span>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; claude mcp add -s "user" r-mcp node /Users/simoncouch/Documents/rrr/rmcp/inst/node/dist/index.js</span></span></code></pre></div>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; claude mcp add -s "user" r-mcp node /Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js</span></span></code></pre></div>
 <p>Or, <strong>Claude Desktop</strong>:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">mcp_config</span>(<span class="st">"Claude Desktop"</span>)</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Run `file.edit(~/Library/Application Support/Claude/claude_desktop_config.json)`</span></span>
@@ -76,7 +76,7 @@
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;   "mcpServers": {</span></span>
 <span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;     "r-mcp": {</span></span>
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;       "command": "node",</span></span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;       "args": ["/Users/simoncouch/Documents/rrr/rmcp/inst/node/dist/index.js"]</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;       "args": ["/Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js"]</span></span>
 <span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;     }</span></span>
 <span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;   }</span></span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; }</span></span></code></pre></div>
@@ -84,7 +84,17 @@
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
+<p>In Claude Desktop, I’ll write the following:</p>
+<blockquote>
+<p>Using the R packages I have installed, write code to download data on flights in/out of Chicago airports in 2024.</p>
+</blockquote>
+<p>In a typical chat interface, I’d be wary of two failure points here:</p>
+<ol style="list-style-type: decimal">
+<li>The model doesn’t know which packages I have installed.</li>
+<li>If the model correctly guesses which packages I have installed, there may not be enough information about how to <em>use</em> the packages baked into its weights to write correct code.</li>
+</ol>
 <p><img src="https://github.com/user-attachments/assets/821ea3d6-4e30-46d6-ab9b-301276af2c35" alt="A screencast of a chat with Claude. I ask 'Using the R packages I have installed, write code to download data on flights in/out of Chicago airports in 2024.' and, after searching through the documentation of my currently installed R packages, Claude writes R code to do so." width="100%"></p>
+<p>Through first searching through my installed packages, Claude can locate the anyflights package, which seems like a reasonable solution. The model then discovers the package’s <code>anyflights()</code> function and reads its documentation, and can pattern-match from there to write the correct code.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
