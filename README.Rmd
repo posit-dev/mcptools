@@ -52,8 +52,19 @@ mcp_config("Claude Desktop")
 
 ## Example
 
+In Claude Desktop, I'll write the following:
+
+> Using the R packages I have installed, write code to download data on flights in/out of Chicago airports in 2024.
+
+In a typical chat interface, I'd be wary of two failure points here:
+
+1) The model doesn't know which packages I have installed.
+2) If the model correctly guesses which packages I have installed, there may not be enough information about how to _use_ the packages baked into its weights to write correct code.
+
 ```{r}
 #| echo: false
 #| fig-alt: "A screencast of a chat with Claude. I ask 'Using the R packages I have installed, write code to download data on flights in/out of Chicago airports in 2024.' and, after searching through the documentation of my currently installed R packages, Claude writes R code to do so."
 knitr::include_graphics("https://github.com/user-attachments/assets/821ea3d6-4e30-46d6-ab9b-301276af2c35")
 ```
+
+Through first searching through my installed packages, Claude can locate the anyflights package, which seems like a reasonable solution. The model then discovers the  package's `anyflights()` function and reads its documentation, and can pattern-match from there to write the correct code.

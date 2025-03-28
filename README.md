@@ -40,7 +40,7 @@ applications. For example, **Claude Code**:
     mcp_config("Claude Code")
     #> In a terminal, run:
     #> 
-    #> claude mcp add -s "user" r-mcp node /Users/simoncouch/Documents/rrr/rmcp/inst/node/dist/index.js
+    #> claude mcp add -s "user" r-mcp node /Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js
 
 Or, **Claude Desktop**:
 
@@ -52,11 +52,29 @@ Or, **Claude Desktop**:
     #>   "mcpServers": {
     #>     "r-mcp": {
     #>       "command": "node",
-    #>       "args": ["/Users/simoncouch/Documents/rrr/rmcp/inst/node/dist/index.js"]
+    #>       "args": ["/Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js"]
     #>     }
     #>   }
     #> }
 
 ## Example
 
+In Claude Desktop, I’ll write the following:
+
+> Using the R packages I have installed, write code to download data on
+> flights in/out of Chicago airports in 2024.
+
+In a typical chat interface, I’d be wary of two failure points here:
+
+1.  The model doesn’t know which packages I have installed.
+2.  If the model correctly guesses which packages I have installed,
+    there may not be enough information about how to *use* the packages
+    baked into its weights to write correct code.
+
 <img src="https://github.com/user-attachments/assets/821ea3d6-4e30-46d6-ab9b-301276af2c35" alt="A screencast of a chat with Claude. I ask 'Using the R packages I have installed, write code to download data on flights in/out of Chicago airports in 2024.' and, after searching through the documentation of my currently installed R packages, Claude writes R code to do so." width="100%" />
+
+Through first searching through my installed packages, Claude can locate
+the anyflights package, which seems like a reasonable solution. The
+model then discovers the package’s `anyflights()` function and reads its
+documentation, and can pattern-match from there to write the correct
+code.
