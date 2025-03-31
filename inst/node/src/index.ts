@@ -149,26 +149,26 @@ server.setRequestHandler(toolsCallSchema, async (request) => {
         
       case "get_package_help_topics":
         result = await executeR(`
-          cat(btw::btw_tool_docs_get_package_help_topics("${args.package_name}"))
+          cat(btw::btw_tool_docs_package_help_topics("${args.package_name}"))
         `);
         break;
         
       case "get_help_page":
         result = await executeR(`
-          cat(btw::btw_tool_docs_get_help_page("${args.package_name}", "${args.topic}"))
+          cat(btw::btw_tool_docs_help_page("${args.package_name}", "${args.topic}"))
         `);
         break;
         
       case "get_package_vignettes":
         result = await executeR(`
-          cat(btw::btw_tool_docs_get_available_vignettes_in_package("${args.package_name}"))
+          cat(btw::btw_tool_docs_available_vignettes("${args.package_name}"))
         `);
         break;
         
       case "get_vignette":
         const vignetteName = args.vignette_name || args.package_name;
         result = await executeR(`
-          cat(btw::btw_tool_docs_get_vignette_from_package("${args.package_name}", "${vignetteName}"))
+          cat(btw::btw_tool_docs_vignette("${args.package_name}", "${vignetteName}"))
         `);
         break;
         
