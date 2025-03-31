@@ -62,7 +62,7 @@ mcp_config_claude_desktop <- function() {
 
   c(
     # TODO: make this path system-dependent
-    paste0('Run `file.edit(', config_path, ')`'),
+    paste0('Run `file.edit("', config_path, '")`'),
     '',
     'Then, paste the following:',
     '{',
