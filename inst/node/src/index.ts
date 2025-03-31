@@ -51,8 +51,8 @@ server.setRequestHandler(toolsListSchema, async () => {
   return {
     tools: [
       {
-        name: "list_installed_packages",
-        description: "Lists all installed R packages with their titles",
+        name: "get_installed_packages",
+        description: "Lists the names of all installed R packages along with their titles.",
         inputSchema: {
           type: "object",
           properties: {}
@@ -141,34 +141,34 @@ server.setRequestHandler(toolsCallSchema, async (request) => {
     let result: string;
     
     switch (name) {
-      case "list_installed_packages":
+      case "get_installed_packages":
         result = await executeR(`
-          cat(btw::btw_tool_get_installed_packages())
+          cat(btw::btw_tool_session_package_info(packages = "installed"))
         `);
         break;
         
       case "get_package_help_topics":
         result = await executeR(`
-          cat(btw::btw_tool_get_package_help_topics("${args.package_name}"))
+          cat(btw::btw_tool_docs_get_package_help_topics("${args.package_name}"))
         `);
         break;
         
       case "get_help_page":
         result = await executeR(`
-          cat(btw::btw_tool_get_help_page("${args.package_name}", "${args.topic}"))
+          cat(btw::btw_tool_docs_get_help_page("${args.package_name}", "${args.topic}"))
         `);
         break;
         
       case "get_package_vignettes":
         result = await executeR(`
-          cat(btw::btw_tool_get_available_vignettes_in_package("${args.package_name}"))
+          cat(btw::btw_tool_docs_get_available_vignettes_in_package("${args.package_name}"))
         `);
         break;
         
       case "get_vignette":
         const vignetteName = args.vignette_name || args.package_name;
         result = await executeR(`
-          cat(btw::btw_tool_get_vignette_from_package("${args.package_name}", "${vignetteName}"))
+          cat(btw::btw_tool_docs_get_vignette_from_package("${args.package_name}", "${vignetteName}"))
         `);
         break;
         
