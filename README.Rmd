@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# acquaint
+# acquaint <a href="https://simonpcouch.github.io/acquaint/"><img src="man/figures/logo.png" align="right" height="240" alt="A hexagonal logo showing a sparse, forested path opening up into a well-trodden meadow path." /></a>
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
