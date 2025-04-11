@@ -70,13 +70,13 @@ server.setRequestHandler(toolsListSchema, async () => {
                 inputSchema: {
                     type: "object",
                     properties: {
-                        package_name: {
-                            type: "string",
-                            description: "The exact name of the package, e.g. 'shiny'"
-                        },
                         topic: {
                             type: "string",
                             description: "The topic_id or alias of the help page, e.g. 'withProgress' or 'incProgress'"
+                        },
+                        package_name: {
+                            type: "string",
+                            description: "The exact name of the package, e.g. 'shiny'"
                         }
                     },
                     required: ["package_name", "topic"]
@@ -141,7 +141,7 @@ server.setRequestHandler(toolsCallSchema, async (request) => {
                 break;
             case "get_help_page":
                 result = await executeR(`
-          cat(btw::btw_tool_docs_help_page("${args.package_name}", "${args.topic}"))
+          cat(btw::btw_tool_docs_help_page("${args.topic}", "${args.package_name}"))
         `);
                 break;
             case "get_package_vignettes":
