@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Model Context Protocol For Your R Installation • rmcp</title>
+<title>Model Context Protocol For Your R Installation • acquaint</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Model Context Protocol For Your R Installation">
-<meta name="description" content="The goal of rmcp is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with rmcp can peruse package documentation and learn to use R packages even if they weren't included in their training data.">
-<meta property="og:description" content="The goal of rmcp is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with rmcp can peruse package documentation and learn to use R packages even if they weren't included in their training data.">
+<meta name="description" content="The goal of acquaint is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with acquaint can peruse package documentation and learn to use R packages even if they weren't included in their training data.">
+<meta property="og:description" content="The goal of acquaint is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with acquaint can peruse package documentation and learn to use R packages even if they weren't included in their training data.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -20,7 +20,7 @@
 
     <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
 
-    <a class="navbar-brand me-2" href="index.html">rmcp</a>
+    <a class="navbar-brand me-2" href="index.html">acquaint</a>
 
     <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
 
@@ -37,7 +37,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/simonpcouch/rmcp/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/simonpcouch/acquaint/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -46,27 +46,27 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="rmcp">rmcp<a class="anchor" aria-label="anchor" href="#rmcp"></a>
+<div class="page-header"><h1 id="acquaint">acquaint<a class="anchor" aria-label="anchor" href="#acquaint"></a>
 </h1></div>
 <!-- badges: start -->
 
-<p>The goal of rmcp is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the <a href="https://modelcontextprotocol.io/" class="external-link">Model Context Protocol</a> (MCP). Tools configured with rmcp can peruse package documentation and learn to use R packages even if they weren’t included in their training data.</p>
-<p>rmcp is written primarily in TypeScript but is distributed as an R package for ease of distribution/install for R users. Installing the package ensures you have the needed dependencies and provides a shortcut, <code><a href="reference/mcp_config.html">mcp_config()</a></code>, to help you configure the tool with other applications.</p>
+<p>The goal of acquaint is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the <a href="https://modelcontextprotocol.io/" class="external-link">Model Context Protocol</a> (MCP). Tools configured with acquaint can peruse package documentation and learn to use R packages even if they weren’t included in their training data.</p>
+<p>acquaint is written primarily in TypeScript but is distributed as an R package for ease of distribution/install for R users. Installing the package ensures you have the needed dependencies and provides a shortcut, <code><a href="reference/mcp_config.html">mcp_config()</a></code>, to help you configure the tool with other applications.</p>
 <blockquote>
 <p>IMPORTANT: This is an early proof of concept. Use at your own risk!</p>
 </blockquote>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of rmcp like so:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(<span class="st">"simonpcouch/rmcp"</span>)</span></code></pre></div>
-<p>rmcp can be hooked up to any application that supports MCP. Use <code><a href="reference/mcp_config.html">mcp_config()</a></code> to generate the config for your machine for common applications. For example, <strong>Claude Code</strong>:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(rmcp)</span>
+<p>You can install the development version of acquaint like so:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(<span class="st">"simonpcouch/acquaint"</span>)</span></code></pre></div>
+<p>acquaint can be hooked up to any application that supports MCP. Use <code><a href="reference/mcp_config.html">mcp_config()</a></code> to generate the config for your machine for common applications. For example, <strong>Claude Code</strong>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(acquaint)</span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">mcp_config</span>(<span class="st">"Claude Code"</span>)</span>
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; In a terminal, run:</span></span>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; claude mcp add -s "user" r-mcp node /Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js</span></span></code></pre></div>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; claude mcp add -s "user" r-acquaint node /Users/simoncouch/Library/R/arm64/4.4/library/acquaint/node/dist/index.js</span></span></code></pre></div>
 <p>Or, <strong>Claude Desktop</strong>:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">mcp_config</span>(<span class="st">"Claude Desktop"</span>)</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Run `file.edit(~/Library/Application Support/Claude/claude_desktop_config.json)`</span></span>
@@ -74,9 +74,9 @@
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt; Then, paste the following:</span></span>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; {</span></span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;   "mcpServers": {</span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;     "r-mcp": {</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;     "r-acquaint": {</span></span>
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;       "command": "node",</span></span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;       "args": ["/Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js"]</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;       "args": ["/Users/simoncouch/Library/R/arm64/4.4/library/acquaint/node/dist/index.js"]</span></span>
 <span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;     }</span></span>
 <span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;   }</span></span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; }</span></span></code></pre></div>
@@ -100,8 +100,8 @@
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/simonpcouch/rmcp/" class="external-link">Browse source code</a></li>
-<li><a href="https://github.com/simonpcouch/rmcp/issues" class="external-link">Report a bug</a></li>
+<li><a href="https://github.com/simonpcouch/acquaint/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/simonpcouch/acquaint/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
@@ -117,7 +117,7 @@
 <div class="citation">
 <h2 data-toc-skip>Citation</h2>
 <ul class="list-unstyled">
-<li><a href="authors.html#citation">Citing rmcp</a></li>
+<li><a href="authors.html#citation">Citing acquaint</a></li>
 </ul>
 </div>
 
@@ -133,8 +133,8 @@
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
-<li><a href="https://CRAN.R-project.org/package=rmcp" class="external-link"><img src="https://www.r-pkg.org/badges/version/rmcp" alt="CRAN status"></a></li>
-<li><a href="https://github.com/simonpcouch/rmcp/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/simonpcouch/rmcp/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://CRAN.R-project.org/package=acquaint" class="external-link"><img src="https://www.r-pkg.org/badges/version/acquaint" alt="CRAN status"></a></li>
+<li><a href="https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
 </ul>
 </div>
 
