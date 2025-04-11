@@ -149,32 +149,32 @@ server.setRequestHandler(toolsCallSchema, async (request) => {
     switch (name) {
       case "get_installed_packages":
         result = await executeR(`
-          btw::btw_tool_session_package_info(packages = "installed")
+          cat(btw::btw_tool_session_package_info(packages = "installed"))
         `);
         break;
         
       case "get_package_help_topics":
         result = await executeR(`
-          btw::btw_tool_docs_package_help_topics("${args.package_name}")
+          cat(btw::btw_tool_docs_package_help_topics("${args.package_name}"))
         `);
         break;
         
       case "get_help_page":
         result = await executeR(`
-          btw::btw_tool_docs_help_page("${args.topic}", "${args.package_name}")
+          cat(btw::btw_tool_docs_help_page("${args.topic}", "${args.package_name}"))
         `);
         break;
         
       case "get_package_vignettes":
         result = await executeR(`
-          btw::btw_tool_docs_available_vignettes("${args.package_name}")
+          cat(btw::btw_tool_docs_available_vignettes("${args.package_name}"))
         `);
         break;
         
       case "get_vignette":
         const vignetteName = args.vignette_name || args.package_name;
         result = await executeR(`
-          btw::btw_tool_docs_vignette("${args.package_name}", "${vignetteName}")
+          cat(btw::btw_tool_docs_vignette("${args.package_name}", "${vignetteName}"))
         `);
         break;
 
@@ -183,10 +183,10 @@ server.setRequestHandler(toolsCallSchema, async (request) => {
         if (args.items && Array.isArray(args.items) && args.items.length > 0) {
           itemsArg = `c(${args.items.map((item: string) => `"${item}"`).join(", ")})`;
           result = await executeR(`
-            btw::btw_tool_env_describe_environment(items = ${itemsArg})
+            cat(btw::btw_tool_env_describe_environment(items = ${itemsArg}))
           `);
         } else {
-          result = await executeR(`btw::btw_tool_env_describe_environment()`);
+          result = await executeR(`cat(btw::btw_tool_env_describe_environment())`);
         }
         break;
         
