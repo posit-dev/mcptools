@@ -12,7 +12,7 @@
     Code
       mcp_config("Claude Desktop")
     Output
-      Run `file.edit(~/Library/Application Support/Claude/claude_desktop_config.json)`
+      Run `file.edit("~/Library/Application Support/Claude/claude_desktop_config.json")`
       
       Then, paste the following:
       {
@@ -29,7 +29,7 @@
     Code
       mcp_config("Claude Desktop")
     Output
-      Run `file.edit(%APPDATA%\Claude\claude_desktop_config.json)`
+      Run `file.edit("%APPDATA%\Claude\claude_desktop_config.json")`
       
       Then, paste the following:
       {
@@ -48,3 +48,4 @@
     Condition
       Error in `mcp_config_claude_desktop()`:
       ! Claude Desktop isn't available on Linux.
+
