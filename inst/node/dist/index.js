@@ -105,6 +105,31 @@ server.setRequestHandler(toolsListSchema, async () => {
                 }
             },
             {
+                name: "describe_data_frame",
+                description: "Show the data frame or table or get information about the structure of a data frame or table.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        data_frame: {
+                            type: "string",
+                            description: "The name of the data frame."
+                        },
+                        format: {
+                            type: "string",
+                            description: "The output format of the data frame: 'skim', 'glimpse', 'print', or 'json'. Default 'skim'.\n\n* skim: Returns a JSON object with information about every column in the table.\n* glimpse: Returns the number of rows, columns, column names and types and the first values of each column\n* print: Prints the data frame\n* json: Returns the data frame as JSON"
+                        },
+                        dims: {
+                            type: "array",
+                            items: {
+                                type: "integer"
+                            },
+                            description: "Dimensions of the data frame to use for the \"print\" or \"json\" format. A numeric vector of length 2 as number of rows and columns. Default `c(5, 100)`."
+                        }
+                    },
+                    required: ["data_frame"]
+                }
+            },
+            {
                 name: "describe_environment",
                 description: "List and describe items in the global environment.",
                 inputSchema: {
@@ -120,6 +145,35 @@ server.setRequestHandler(toolsListSchema, async () => {
                     }
                 },
                 required: []
+            },
+            {
+                name: "session_package_info",
+                description: "Verify that a specific package is installed, or find out which packages are in use in the current session. As a last resort, this function can also list all installed packages.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        packages: {
+                            type: "string",
+                            description: "Provide a commma-separated list of package names to check that these packages are installed and to confirm which versions of the packages are available. Use the single string \"attached\" to show packages that have been attached by the user, i.e. are explicitly in use in the session. Use the single string \"loaded\" to show all packages, including implicitly loaded packages, that are in use in the session (useful for debugging). Finally, the string \"installed\" lists all installed packages. Try using the other available options prior to listing all installed packages.",
+                            required: true
+                        },
+                        dependencies: {
+                            type: "string",
+                            description: "When describing the installed or loaded version of a specific package, you can use `dependencies = \"true\"` to list dependencies of the package. Alternatively, you can give a comma-separated list of dependency types, choosing from `\"Depends\"`, `\"Imports\"`, `\"Suggests\"`, `\"LinkingTo\"`, `\"Enhances\"`.",
+                            required: false
+                        }
+                    },
+                    required: ["packages"]
+                }
+            },
+            {
+                name: "session_platform_info",
+                description: "Describes the R version, operating system, language and locale settings for the user's system.",
+                inputSchema: {
+                    type: "object",
+                    properties: {},
+                    required: []
+                }
             }
         ]
     };
@@ -162,6 +216,14 @@ server.setRequestHandler(toolsCallSchema, async (request) => {
           cat(btw::btw_tool_docs_vignette("${args.package_name}", "${vignetteName}"))
         `);
                 break;
+            case "describe_data_frame":
+                const dataFrameName = args.data_frame;
+                const dataFrameFormat = args.format || "skim";
+                const dataFrameDims = args.dims ? JSON.stringify(args.dims) : "c(5, 100)";
+                result = await executeR(`
+          cat(btw::btw_tool_env_describe_data_frame("${dataFrameName}", "${dataFrameFormat}", ${dataFrameDims}))
+        `);
+                break;
             case "describe_environment":
                 let itemsArg = "NULL";
                 if (args.items && Array.isArray(args.items) && args.items.length > 0) {
@@ -173,6 +235,15 @@ server.setRequestHandler(toolsCallSchema, async (request) => {
                 else {
                     result = await executeR(`cat(btw::btw_tool_env_describe_environment())`);
                 }
+                break;
+            case "session_package_info":
+                const dependenciesArg = args.dependencies || "";
+                result = await executeR(`
+          cat(btw::btw_tool_session_package_info("${args.packages}", "${dependenciesArg}"))
+        `);
+                break;
+            case "session_platform_info":
+                result = await executeR(`cat(btw::btw_tool_session_platform_info())`);
                 break;
             default:
                 throw new Error(`Unknown tool: ${name}`);
