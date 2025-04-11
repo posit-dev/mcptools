@@ -1,4 +1,19 @@
+#' Start an MCP server for your R session
+#' @export
 mcp_enable <- function(port = 8081) {
+  tryCatch({
+    existing_server <- httpuv::listServers()
+    if (length(existing_server) > 0) {
+      httpuv::stopServer(existing_server[[1]])
+    }
+  }, error = function(cnd) {
+    cli::cli_abort(
+      "Unable to terminate the existing server.",
+      parent = cnd,
+      call = call
+    )
+  })
+
   server <- httpuv::startServer(
     host = "127.0.0.1",
     port = port,
@@ -46,5 +61,11 @@ mcp_enable <- function(port = 8081) {
     )
   )
   
+  url <- sprintf("http://%s:%d", host, port)
+  cli::cli_inform(
+    c("v" = "R session server running at: {.url {url}}"),
+    class = "acquaint_viewer_start"
+  )
+
   invisible(server)
 }
