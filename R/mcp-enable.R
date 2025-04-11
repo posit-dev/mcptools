@@ -1,6 +1,6 @@
 #' Start an MCP server for your R session
 #' @export
-mcp_enable <- function(port = 8081) {
+mcp_enable <- function(host = "127.0.0.1", port = 8081) {
   tryCatch({
     existing_server <- httpuv::listServers()
     if (length(existing_server) > 0) {
@@ -15,7 +15,7 @@ mcp_enable <- function(port = 8081) {
   })
 
   server <- httpuv::startServer(
-    host = "127.0.0.1",
+    host = host,
     port = port,
     app = list(
       call = function(req) {
