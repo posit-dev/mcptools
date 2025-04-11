@@ -21,9 +21,7 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of acquaint is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with acquaint can peruse package documentation and learn to use R packages even if they weren't included in their training data.
-
-acquaint is written primarily in TypeScript but is distributed as an R package for ease of distribution/install for R users. Installing the package ensures you have the needed dependencies and provides a shortcut, `mcp_config()`, to help you configure the tool with other applications.
+The goal of acquaint is to enable LLM-enabled tools like Claude Code  to learn about your R session  using the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with acquaint can peruse package documentation, look at objects in your global environment, and query your R session information.
 
 > IMPORTANT:
 > This is an early proof of concept. Use at your own risk!
@@ -35,6 +33,8 @@ You can install the development version of acquaint like so:
 ```r
 pak::pak("simonpcouch/acquaint")
 ```
+
+Use `mcp_enable()` to start an MCP server for your R session. Add that function call to your `.Rprofile`, perhaps with `usethis::edit_r_profile()`, to always start an R MCP server when you start R.
 
 acquaint can be hooked up to any application that supports MCP. Use `mcp_config()` to generate the config for your machine for common applications. For example, **Claude Code**:
 

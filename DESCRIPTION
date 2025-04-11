@@ -1,16 +1,16 @@
 Package: acquaint
-Title: Model Context Protocol For Your R Installation
+Title: Model Context Protocol For Your R Session
 Version: 0.0.0.9000
 Authors@R: c(
     person("Simon", "Couch", , "simon.couch@posit.co", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-5676-5107")),
     person("Posit Software, PBC", role = c("cph", "fnd"))
   )
-Description: The goal of acquaint is to enable LLM-enabled tools like Claude Code to 
-    learn about the R packages you have installed using the 
+Description: The goal of acquaint is to enable LLM-enabled tools like Claude Code 
+    to learn about your R session  using the 
     [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). 
-    Tools configured with acquaint can peruse package documentation and learn 
-    to use R packages even if they weren't included in their training data.
+    Tools configured with acquaint can peruse package documentation, look at
+    objects in your global environment, and query your session information.
 License: MIT + file LICENSE
 Suggests: 
     testthat (>= 3.0.0)
@@ -20,6 +20,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     btw (>= 0.0.1.9000),
+    cli,
     httpuv,
     rlang
 SystemRequirements: Node.js (>= 18.0.0)
