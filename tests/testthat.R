@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(rmcp)
+library(acquaint)
 
-test_check("rmcp")
+test_check("acquaint")

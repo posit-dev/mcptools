@@ -5,7 +5,7 @@
     Output
       In a terminal, run:
       
-      claude mcp add -s "user" r-mcp node node/dist/index.js
+      claude mcp add -s "user" r-acquaint node node/dist/index.js
 
 # mcp_config produces correct Claude Desktop output for macOS
 
@@ -17,7 +17,7 @@
       Then, paste the following:
       {
         "mcpServers": {
-          "r-mcp": {
+          "r-acquaint": {
             "command": "node",
             "args": ["node/dist/index.js"]
           }
@@ -34,7 +34,7 @@
       Then, paste the following:
       {
         "mcpServers": {
-          "r-mcp": {
+          "r-acquaint": {
             "command": "node",
             "args": ["node/dist/index.js"]
           }
@@ -48,4 +48,3 @@
     Condition
       Error in `mcp_config_claude_desktop()`:
       ! Claude Desktop isn't available on Linux.
-

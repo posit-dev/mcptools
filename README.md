@@ -1,23 +1,23 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# rmcp
+# acquaint
 
 <!-- badges: start -->
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN
-status](https://www.r-pkg.org/badges/version/rmcp)](https://CRAN.R-project.org/package=rmcp)
-[![R-CMD-check](https://github.com/simonpcouch/rmcp/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/rmcp/actions/workflows/R-CMD-check.yaml)
+status](https://www.r-pkg.org/badges/version/acquaint)](https://CRAN.R-project.org/package=acquaint)
+[![R-CMD-check](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of rmcp is to enable LLM-enabled tools like Claude Code to
+The goal of acquaint is to enable LLM-enabled tools like Claude Code to
 learn about the R packages you have installed using the [Model Context
 Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with
-rmcp can peruse package documentation and learn to use R packages even
+acquaint can peruse package documentation and learn to use R packages even
 if they weren’t included in their training data.
 
-rmcp is written primarily in TypeScript but is distributed as an R
+acquaint is written primarily in TypeScript but is distributed as an R
 package for ease of distribution/install for R users. Installing the
 package ensures you have the needed dependencies and provides a
 shortcut, `mcp_config()`, to help you configure the tool with other
@@ -27,20 +27,20 @@ applications.
 
 ## Installation
 
-You can install the development version of rmcp like so:
+You can install the development version of acquaint like so:
 
-    pak::pak("simonpcouch/rmcp")
+    pak::pak("simonpcouch/acquaint")
 
-rmcp can be hooked up to any application that supports MCP. Use
+acquaint can be hooked up to any application that supports MCP. Use
 `mcp_config()` to generate the config for your machine for common
 applications. For example, **Claude Code**:
 
-    library(rmcp)
+    library(acquaint)
 
     mcp_config("Claude Code")
     #> In a terminal, run:
     #> 
-    #> claude mcp add -s "user" r-mcp node /Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js
+    #> claude mcp add -s "user" r-acquaint node /Users/simoncouch/Library/R/arm64/4.4/library/acquaint/node/dist/index.js
 
 Or, **Claude Desktop**:
 
@@ -50,9 +50,9 @@ Or, **Claude Desktop**:
     #> Then, paste the following:
     #> {
     #>   "mcpServers": {
-    #>     "r-mcp": {
+    #>     "r-acquaint": {
     #>       "command": "node",
-    #>       "args": ["/Users/simoncouch/Library/R/arm64/4.4/library/rmcp/node/dist/index.js"]
+    #>       "args": ["/Users/simoncouch/Library/R/arm64/4.4/library/acquaint/node/dist/index.js"]
     #>     }
     #>   }
     #> }

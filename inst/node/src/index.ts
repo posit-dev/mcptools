@@ -4,7 +4,7 @@ import { spawn } from 'child_process';
 import { z } from "zod";
 
 const server = new Server({
-  name: "r-mcp",
+  name: "r-acquaint",
   version: "1.0.0"
 }, {
   capabilities: {

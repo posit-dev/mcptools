@@ -1,10 +1,10 @@
 #' Generate Model Context Protocol (MCP) configuration
 #'
 #' @description
-#' This function provides instructions to configure rmcp with LLM-enabled
+#' This function provides instructions to configure acquaint with LLM-enabled
 #' tools like Claude Code or Claude Desktop.
 #' 
-#' @param which The name of the application to configure with rmcp. Currently,
+#' @param which The name of the application to configure with acquaint. Currently,
 #' one of "Claude Code" or "Claude Desktop".
 #' 
 #' @returns 
@@ -43,8 +43,8 @@ mcp_config_claude_code <- function() {
     'In a terminal, run:',
     '',
     paste0(
-      'claude mcp add -s "user" r-mcp node ',
-      system.file("node/dist/index.js", package = "rmcp")
+      'claude mcp add -s "user" r-acquaint node ',
+      system.file("node/dist/index.js", package = "acquaint")
     )
   )
 }
@@ -67,11 +67,11 @@ mcp_config_claude_desktop <- function() {
     'Then, paste the following:',
     '{',
     '  "mcpServers": {',
-    '    "r-mcp": {',
+    '    "r-acquaint": {',
     '      "command": "node",',
     paste0(
       '      "args": ["',
-      system.file("node/dist/index.js", package = "rmcp"),
+      system.file("node/dist/index.js", package = "acquaint"),
       '"]'
     ),
     '    }',

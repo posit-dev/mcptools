@@ -7,7 +7,7 @@
 mcp_config(which = c("Claude Code", "Claude Desktop"))
 }
 \arguments{
-\item{which}{The name of the application to configure with rmcp. Currently,
+\item{which}{The name of the application to configure with acquaint. Currently,
 one of "Claude Code" or "Claude Desktop".}
 }
 \value{
@@ -16,7 +16,7 @@ instructions, invisibly. The function also prints the configuration to
 the console.
 }
 \description{
-This function provides instructions to configure rmcp with LLM-enabled
+This function provides instructions to configure acquaint with LLM-enabled
 tools like Claude Code or Claude Desktop.
 }
 \examples{
