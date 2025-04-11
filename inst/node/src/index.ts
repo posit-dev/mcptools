@@ -179,6 +179,7 @@ server.setRequestHandler(toolsCallSchema, async (request) => {
         break;
 
       case "describe_environment":
+        let itemsArg = "NULL";
         if (args.items && Array.isArray(args.items) && args.items.length > 0) {
           itemsArg = `c(${args.items.map((item: string) => `"${item}"`).join(", ")})`;
           result = await executeR(`
