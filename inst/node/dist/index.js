@@ -1,7 +1,7 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { spawn } from 'child_process';
 import { z } from "zod";
+import fetch from 'node-fetch';
 const server = new Server({
     name: "r-acquaint",
     version: "1.0.0"
@@ -10,29 +10,19 @@ const server = new Server({
         tools: {}
     }
 });
-async function executeR(rScript) {
-    const rscriptPath = process.env.R_HOME ?
-        `${process.env.R_HOME}/bin/Rscript` :
-        process.env.RSCRIPT_PATH || 'Rscript';
-    return new Promise((resolve, reject) => {
-        const child = spawn(rscriptPath, ['-e', rScript]);
-        let stdout = '';
-        let stderr = '';
-        child.stdout.on('data', (data) => {
-            stdout += data.toString();
-        });
-        child.stderr.on('data', (data) => {
-            stderr += data.toString();
-        });
-        child.on('close', (code) => {
-            if (code !== 0) {
-                reject(new Error(`R script failed with code ${code}: ${stderr}`));
-            }
-            else {
-                resolve(stdout);
-            }
-        });
+async function executeR(rCode) {
+    const sessionServerUrl = process.env.R_SESSION_SERVER_URL || 'http://127.0.0.1:8080';
+    const response = await fetch(sessionServerUrl, {
+        method: 'POST',
+        body: rCode,
+        headers: {
+            'Content-Type': 'text/plain'
+        }
     });
+    if (!response.ok) {
+        throw new Error(`Session server responded with status: ${response.status}`);
+    }
+    return await response.text();
 }
 // Register tools that map to btw functions
 const toolsListSchema = z.object({
@@ -113,6 +103,23 @@ server.setRequestHandler(toolsListSchema, async () => {
                     },
                     required: ["package_name"]
                 }
+            },
+            {
+                name: "describe_environment",
+                description: "List and describe items in the global environment.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        items: {
+                            type: "array",
+                            items: {
+                                type: "string"
+                            },
+                            description: "The names of items to describe from the environment. In omitted, describes all items."
+                        }
+                    }
+                },
+                required: []
             }
         ]
     };
@@ -131,29 +138,41 @@ server.setRequestHandler(toolsCallSchema, async (request) => {
         switch (name) {
             case "get_installed_packages":
                 result = await executeR(`
-          cat(btw::btw_tool_session_package_info(packages = "installed"))
+          btw::btw_tool_session_package_info(packages = "installed")
         `);
                 break;
             case "get_package_help_topics":
                 result = await executeR(`
-          cat(btw::btw_tool_docs_package_help_topics("${args.package_name}"))
+          btw::btw_tool_docs_package_help_topics("${args.package_name}")
         `);
                 break;
             case "get_help_page":
                 result = await executeR(`
-          cat(btw::btw_tool_docs_help_page("${args.topic}", "${args.package_name}"))
+          btw::btw_tool_docs_help_page("${args.topic}", "${args.package_name}")
         `);
                 break;
             case "get_package_vignettes":
                 result = await executeR(`
-          cat(btw::btw_tool_docs_available_vignettes("${args.package_name}"))
+          btw::btw_tool_docs_available_vignettes("${args.package_name}")
         `);
                 break;
             case "get_vignette":
                 const vignetteName = args.vignette_name || args.package_name;
                 result = await executeR(`
-          cat(btw::btw_tool_docs_vignette("${args.package_name}", "${vignetteName}"))
+          btw::btw_tool_docs_vignette("${args.package_name}", "${vignetteName}")
         `);
+                break;
+            case "describe_environment":
+                let itemsArg = "NULL";
+                if (args.items && Array.isArray(args.items) && args.items.length > 0) {
+                    itemsArg = `c(${args.items.map((item) => `"${item}"`).join(", ")})`;
+                    result = await executeR(`
+            btw::btw_tool_env_describe_environment(items = ${itemsArg})
+          `);
+                }
+                else {
+                    result = await executeR(`btw::btw_tool_env_describe_environment()`);
+                }
                 break;
             default:
                 throw new Error(`Unknown tool: ${name}`);
