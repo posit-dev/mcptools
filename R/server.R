@@ -1,27 +1,87 @@
-library(httpuv)
-library(jsonlite)
+#' Model context protocol for your R session
+#' 
+#' @description
+#' Together, these functions implement a model context protocol server for your
+#' R session.
+#' 
+#' @section Configuration: 
+#' 
+#' [mcp_proxy()] should be configured with the MCP clients via the `Rscript`
+#' command. For example, to use with Claude Desktop, paste the following in your
+#' Claude Desktop configuration (on macOS, at 
+#' `file.edit("~/Library/Application Support/Claude/claude_desktop_config.json")`):
+#' 
+#' ```json
+#' {
+#'   "mcpServers": {
+#'     "r-acquaint": {
+#'       "command": "Rscript",
+#'       "args": ["-e", "acquaint::mcp_proxy()"]
+#'     }
+#'   }
+#' }
+#' ```
+#' 
+#' Or, to use with Claude Code, you might type in a terminal:
+#' 
+#' ```bash
+#' claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_proxy()"
+#' ```
+#' 
+#' **mcp_proxy() is not intended for interactive use.**
+#' 
+#' The proxy interfaces with the MCP client on behalf of the server hosted in
+#' your R session. **Use [mcp_serve()] to start the MCP server in your R session.**
+#' Place a call to `acquaint::mcp_serve()` in your `.Rprofile`, perhaps with
+#' `usethis::edit_r_profile()`, to start a server for your R session every time
+#' you start R.
+#' 
+#' @examples
+#' if (interactive()) {
+#' mcp_serve()
+#' }
+#' 
+#' @name mcp
+#' @export
+mcp_serve <- function() {
+  # HACK: If a server is already running in one session via `.Rprofile`, 
+  # `mcp_serve()` will be called again when the client runs the command 
+  # Rscript -e "acquaint::mcp_serve()" and the existing server will be wiped.
+  # Returning early in this case allows for the desired R session server to be
+  # running already before the client initiates the proxy.
+  if (!interactive()) {
+    return(invisible())
+  }
 
-# stopAllServers()
-s <- startServer(
-  host = "127.0.0.1",
-  port = 8000,
-  app = list(
-    call = function(req) {
-      serve(req)
-    }
+  # TODO: This only works with one active R session. If there's some other R
+  # session running with a server, `startServer` will error out. Maybe this
+  # should be based on an envvar?
+  if (env_has(acquaint_env, "active_server")) {
+    httpuv::stopServer(env_get(acquaint_env, "active_server"))
+  }
+
+  s <- httpuv::startServer(
+    host = "127.0.0.1",
+    port = acquaint_port(),
+    app = list(
+      call = function(req) {
+        mcp_serve_impl(req)
+      }
+    )
   )
-)
 
+  env_bind(acquaint_env, active_server = s)
 
+  s
+}
 
-serve <- function(req) {
+mcp_serve_impl <- function(req) {
   req_body <- rawToChar(req$rook.input$read())
 
   # In RStudio, content logged to stderr will show in red.
   # cat(req_body, file=stderr())
-  data <- fromJSON(req_body)
+  data <- jsonlite::fromJSON(req_body)
   # cat(paste(capture.output(str(data)), collapse="\n"), file=stderr())
-
 
   if (data$method == "tools/call") {
     name <- data$params$name
@@ -39,7 +99,7 @@ serve <- function(req) {
     tool_call_result <- do.call(fn, args)
     # cat(paste(capture.output(str(body)), collapse="\n"), file=stderr())
 
-    body <- jsonrpc_response(
+    body <- jsonrpc_response_server(
       data$id,
       list(
         content = list(
@@ -52,8 +112,8 @@ serve <- function(req) {
       )
     )
   } else {
-    body <- jsonrpc_response(
-      dat$id,
+    body <- jsonrpc_response_server(
+      data$id,
       error = list(code = -32601, message = "Method not found")
     )
   }
@@ -68,9 +128,8 @@ serve <- function(req) {
   )
 }
 
-
 # Create a jsonrpc-structured response object.
-jsonrpc_response <- function(id, result = NULL, error = NULL) {
+jsonrpc_response_server <- function(id, result = NULL, error = NULL) {
   if (!xor(is.null(result), is.null(error))) {
     warning("Either `result` or `error` must be provided, but not both.")
   }
@@ -81,20 +140,6 @@ jsonrpc_response <- function(id, result = NULL, error = NULL) {
     result = result,
     error = error
   ))
-}
-
-to_json <- function(x, ...) {
-  jsonlite::toJSON(x, ..., auto_unbox = TRUE)
-}
-
-# Create a named list, ensuring that it's a named list, even if empty.
-named_list <- function(...) {
-  res <- list(...)
-  if (length(res) == 0) {
-    # A way of creating an empty named list
-    res <- list(a = 1)[0]
-  }
-  res
 }
 
 # Given a vector or list, drop all the NULL items in it

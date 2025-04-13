@@ -1,6 +1,7 @@
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# acquaint
+# acquaint <a href="https://simonpcouch.github.io/acquaint/"><img src="man/figures/logo.png" align="right" height="240" alt="A hexagonal logo showing a sparse, forested path opening up into a well-trodden meadow path." /></a>
 
 <!-- badges: start -->
 
@@ -11,17 +12,14 @@ status](https://www.r-pkg.org/badges/version/acquaint)](https://CRAN.R-project.o
 [![R-CMD-check](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of acquaint is to enable LLM-enabled tools like Claude Code to
-learn about the R packages you have installed using the [Model Context
-Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with
-acquaint can peruse package documentation and learn to use R packages even
-if they weren’t included in their training data.
+acquaint implements a [Model Context
+Protocol](https://modelcontextprotocol.io/) (MCP) for your R session.
+When configured with acquaint, tools like Claude Desktop and Claude Code
+can:
 
-acquaint is written primarily in TypeScript but is distributed as an R
-package for ease of distribution/install for R users. Installing the
-package ensures you have the needed dependencies and provides a
-shortcut, `mcp_config()`, to help you configure the tool with other
-applications.
+- Peruse the documentation of packages you have installed,
+- Check out the objects in your global environment, and
+- Retrieve metadata about your session and platform.
 
 > IMPORTANT: This is an early proof of concept. Use at your own risk!
 
@@ -29,33 +27,33 @@ applications.
 
 You can install the development version of acquaint like so:
 
-    pak::pak("simonpcouch/acquaint")
+``` r
+pak::pak("simonpcouch/acquaint")
+```
 
-acquaint can be hooked up to any application that supports MCP. Use
-`mcp_config()` to generate the config for your machine for common
-applications. For example, **Claude Code**:
+acquaint can be hooked up to any application that supports MCP. For
+example, to use with Claude Desktop, you might paste the following in
+your Claude Desktop configuration (on macOS, at
+`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
-    library(acquaint)
+``` json
+{
+  "mcpServers": {
+    "r-acquaint": {
+      "command": "Rscript",
+      "args": ["-e", "acquaint::mcp_proxy()"]
+    }
+  }
+}
+```
 
-    mcp_config("Claude Code")
-    #> In a terminal, run:
-    #> 
-    #> claude mcp add -s "user" r-acquaint node /Users/simoncouch/Library/R/arm64/4.4/library/acquaint/node/dist/index.js
+Or, to use with Claude Code, you might type in a terminal:
 
-Or, **Claude Desktop**:
+``` bash
+claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_proxy()"
+```
 
-    mcp_config("Claude Desktop")
-    #> Run `file.edit(~/Library/Application Support/Claude/claude_desktop_config.json)`
-    #> 
-    #> Then, paste the following:
-    #> {
-    #>   "mcpServers": {
-    #>     "r-acquaint": {
-    #>       "command": "node",
-    #>       "args": ["/Users/simoncouch/Library/R/arm64/4.4/library/acquaint/node/dist/index.js"]
-    #>     }
-    #>   }
-    #> }
+Then, in your R session, call `acquaint::mcp_server()`.
 
 ## Example
 
@@ -66,8 +64,8 @@ In Claude Desktop, I’ll write the following:
 
 In a typical chat interface, I’d be wary of two failure points here:
 
-1.  The model doesn’t know which packages I have installed.
-2.  If the model correctly guesses which packages I have installed,
+1)  The model doesn’t know which packages I have installed.
+2)  If the model correctly guesses which packages I have installed,
     there may not be enough information about how to *use* the packages
     baked into its weights to write correct code.
 

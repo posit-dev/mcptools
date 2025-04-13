@@ -21,9 +21,11 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of acquaint is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with acquaint can peruse package documentation and learn to use R packages even if they weren't included in their training data.
+acquaint implements a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) for your R session. When configured with acquaint, tools like Claude Desktop and Claude Code can:
 
-acquaint is written primarily in TypeScript but is distributed as an R package for ease of distribution/install for R users. Installing the package ensures you have the needed dependencies and provides a shortcut, `mcp_config()`, to help you configure the tool with other applications.
+* Peruse the documentation of packages you have installed,
+* Check out the objects in your global environment, and
+* Retrieve metadata about your session and platform.
 
 > IMPORTANT:
 > This is an early proof of concept. Use at your own risk!
@@ -36,19 +38,26 @@ You can install the development version of acquaint like so:
 pak::pak("simonpcouch/acquaint")
 ```
 
-acquaint can be hooked up to any application that supports MCP. Use `mcp_config()` to generate the config for your machine for common applications. For example, **Claude Code**:
+acquaint can be hooked up to any application that supports MCP. For example, to use with Claude Desktop, you might paste the following in your Claude Desktop configuration (on macOS, at  `~/Library/Application Support/Claude/claude_desktop_config.json`):
 
-```{r}
-library(acquaint)
-
-mcp_config("Claude Code")
+```json
+{
+  "mcpServers": {
+    "r-acquaint": {
+      "command": "Rscript",
+      "args": ["-e", "acquaint::mcp_proxy()"]
+    }
+  }
+}
 ```
 
-Or, **Claude Desktop**:
+Or, to use with Claude Code, you might type in a terminal:
 
-```{r}
-mcp_config("Claude Desktop")
+```bash
+claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_proxy()"
 ```
+
+Then, in your R session, call `acquaint::mcp_server()`.
 
 ## Example
 
@@ -67,4 +76,4 @@ In a typical chat interface, I'd be wary of two failure points here:
 knitr::include_graphics("https://github.com/user-attachments/assets/821ea3d6-4e30-46d6-ab9b-301276af2c35")
 ```
 
-Through first searching through my installed packages, Claude can locate the anyflights package, which seems like a reasonable solution. The model then discovers the  package's `anyflights()` function and reads its documentation, and can pattern-match from there to write the correct code.
+Through first searching through my installed packages, Claude can locate the anyflights package, which seems like a reasonable solution. The model then discovers the package's `anyflights()` function and reads its documentation, and can pattern-match from there to write the correct code.
