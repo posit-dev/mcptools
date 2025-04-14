@@ -53,35 +53,15 @@ mcp_serve <- function() {
     return(invisible())
   }
 
-  # TODO: This only works with one active R session. If there's some other R
-  # session running with a server, `startServer` will error out. Maybe this
-  # should be based on an envvar?
-  if (env_has(acquaint_env, "active_server")) {
-    httpuv::stopServer(env_get(acquaint_env, "active_server"))
-  }
-
-  s <- httpuv::startServer(
-    host = "127.0.0.1",
-    port = acquaint_port(),
-    app = list(
-      call = function(req) {
-        mcp_serve_impl(req)
-      }
-    )
-  )
-
-  env_bind(acquaint_env, active_server = s)
-
-  s
+  the$server_socket <- nanonext::socket("pair", listen = acquaint_socket)
+  schedule_handle_message_from_proxy()
 }
 
-mcp_serve_impl <- function(req) {
-  req_body <- rawToChar(req$rook.input$read())
+handle_message_from_proxy <- function(msg) {
+  schedule_handle_message_from_proxy()
 
-  # In RStudio, content logged to stderr will show in red.
-  # cat(req_body, file=stderr())
-  data <- jsonlite::fromJSON(req_body)
-  # cat(paste(capture.output(str(data)), collapse="\n"), file=stderr())
+  # cat("RECV :", msg, "\n", sep = "", file = stderr())
+  data <- jsonlite::fromJSON(msg)
 
   if (data$method == "tools/call") {
     name <- data$params$name
@@ -99,7 +79,7 @@ mcp_serve_impl <- function(req) {
     tool_call_result <- do.call(fn, args)
     # cat(paste(capture.output(str(body)), collapse="\n"), file=stderr())
 
-    body <- jsonrpc_response_server(
+    body <- jsonrpc_response(
       data$id,
       list(
         content = list(
@@ -112,35 +92,25 @@ mcp_serve_impl <- function(req) {
       )
     )
   } else {
-    body <- jsonrpc_response_server(
+    body <- jsonrpc_response(
       data$id,
       error = list(code = -32601, message = "Method not found")
     )
   }
-  # cat(to_json(body), file = stderr())
+  # cat("SEND:", to_json(body), "\n", sep = "", file = stderr())
 
-  # cat("Request received at ", format(Sys.time(), "%H:%M:%S.%OS3\n"), file=stderr())
+  nanonext::send_aio(the$server_socket, to_json(body))
+}
 
-  list(
-    status = 200L,
-    headers = list('Content-Type' = 'application/json'),
-    body = to_json(body)
-  )
+schedule_handle_message_from_proxy <- function() {
+  r <- nanonext::recv_aio(the$server_socket)
+  promises::as.promise(r)$then(handle_message_from_proxy)$catch(function(e) {
+    print(e)
+  })
 }
 
 # Create a jsonrpc-structured response object.
-jsonrpc_response_server <- function(id, result = NULL, error = NULL) {
-  if (!xor(is.null(result), is.null(error))) {
-    warning("Either `result` or `error` must be provided, but not both.")
-  }
 
-  drop_nulls(list(
-    jsonrpc = "2.0",
-    id = id,
-    result = result,
-    error = error
-  ))
-}
 
 # Given a vector or list, drop all the NULL items in it
 drop_nulls <- function(x) {

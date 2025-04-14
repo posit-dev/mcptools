@@ -1,4 +1,19 @@
-acquaint_env <- new_environment()
+the <- new_environment()
+
+acquaint_socket <- "ipc:///tmp/acquaint-socket"
+
+jsonrpc_response <- function(id, result = NULL, error = NULL) {
+  if (!xor(is.null(result), is.null(error))) {
+    warning("Either `result` or `error` must be provided, but not both.")
+  }
+
+  drop_nulls(list(
+    jsonrpc = "2.0",
+    id = id,
+    result = result,
+    error = error
+  ))
+}
 
 # Create a named list, ensuring that it's a named list, even if empty.
 named_list <- function(...) {

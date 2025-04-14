@@ -1,91 +1,126 @@
+# This R script is a proxy. It takes input on stdin, and when the input forms
+# valid JSON, it will send the JSON to the server. Then, when it receives the
+# response, it will print the response to stdout.
 #' @rdname mcp
 #' @export
 mcp_proxy <- function() {
   # TODO: should this actually be a check for being called within Rscript or not?
   check_not_interactive()
 
-  mcp_proxy_impl()
+  the$proxy_socket <- nanonext::socket("pair", dial = acquaint_socket)
+
+  # Note that we're using file("stdin") instead of stdin(), which are not the
+  # same.
+  the$f <- file("stdin")
+  open(the$f, blocking = FALSE)
+
+  schedule_handle_message_from_client()
+  schedule_handle_message_from_server()
+
+  # Pump the event loop
+  while (TRUE) {
+    later::run_now(Inf)
+  }
 }
 
-# This R script is a proxy. It takes input on stdin, and when the input forms
-# valid JSON, it will POST the JSON to the server, then when it receives the
-# response, it will print the response to stdout.
-mcp_proxy_impl <- function() {
-  url <- paste0("http://localhost:", acquaint_port(), collapse = "")
-  logcat("START", append = FALSE)
+handle_message_from_client <- function(fdstatus) {
   buf <- ""
+  schedule_handle_message_from_client()
+  # TODO: Read multiple lines all at once (because the server can send
+  # multiple requests quickly), and then handle each line separately.
+  # Otherwise, the message throughput will be bound by the polling rate.
+  line <- readLines(the$f, n = 1)
+  # TODO: If stdin is closed, we should exit. Not sure there's a way to detect
+  # that stdin has been closed without writing C code, though.
 
-  # Note that we're using file("stdin") instead of stdin() because the former
-  # blocks but the latter does not when used with readLines(). If it doesn't block,
-  # the loop will poll continuously and use 100% CPU.
-  f <- file("stdin")
-  open(f, blocking = TRUE)
-
-  while (TRUE) {
-    line <- readLines(f, n = 1)
-
-    if (length(line) == 0) {
-      next
-    }
-
-    logcat(line)
-
-    buf <- paste0(c(buf, line), collapse = "\n")
-
-    data <- NULL
-
-    tryCatch(
-      {
-        data <- jsonlite::fromJSON(buf)
-      },
-      error = function(e) {
-        # Invalid JSON
-      }
-    )
-    if (is.null(data)) {
-      next
-    }
-    # If we made it here, it's valid JSON
-
-    if (identical(data$method, "initialize")) {
-      res <- jsonrpc_response_proxy(data$id, capabilities())
-      cat_json(res)
-
-    } else if (identical(data$method, "notifications/initialized")) {
-      # This is confirmation from the client; do nothing
-    
-    } else if (identical(data$method, "prompts/list")) {
-      # No prompts yet
-      cat_json(jsonrpc_response_proxy(data$id, list(prompts = list())))
-
-    } else if (identical(data$method, "resources/list")) {
-      # No resources yet
-      cat_json(jsonrpc_response_proxy(data$id, list(resources = list())))
-
-    } else if (identical(data$method, "tools/list")) {
-      res <- jsonrpc_response_proxy(
-        data$id,
-        list(
-          tools = get_all_btw_tools()
-        )
-      )
-      # cat(to_json(res), "\n", sep = "", file = stderr())
-      cat_json(res)
-    } else {
-      # For all other messages, forward them to the server
-      result <- post_request(buf, url)
-
-      response_text <- rawToChar(result$content)
-      logcat(response_text)
-      
-      # The response_text is alredy JSON, so we'll use cat() instead of cat_json()
-      cat(response_text, "\n", sep = "")
-      # cat("Response status:", result$status_code, "\n", file = stderr())
-      # cat("Response body:", response_text, "\n", file = stderr())
-    }
-
-    buf <- ""
+  if (length(line) == 0) {
+    return()
   }
+
+  logcat("FROM CLIENT: ", line)
+
+  buf <- paste0(c(buf, line), collapse = "\n")
+
+  data <- NULL
+
+  tryCatch(
+    {
+      data <- jsonlite::fromJSON(buf)
+    },
+    error = function(e) {
+      # Invalid JSON. Possibly unfinished multi-line JSON message?
+    }
+  )
+
+  if (is.null(data)) {
+    # Can get here if there's an empty line
+    return()
+  }
+
+  if (!is.list(data) || is.null(data$method)) {
+    cat_json(jsonrpc_response(
+      data$id,
+      error = list(code = -32600, message = "Invalid Request")
+    ))
+  }
+
+  # If we made it here, it's valid JSON
+
+  if (data$method == "initialize") {
+    res <- jsonrpc_response(data$id, capabilities())
+    cat_json(res)
+  } else if (data$method == "tools/list") {
+    res <- jsonrpc_response(
+      data$id,
+      list(
+        tools = get_all_btw_tools()
+      )
+    )
+
+    cat_json(res)
+  } else if (data$method == "tools/call") {
+    result <- forward_request(buf)
+
+    # } else if (data$method == "prompts/list") {
+    # } else if (data$method == "resources/list") {
+  } else if (is.null(data$id)) {
+    # If there is no `id` in the request, then this is a notification and the
+    # client does not expect a response.
+    if (data$method == "notifications/initialized") {
+    }
+  } else {
+    cat_json(jsonrpc_response(
+      data$id,
+      error = list(code = -32601, message = "Method not found")
+    ))
+  }
+
+  buf <- ""
+}
+
+schedule_handle_message_from_client <- function() {
+  # Schedule the callback to run when stdin (fd 0) has input.
+  later::later_fd(handle_message_from_client, readfds = 0L)
+}
+
+handle_message_from_server <- function(data) {
+  schedule_handle_message_from_server()
+
+  logcat("FROM SERVER: ", data)
+
+  # The response_text is alredy JSON, so we'll use cat() instead of cat_json()
+  cat(data, "\n", sep = "")
+}
+
+schedule_handle_message_from_server <- function() {
+  r <- nanonext::recv_aio(the$proxy_socket)
+  promises::as.promise(r)$then(handle_message_from_server)
+}
+
+forward_request <- function(data) {
+  logcat("TO SERVER: ", data)
+
+  nanonext::send_aio(the$proxy_socket, data)
 }
 
 # This process will be launched by the MCP client, so stdout/stderr aren't
@@ -94,26 +129,6 @@ mcp_proxy_impl <- function() {
 logcat <- function(x, ..., append = TRUE) {
   log_file <- acquaint_log_file()
   cat(x, "\n", sep = "", append = append, file = log_file)
-}
-
-post_request <- function(json_data, url) {
-  h <- curl::new_handle() 
-  h <- curl::handle_setheaders(h, "Content-Type" = "application/json")
-  h <- curl::handle_setopt(h, customrequest = "POST")
-  h <- curl::handle_setopt(h, postfields = json_data)
-
-  result <- curl::curl_fetch_memory(url, h)
-
-  return(result)
-}
-
-# Wrap `x` in a jsonrpc-formatted object. This also includes the id.
-jsonrpc_response_proxy <- function(id, x) {
-  list(
-    jsonrpc = "2.0",
-    id = id,
-    result = x
-  )
 }
 
 cat_json <- function(x) {
