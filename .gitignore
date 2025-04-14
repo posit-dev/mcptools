@@ -4,5 +4,4 @@
 .httr-oauth
 .DS_Store
 .quarto
-inst/node/node_modules
 docs
