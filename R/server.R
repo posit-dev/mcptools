@@ -61,7 +61,7 @@ handle_message_from_proxy <- function(msg) {
   schedule_handle_message_from_proxy()
 
   # cat("RECV :", msg, "\n", sep = "", file = stderr())
-  data <- jsonlite::fromJSON(msg)
+  data <- jsonlite::parse_json(msg)
 
   if (data$method == "tools/call") {
     name <- data$params$name

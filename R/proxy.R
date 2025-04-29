@@ -45,7 +45,7 @@ handle_message_from_client <- function(fdstatus) {
 
   tryCatch(
     {
-      data <- jsonlite::fromJSON(buf)
+      data <- jsonlite::parse_json(buf)
     },
     error = function(e) {
       # Invalid JSON. Possibly unfinished multi-line JSON message?
