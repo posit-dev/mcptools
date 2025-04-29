@@ -163,14 +163,16 @@ capabilities <- function() {
 get_all_btw_tools <- function() {
   dummy_provider <- ellmer::Provider("dummy", "dummy", "dummy")
 
-  tools <- lapply(unname(btw:::.btw_tools), function(tool_obj) {
+  .btw_tools <- getNamespace("btw")[[".btw_tools"]]
+  tools <- lapply(unname(.btw_tools), function(tool_obj) {
     tool <- tool_obj$tool()
 
     if (is.null(tool)) {
       return(NULL)
     }
 
-    inputSchema <- compact(ellmer:::as_json(dummy_provider, tool@arguments))
+    as_json <- getNamespace("ellmer")[["as_json"]]
+    inputSchema <- compact(as_json(dummy_provider, tool@arguments))
     # This field is present but shouldn't be
     inputSchema$description <- NULL
 
