@@ -1,16 +1,16 @@
 #' Model context protocol for your R session
-#' 
+#'
 #' @description
 #' Together, these functions implement a model context protocol server for your
 #' R session.
-#' 
-#' @section Configuration: 
-#' 
+#'
+#' @section Configuration:
+#'
 #' [mcp_proxy()] should be configured with the MCP clients via the `Rscript`
 #' command. For example, to use with Claude Desktop, paste the following in your
-#' Claude Desktop configuration (on macOS, at 
+#' Claude Desktop configuration (on macOS, at
 #' `file.edit("~/Library/Application Support/Claude/claude_desktop_config.json")`):
-#' 
+#'
 #' ```json
 #' {
 #'   "mcpServers": {
@@ -21,31 +21,31 @@
 #'   }
 #' }
 #' ```
-#' 
+#'
 #' Or, to use with Claude Code, you might type in a terminal:
-#' 
+#'
 #' ```bash
 #' claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_proxy()"
 #' ```
-#' 
+#'
 #' **mcp_proxy() is not intended for interactive use.**
-#' 
+#'
 #' The proxy interfaces with the MCP client on behalf of the server hosted in
 #' your R session. **Use [mcp_serve()] to start the MCP server in your R session.**
 #' Place a call to `acquaint::mcp_serve()` in your `.Rprofile`, perhaps with
 #' `usethis::edit_r_profile()`, to start a server for your R session every time
 #' you start R.
-#' 
+#'
 #' @examples
 #' if (interactive()) {
 #' mcp_serve()
 #' }
-#' 
+#'
 #' @name mcp
 #' @export
 mcp_serve <- function() {
-  # HACK: If a server is already running in one session via `.Rprofile`, 
-  # `mcp_serve()` will be called again when the client runs the command 
+  # HACK: If a server is already running in one session via `.Rprofile`,
+  # `mcp_serve()` will be called again when the client runs the command
   # Rscript -e "acquaint::mcp_serve()" and the existing server will be wiped.
   # Returning early in this case allows for the desired R session server to be
   # running already before the client initiates the proxy.
@@ -99,7 +99,8 @@ handle_message_from_proxy <- function(msg) {
   }
   # cat("SEND:", to_json(body), "\n", sep = "", file = stderr())
 
-  nanonext::send_aio(the$server_socket, to_json(body))
+  # TODO: consider if better / more robust using synchronous sends
+  the$saio <- nanonext::send_aio(the$server_socket, to_json(body))
 }
 
 schedule_handle_message_from_proxy <- function() {
