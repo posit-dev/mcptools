@@ -11,8 +11,7 @@ mcp_proxy <- function() {
 
   # Note that we're using file("stdin") instead of stdin(), which are not the
   # same.
-  the$f <- file("stdin")
-  open(the$f, blocking = FALSE)
+  the$f <- file("stdin", open = "r")
 
   schedule_handle_message_from_client()
   schedule_handle_message_from_server()
