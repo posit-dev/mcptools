@@ -11,8 +11,7 @@ mcp_proxy <- function() {
 
   # Note that we're using file("stdin") instead of stdin(), which are not the
   # same.
-  the$f <- file("stdin")
-  open(the$f, blocking = FALSE)
+  the$f <- file("stdin", open = "r")
 
   schedule_handle_message_from_client()
   schedule_handle_message_from_server()
@@ -108,19 +107,19 @@ handle_message_from_server <- function(data) {
 
   logcat("FROM SERVER: ", data)
 
-  # The response_text is alredy JSON, so we'll use cat() instead of cat_json()
-  cat(data, "\n", sep = "")
+  # The response_text is already JSON, so we'll use cat() instead of cat_json()
+  nanonext::write_stdout(data)
 }
 
 schedule_handle_message_from_server <- function() {
-  r <- nanonext::recv_aio(the$proxy_socket)
+  r <- nanonext::recv_aio(the$proxy_socket, mode = "string")
   promises::as.promise(r)$then(handle_message_from_server)
 }
 
 forward_request <- function(data) {
   logcat("TO SERVER: ", data)
 
-  nanonext::send_aio(the$proxy_socket, data)
+  the$saio <- nanonext::send_aio(the$proxy_socket, data, mode = "raw")
 }
 
 # This process will be launched by the MCP client, so stdout/stderr aren't
@@ -132,7 +131,7 @@ logcat <- function(x, ..., append = TRUE) {
 }
 
 cat_json <- function(x) {
-  cat(to_json(x), "\n", sep = "")
+  nanonext::write_stdout(to_json(x))
 }
 
 capabilities <- function() {

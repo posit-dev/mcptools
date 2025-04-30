@@ -26,7 +26,7 @@ Imports:
     ellmer,
     jsonlite,
     later,
-    nanonext,
+    nanonext (>= 1.5.2.9009),
     promises,
     rlang
 Depends: R (>= 4.1.0)
@@ -34,4 +34,5 @@ URL: https://github.com/simonpcouch/acquaint, https://simonpcouch.github.io/acqu
 BugReports: https://github.com/simonpcouch/acquaint/issues
 Config/Needs/website: tidyverse/tidytemplate
 Remotes:
-    posit-dev/btw
+    posit-dev/btw,
+    r-lib/nanonext
