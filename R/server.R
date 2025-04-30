@@ -100,11 +100,11 @@ handle_message_from_proxy <- function(msg) {
   # cat("SEND:", to_json(body), "\n", sep = "", file = stderr())
 
   # TODO: consider if better / more robust using synchronous sends
-  the$saio <- nanonext::send_aio(the$server_socket, to_json(body))
+  the$saio <- nanonext::send_aio(the$server_socket, to_json(body), mode = "raw")
 }
 
 schedule_handle_message_from_proxy <- function() {
-  r <- nanonext::recv_aio(the$server_socket)
+  r <- nanonext::recv_aio(the$server_socket, mode = "string")
   promises::as.promise(r)$then(handle_message_from_proxy)$catch(function(e) {
     print(e)
   })
