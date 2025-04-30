@@ -108,8 +108,8 @@ handle_message_from_server <- function(data) {
 
   logcat("FROM SERVER: ", data)
 
-  # The response_text is alredy JSON, so we'll use cat() instead of cat_json()
-  cat(data, "\n", sep = "")
+  # The response_text is already JSON, so we'll use cat() instead of cat_json()
+  nanonext::write_stdout(data)
 }
 
 schedule_handle_message_from_server <- function() {
@@ -132,7 +132,7 @@ logcat <- function(x, ..., append = TRUE) {
 }
 
 cat_json <- function(x) {
-  cat(to_json(x), "\n", sep = "")
+  nanonext::write_stdout(to_json(x))
 }
 
 capabilities <- function() {

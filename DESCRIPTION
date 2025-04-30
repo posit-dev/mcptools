@@ -26,7 +26,7 @@ Imports:
     ellmer,
     jsonlite,
     later,
-    nanonext,
+    nanonext (>= 1.5.2.9009),
     promises,
     rlang
 Depends: R (>= 4.1.0)
@@ -35,3 +35,4 @@ BugReports: https://github.com/simonpcouch/acquaint/issues
 Config/Needs/website: tidyverse/tidytemplate
 Remotes:
     posit-dev/btw
+    r-lib/nanonext
