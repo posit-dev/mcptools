@@ -6,6 +6,8 @@ Authors@R: c(
            comment = c(ORCID = "0000-0001-5676-5107")),
     person("Winston", "Chang", , "winston@posit.co", role = "aut",
            comment = c(ORCID = "0000-0001-5676-5107")),
+    person("Charlie", "Gao", , "charlie.gao@posit.co", role = "aut",
+           comment = c(ORCID = "0000-0002-0750-061X")),
     person("Posit Software, PBC", role = c("cph", "fnd"))
   )
 Description: The goal of acquaint is to enable LLM-enabled tools like Claude Code to 
