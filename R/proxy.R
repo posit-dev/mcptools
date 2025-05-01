@@ -7,7 +7,11 @@ mcp_proxy <- function() {
   # TODO: should this actually be a check for being called within Rscript or not?
   check_not_interactive()
 
-  the$proxy_socket <- nanonext::socket("pair", dial = acquaint_socket)
+  the$proxy_socket <- nanonext::socket("poly")
+  i <- 1L
+  suppressWarnings(
+    nanonext::dial(the$proxy_socket, url = sprintf("%s%d", acquaint_socket, i))
+  )
 
   # Note that we're using file("stdin") instead of stdin(), which are not the
   # same.

@@ -53,7 +53,15 @@ mcp_serve <- function() {
     return(invisible())
   }
 
-  the$server_socket <- nanonext::socket("pair", listen = acquaint_socket)
+  the$server_socket <- nanonext::socket("poly")
+  i <- 1L
+  suppressWarnings(
+    repeat {
+      nanonext::listen(the$server_socket, url = sprintf("%s%d", acquaint_socket, i)) || break
+      i <- i + 1L
+    }
+  )
+
   schedule_handle_message_from_proxy()
 }
 
