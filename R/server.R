@@ -66,7 +66,7 @@ mcp_serve <- function() {
 }
 
 handle_message_from_proxy <- function(msg) {
-  pipe <- the$raio[["aio"]]
+  pipe <- nanonext::pipe_id(the$raio)
   schedule_handle_message_from_proxy()
 
   # cat("RECV :", msg, "\n", sep = "", file = stderr())
