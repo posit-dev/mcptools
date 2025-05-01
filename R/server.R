@@ -66,6 +66,7 @@ mcp_serve <- function() {
 }
 
 handle_message_from_proxy <- function(msg) {
+  pipe <- the$raio[["aio"]]
   schedule_handle_message_from_proxy()
 
   # cat("RECV :", msg, "\n", sep = "", file = stderr())
@@ -108,12 +109,17 @@ handle_message_from_proxy <- function(msg) {
   # cat("SEND:", to_json(body), "\n", sep = "", file = stderr())
 
   # TODO: consider if better / more robust using synchronous sends
-  the$saio <- nanonext::send_aio(the$server_socket, to_json(body), mode = "raw")
+  the$saio <- nanonext::send_aio(
+    the$server_socket,
+    to_json(body),
+    mode = "raw",
+    pipe = pipe
+  )
 }
 
 schedule_handle_message_from_proxy <- function() {
-  r <- nanonext::recv_aio(the$server_socket, mode = "string")
-  promises::as.promise(r)$then(handle_message_from_proxy)$catch(function(e) {
+  the$raio <- nanonext::recv_aio(the$server_socket, mode = "string")
+  promises::as.promise(the$raio)$then(handle_message_from_proxy)$catch(function(e) {
     print(e)
   })
 }
