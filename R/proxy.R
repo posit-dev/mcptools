@@ -1,14 +1,17 @@
 # This R script is a proxy. It takes input on stdin, and when the input forms
 # valid JSON, it will send the JSON to the server. Then, when it receives the
 # response, it will print the response to stdout.
+#' @param i integer instance number.
 #' @rdname mcp
 #' @export
-mcp_proxy <- function() {
+mcp_proxy <- function(i = 1L) {
   # TODO: should this actually be a check for being called within Rscript or not?
   check_not_interactive()
+  i <- as.integer(i)
+  if (is.na(i))
+    abort("`i` should be an integer value")
 
   the$proxy_socket <- nanonext::socket("poly")
-  i <- 1L
   suppressWarnings(
     nanonext::dial(the$proxy_socket, url = sprintf("%s%d", acquaint_socket, i))
   )
