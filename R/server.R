@@ -56,7 +56,7 @@ mcp_serve <- function() {
   the$server_socket <- nanonext::socket("poly")
   i <- 1L
   suppressWarnings(
-    repeat {
+    while (i < 65536L) { # prevent indefinite loop
       nanonext::listen(the$server_socket, url = sprintf("%s%d", acquaint_socket, i)) || break
       i <- i + 1L
     }
