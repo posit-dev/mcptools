@@ -126,7 +126,7 @@ schedule_handle_message_from_server <- function() {
 forward_request <- function(data) {
   logcat("TO SERVER: ", data)
 
-  the$saio <- nanonext::send_aio(the$proxy_socket, data, mode = "raw")
+  nanonext::send_aio(the$proxy_socket, data, mode = "raw")
 }
 
 # This process will be launched by the MCP client, so stdout/stderr aren't

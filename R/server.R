@@ -108,13 +108,7 @@ handle_message_from_proxy <- function(msg) {
   }
   # cat("SEND:", to_json(body), "\n", sep = "", file = stderr())
 
-  # TODO: consider if better / more robust using synchronous sends
-  the$saio <- nanonext::send_aio(
-    the$server_socket,
-    to_json(body),
-    mode = "raw",
-    pipe = pipe
-  )
+  nanonext::send_aio(the$server_socket, to_json(body), mode = "raw", pipe = pipe)
 }
 
 schedule_handle_message_from_proxy <- function() {
