@@ -2,7 +2,7 @@ pandoc: 3.1.11
 pkgdown: 2.1.2
 pkgdown_sha: ~
 articles: {}
-last_built: 2025-04-30T14:00Z
+last_built: 2025-05-03T14:39Z
 urls:
   reference: https://simonpcouch.github.io/acquaint/reference
   article: https://simonpcouch.github.io/acquaint/articles
