@@ -56,7 +56,7 @@ mcp_serve <- function() {
   the$server_socket <- nanonext::socket("poly")
   i <- 1L
   suppressWarnings(
-    while (i < 65536L) { # prevent indefinite loop
+    while (i < 1024L) { # prevent indefinite loop
       nanonext::listen(the$server_socket, url = sprintf("%s%d", acquaint_socket, i)) || break
       i <- i + 1L
     }
@@ -70,6 +70,9 @@ handle_message_from_proxy <- function(msg) {
   schedule_handle_message_from_proxy()
 
   # cat("RECV :", msg, "\n", sep = "", file = stderr())
+  if (!nzchar(msg)) {
+    return(nanonext::send_aio(the$server_socket, commandArgs(), pipe = pipe))
+  }
   data <- jsonlite::parse_json(msg)
 
   if (data$method == "tools/call") {

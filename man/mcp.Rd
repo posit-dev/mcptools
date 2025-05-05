@@ -6,12 +6,9 @@
 \alias{mcp_serve}
 \title{Model context protocol for your R session}
 \usage{
-mcp_proxy(i = 1L)
+mcp_proxy()
 
 mcp_serve()
-}
-\arguments{
-\item{i}{integer instance number.}
 }
 \description{
 Together, these functions implement a model context protocol server for your
