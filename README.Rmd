@@ -45,7 +45,7 @@ acquaint can be hooked up to any application that supports MCP. For example, to 
   "mcpServers": {
     "r-acquaint": {
       "command": "Rscript",
-      "args": ["-e", "acquaint::mcp_proxy()"]
+      "args": ["-e", "acquaint::mcp_server()"]
     }
   }
 }
@@ -54,7 +54,7 @@ acquaint can be hooked up to any application that supports MCP. For example, to 
 Or, to use with Claude Code, you might type in a terminal:
 
 ```bash
-claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_proxy()"
+claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"
 ```
 
 Then, in your R session, call `acquaint::mcp_hostr()`.

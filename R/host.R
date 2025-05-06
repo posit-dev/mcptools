@@ -6,7 +6,7 @@
 #'
 #' @section Configuration:
 #'
-#' [mcp_proxy()] should be configured with the MCP clients via the `Rscript`
+#' [mcp_server()] should be configured with the MCP clients via the `Rscript`
 #' command. For example, to use with Claude Desktop, paste the following in your
 #' Claude Desktop configuration (on macOS, at
 #' `file.edit("~/Library/Application Support/Claude/claude_desktop_config.json")`):
@@ -16,7 +16,7 @@
 #'   "mcpServers": {
 #'     "r-acquaint": {
 #'       "command": "Rscript",
-#'       "args": ["-e", "acquaint::mcp_proxy()"]
+#'       "args": ["-e", "acquaint::mcp_server()"]
 #'     }
 #'   }
 #' }
@@ -25,12 +25,12 @@
 #' Or, to use with Claude Code, you might type in a terminal:
 #'
 #' ```bash
-#' claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_proxy()"
+#' claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"
 #' ```
 #'
-#' **mcp_proxy() is not intended for interactive use.**
+#' **mcp_server() is not intended for interactive use.**
 #'
-#' The proxy interfaces with the MCP client on behalf of the host in
+#' The server interfaces with the MCP client on behalf of the host in
 #' your R session. **Use [mcp_host()] to start the host in your R session.**
 #' Place a call to `acquaint::mcp_host()` in your `.Rprofile`, perhaps with
 #' `usethis::edit_r_profile()`, to start a host for every interactive R session
@@ -46,9 +46,9 @@
 mcp_host <- function() {
   # HACK: If a host is already running in one session via `.Rprofile`,
   # `mcp_host()` will be called again when the client runs the command
-  # Rscript -e "acquaint::mcp_proxy()" and the existing host will be wiped.
+  # Rscript -e "acquaint::mcp_server()" and the existing host will be wiped.
   # Returning early in this case allows for the desired R session host to be
-  # running already before the client initiates the proxy.
+  # running already before the client initiates the server.
   if (!interactive()) {
     return(invisible())
   }
@@ -67,12 +67,12 @@ mcp_host <- function() {
     }
   )
 
-  schedule_handle_message_from_proxy()
+  schedule_handle_message_from_server()
 }
 
-handle_message_from_proxy <- function(msg) {
+handle_message_from_server <- function(msg) {
   pipe <- nanonext::pipe_id(the$raio)
-  schedule_handle_message_from_proxy()
+  schedule_handle_message_from_server()
 
   # cat("RECV :", msg, "\n", sep = "", file = stderr())
   if (!nzchar(msg)) {
@@ -124,13 +124,15 @@ handle_message_from_proxy <- function(msg) {
   )
 }
 
-schedule_handle_message_from_proxy <- function() {
+schedule_handle_message_from_server <- function() {
   the$raio <- nanonext::recv_aio(the$host_socket, mode = "string")
-  promises::as.promise(the$raio)$then(handle_message_from_proxy)$catch(function(
-    e
-  ) {
-    print(e)
-  })
+  promises::as.promise(the$raio)$then(handle_message_from_server)$catch(
+    function(
+      e
+    ) {
+      print(e)
+    }
+  )
 }
 
 # Create a jsonrpc-structured response object.

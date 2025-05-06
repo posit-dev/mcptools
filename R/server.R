@@ -1,14 +1,14 @@
-# This R script is a proxy. It takes input on stdin, and when the input forms
+# The MCP server is a proxy. It takes input on stdin, and when the input forms
 # valid JSON, it will send the JSON to the host. Then, when it receives the
 # response, it will print the response to stdout.
 #' @rdname mcp
 #' @export
-mcp_proxy <- function() {
+mcp_server <- function() {
   # TODO: should this actually be a check for being called within Rscript or not?
   check_not_interactive()
 
-  the$proxy_socket <- nanonext::socket("poly")
-  nanonext::dial(the$proxy_socket, url = sprintf("%s%d", acquaint_socket, 1L))
+  the$server_socket <- nanonext::socket("poly")
+  nanonext::dial(the$server_socket, url = sprintf("%s%d", acquaint_socket, 1L))
 
   # Note that we're using file("stdin") instead of stdin(), which are not the
   # same.
@@ -117,14 +117,14 @@ handle_message_from_host <- function(data) {
 }
 
 schedule_handle_message_from_host <- function() {
-  r <- nanonext::recv_aio(the$proxy_socket, mode = "string")
+  r <- nanonext::recv_aio(the$server_socket, mode = "string")
   promises::as.promise(r)$then(handle_message_from_host)
 }
 
 forward_request <- function(data) {
   logcat("TO HOST: ", data)
 
-  nanonext::send_aio(the$proxy_socket, data, mode = "raw")
+  nanonext::send_aio(the$server_socket, data, mode = "raw")
 }
 
 # This process will be launched by the MCP client, so stdout/stderr aren't
@@ -199,7 +199,7 @@ check_not_interactive <- function(call = caller_env()) {
     cli::cli_abort(
       c(
         "This function is not intended for interactive use.",
-        "i" = "See {.help {.fn mcp_proxy}} for instructions on configuring this
+        "i" = "See {.help {.fn mcp_server}} for instructions on configuring this
        function with applications"
       ),
       call = call
@@ -232,10 +232,10 @@ mcp_discover <- function() {
 }
 
 select_host <- function(i) {
-  lapply(the$proxy_socket[["dialer"]], nanonext::reap)
-  attr(the$proxy_socket, "dialer") <- NULL
+  lapply(the$server_socket[["dialer"]], nanonext::reap)
+  attr(the$server_socket, "dialer") <- NULL
   nanonext::dial(
-    the$proxy_socket,
+    the$server_socket,
     url = sprintf("%s%d", acquaint_socket, as.integer(i))
   )
 }
