@@ -37,7 +37,7 @@ handle_message_from_client <- function(fdstatus) {
     return()
   }
 
-  logcat("FROM CLIENT: ", line)
+  logcat(c("FROM CLIENT: ", line))
 
   buf <- paste0(c(buf, line), collapse = "\n")
 
@@ -110,7 +110,7 @@ handle_message_from_host <- function(data) {
 
   schedule_handle_message_from_host()
 
-  logcat("FROM HOST: ", data)
+  logcat(c("FROM HOST: ", data))
 
   # The response_text is already JSON, so we'll use cat() instead of cat_json()
   nanonext::write_stdout(data)
@@ -122,7 +122,7 @@ schedule_handle_message_from_host <- function() {
 }
 
 forward_request <- function(data) {
-  logcat("TO HOST: ", data)
+  logcat(c("TO HOST: ", data))
 
   nanonext::send_aio(the$server_socket, data, mode = "raw")
 }
