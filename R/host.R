@@ -30,36 +30,36 @@
 #'
 #' **mcp_proxy() is not intended for interactive use.**
 #'
-#' The proxy interfaces with the MCP client on behalf of the server hosted in
-#' your R session. **Use [mcp_serve()] to start the MCP server in your R session.**
-#' Place a call to `acquaint::mcp_serve()` in your `.Rprofile`, perhaps with
-#' `usethis::edit_r_profile()`, to start a server for your R session every time
-#' you start R.
+#' The proxy interfaces with the MCP client on behalf of the host in
+#' your R session. **Use [mcp_host()] to start the host in your R session.**
+#' Place a call to `acquaint::mcp_host()` in your `.Rprofile`, perhaps with
+#' `usethis::edit_r_profile()`, to start a host for every interactive R session
+#' you start.
 #'
 #' @examples
 #' if (interactive()) {
-#' mcp_serve()
+#' mcp_host()
 #' }
 #'
 #' @name mcp
 #' @export
-mcp_serve <- function() {
-  # HACK: If a server is already running in one session via `.Rprofile`,
-  # `mcp_serve()` will be called again when the client runs the command
-  # Rscript -e "acquaint::mcp_serve()" and the existing server will be wiped.
-  # Returning early in this case allows for the desired R session server to be
+mcp_host <- function() {
+  # HACK: If a host is already running in one session via `.Rprofile`,
+  # `mcp_host()` will be called again when the client runs the command
+  # Rscript -e "acquaint::mcp_proxy()" and the existing host will be wiped.
+  # Returning early in this case allows for the desired R session host to be
   # running already before the client initiates the proxy.
   if (!interactive()) {
     return(invisible())
   }
 
-  the$server_socket <- nanonext::socket("poly")
+  the$host_socket <- nanonext::socket("poly")
   i <- 1L
   suppressWarnings(
     while (i < 1024L) {
       # prevent indefinite loop
       nanonext::listen(
-        the$server_socket,
+        the$host_socket,
         url = sprintf("%s%d", acquaint_socket, i)
       ) ||
         break
@@ -76,7 +76,7 @@ handle_message_from_proxy <- function(msg) {
 
   # cat("RECV :", msg, "\n", sep = "", file = stderr())
   if (!nzchar(msg)) {
-    return(nanonext::send_aio(the$server_socket, commandArgs(), pipe = pipe))
+    return(nanonext::send_aio(the$host_socket, commandArgs(), pipe = pipe))
   }
   data <- jsonlite::parse_json(msg)
 
@@ -117,7 +117,7 @@ handle_message_from_proxy <- function(msg) {
   # cat("SEND:", to_json(body), "\n", sep = "", file = stderr())
 
   nanonext::send_aio(
-    the$server_socket,
+    the$host_socket,
     to_json(body),
     mode = "raw",
     pipe = pipe
@@ -125,7 +125,7 @@ handle_message_from_proxy <- function(msg) {
 }
 
 schedule_handle_message_from_proxy <- function() {
-  the$raio <- nanonext::recv_aio(the$server_socket, mode = "string")
+  the$raio <- nanonext::recv_aio(the$host_socket, mode = "string")
   promises::as.promise(the$raio)$then(handle_message_from_proxy)$catch(function(
     e
   ) {

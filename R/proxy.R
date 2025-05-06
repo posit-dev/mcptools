@@ -1,5 +1,5 @@
 # This R script is a proxy. It takes input on stdin, and when the input forms
-# valid JSON, it will send the JSON to the server. Then, when it receives the
+# valid JSON, it will send the JSON to the host. Then, when it receives the
 # response, it will print the response to stdout.
 #' @rdname mcp
 #' @export
@@ -15,7 +15,7 @@ mcp_proxy <- function() {
   the$f <- file("stdin", open = "r")
 
   schedule_handle_message_from_client()
-  schedule_handle_message_from_server()
+  schedule_handle_message_from_host()
 
   # Pump the event loop
   while (TRUE) {
@@ -26,7 +26,7 @@ mcp_proxy <- function() {
 handle_message_from_client <- function(fdstatus) {
   buf <- ""
   schedule_handle_message_from_client()
-  # TODO: Read multiple lines all at once (because the server can send
+  # TODO: Read multiple lines all at once (because the client can send
   # multiple requests quickly), and then handle each line separately.
   # Otherwise, the message throughput will be bound by the polling rate.
   line <- readLines(the$f, n = 1)
@@ -103,26 +103,26 @@ schedule_handle_message_from_client <- function() {
   later::later_fd(handle_message_from_client, readfds = 0L)
 }
 
-handle_message_from_server <- function(data) {
+handle_message_from_host <- function(data) {
   if (!is.character(data)) {
     return()
   }
 
-  schedule_handle_message_from_server()
+  schedule_handle_message_from_host()
 
-  logcat("FROM SERVER: ", data)
+  logcat("FROM HOST: ", data)
 
   # The response_text is already JSON, so we'll use cat() instead of cat_json()
   nanonext::write_stdout(data)
 }
 
-schedule_handle_message_from_server <- function() {
+schedule_handle_message_from_host <- function() {
   r <- nanonext::recv_aio(the$proxy_socket, mode = "string")
-  promises::as.promise(r)$then(handle_message_from_server)
+  promises::as.promise(r)$then(handle_message_from_host)
 }
 
 forward_request <- function(data) {
-  logcat("TO SERVER: ", data)
+  logcat("TO HOST: ", data)
 
   nanonext::send_aio(the$proxy_socket, data, mode = "raw")
 }
@@ -231,7 +231,7 @@ mcp_discover <- function() {
   nanonext::collect_aio_(res)
 }
 
-select_server <- function(i) {
+select_host <- function(i) {
   lapply(the$proxy_socket[["dialer"]], nanonext::reap)
   attr(the$proxy_socket, "dialer") <- NULL
   nanonext::dial(
