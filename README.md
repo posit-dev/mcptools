@@ -41,7 +41,7 @@ your Claude Desktop configuration (on macOS, at
   "mcpServers": {
     "r-acquaint": {
       "command": "Rscript",
-      "args": ["-e", "acquaint::mcp_proxy()"]
+      "args": ["-e", "acquaint::mcp_server()"]
     }
   }
 }
@@ -50,10 +50,10 @@ your Claude Desktop configuration (on macOS, at
 Or, to use with Claude Code, you might type in a terminal:
 
 ``` bash
-claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_proxy()"
+claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"
 ```
 
-Then, in your R session, call `acquaint::mcp_server()`.
+Then, in your R session, call `acquaint::mcp_host()`.
 
 ## Example
 
