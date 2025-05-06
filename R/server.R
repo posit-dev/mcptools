@@ -56,8 +56,13 @@ mcp_serve <- function() {
   the$server_socket <- nanonext::socket("poly")
   i <- 1L
   suppressWarnings(
-    while (i < 1024L) { # prevent indefinite loop
-      nanonext::listen(the$server_socket, url = sprintf("%s%d", acquaint_socket, i)) || break
+    while (i < 1024L) {
+      # prevent indefinite loop
+      nanonext::listen(
+        the$server_socket,
+        url = sprintf("%s%d", acquaint_socket, i)
+      ) ||
+        break
       i <- i + 1L
     }
   )
@@ -111,20 +116,26 @@ handle_message_from_proxy <- function(msg) {
   }
   # cat("SEND:", to_json(body), "\n", sep = "", file = stderr())
 
-  nanonext::send_aio(the$server_socket, to_json(body), mode = "raw", pipe = pipe)
+  nanonext::send_aio(
+    the$server_socket,
+    to_json(body),
+    mode = "raw",
+    pipe = pipe
+  )
 }
 
 schedule_handle_message_from_proxy <- function() {
   the$raio <- nanonext::recv_aio(the$server_socket, mode = "string")
-  promises::as.promise(the$raio)$then(handle_message_from_proxy)$catch(function(e) {
+  promises::as.promise(the$raio)$then(handle_message_from_proxy)$catch(function(
+    e
+  ) {
     print(e)
   })
 }
 
 # Create a jsonrpc-structured response object.
 
-
 # Given a vector or list, drop all the NULL items in it
 drop_nulls <- function(x) {
-  x[!vapply(x, is.null, FUN.VALUE=logical(1))]
+  x[!vapply(x, is.null, FUN.VALUE = logical(1))]
 }

@@ -1,6 +1,6 @@
 acquaint_port <- function(call = caller_env()) {
   port <- Sys.getenv("ACQUAINT_PORT", "8000")
-  
+
   tryCatch(
     return(as.numeric(port)),
     error = function(e) {

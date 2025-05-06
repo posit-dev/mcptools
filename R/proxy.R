@@ -198,8 +198,8 @@ check_not_interactive <- function(call = caller_env()) {
   if (interactive()) {
     cli::cli_abort(
       c(
-      "This function is not intended for interactive use.",
-      "i" = "See {.help {.fn mcp_proxy}} for instructions on configuring this
+        "This function is not intended for interactive use.",
+        "i" = "See {.help {.fn mcp_proxy}} for instructions on configuring this
        function with applications"
       ),
       call = call
@@ -214,13 +214,20 @@ mcp_discover <- function() {
   monitor <- nanonext::monitor(sock, cv)
   suppressWarnings(
     for (i in seq_len(1024L)) {
-      nanonext::dial(sock, url = sprintf("%s%d", acquaint_socket, i), autostart = NA) &&
+      nanonext::dial(
+        sock,
+        url = sprintf("%s%d", acquaint_socket, i),
+        autostart = NA
+      ) &&
         break
     }
   )
   pipes <- nanonext::read_monitor(monitor)
   res <- lapply(seq_along(pipes), function(x) nanonext::recv_aio(sock))
-  lapply(pipes, function(x) nanonext::send_aio(sock, "", mode = "raw", pipe = x))
+  lapply(
+    pipes,
+    function(x) nanonext::send_aio(sock, "", mode = "raw", pipe = x)
+  )
   nanonext::collect_aio_(res)
 }
 
