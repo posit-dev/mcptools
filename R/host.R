@@ -82,7 +82,10 @@ handle_message_from_server <- function(msg) {
 
   if (data$method == "tools/call") {
     name <- data$params$name
-    fn <- getNamespace("btw")[[name]]
+
+    # TODO: retrieve the function definitions directly from the configured tools
+    # (#12)
+    fn <- getNamespace("btw")[[name]] %||% getNamespace("acquaint")[[name]]
     args <- data$params$arguments
 
     # HACK for btw_tool_env_describe_environment. In the JSON, it will have
