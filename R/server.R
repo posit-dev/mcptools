@@ -53,14 +53,26 @@ mcp_serve <- function() {
     return(invisible())
   }
 
-  the$server_socket <- nanonext::socket("pair", listen = acquaint_socket)
+  the$server_socket <- nanonext::socket("poly")
+  i <- 1L
+  suppressWarnings(
+    while (i < 1024L) { # prevent indefinite loop
+      nanonext::listen(the$server_socket, url = sprintf("%s%d", acquaint_socket, i)) || break
+      i <- i + 1L
+    }
+  )
+
   schedule_handle_message_from_proxy()
 }
 
 handle_message_from_proxy <- function(msg) {
+  pipe <- nanonext::pipe_id(the$raio)
   schedule_handle_message_from_proxy()
 
   # cat("RECV :", msg, "\n", sep = "", file = stderr())
+  if (!nzchar(msg)) {
+    return(nanonext::send_aio(the$server_socket, commandArgs(), pipe = pipe))
+  }
   data <- jsonlite::parse_json(msg)
 
   if (data$method == "tools/call") {
@@ -99,13 +111,12 @@ handle_message_from_proxy <- function(msg) {
   }
   # cat("SEND:", to_json(body), "\n", sep = "", file = stderr())
 
-  # TODO: consider if better / more robust using synchronous sends
-  the$saio <- nanonext::send_aio(the$server_socket, to_json(body), mode = "raw")
+  nanonext::send_aio(the$server_socket, to_json(body), mode = "raw", pipe = pipe)
 }
 
 schedule_handle_message_from_proxy <- function() {
-  r <- nanonext::recv_aio(the$server_socket, mode = "string")
-  promises::as.promise(r)$then(handle_message_from_proxy)$catch(function(e) {
+  the$raio <- nanonext::recv_aio(the$server_socket, mode = "string")
+  promises::as.promise(the$raio)$then(handle_message_from_proxy)$catch(function(e) {
     print(e)
   })
 }

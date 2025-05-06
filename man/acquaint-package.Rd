@@ -24,12 +24,13 @@ Useful links:
 
 Authors:
 \itemize{
-  \item Winston Chang \email{winston@posit.co} (\href{https://orcid.org/0000-0001-5676-5107}{ORCID})
+  \item Winston Chang \email{winston@posit.co}
+  \item Charlie Gao \email{charlie.gao@posit.co} (\href{https://orcid.org/0000-0002-0750-061X}{ORCID})
 }
 
 Other contributors:
 \itemize{
-  \item Posit Software, PBC [copyright holder, funder]
+  \item Posit Software, PBC (\href{https://ror.org/03wc8by49}{ROR}) [copyright holder, funder]
 }
 
 }

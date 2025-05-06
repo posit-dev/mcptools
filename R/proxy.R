@@ -7,7 +7,8 @@ mcp_proxy <- function() {
   # TODO: should this actually be a check for being called within Rscript or not?
   check_not_interactive()
 
-  the$proxy_socket <- nanonext::socket("pair", dial = acquaint_socket)
+  the$proxy_socket <- nanonext::socket("poly")
+  nanonext::dial(the$proxy_socket, url = sprintf("%s%d", acquaint_socket, 1L))
 
   # Note that we're using file("stdin") instead of stdin(), which are not the
   # same.
@@ -103,6 +104,10 @@ schedule_handle_message_from_client <- function() {
 }
 
 handle_message_from_server <- function(data) {
+  if (!is.character(data)) {
+    return()
+  }
+
   schedule_handle_message_from_server()
 
   logcat("FROM SERVER: ", data)
@@ -119,7 +124,7 @@ schedule_handle_message_from_server <- function() {
 forward_request <- function(data) {
   logcat("TO SERVER: ", data)
 
-  the$saio <- nanonext::send_aio(the$proxy_socket, data, mode = "raw")
+  nanonext::send_aio(the$proxy_socket, data, mode = "raw")
 }
 
 # This process will be launched by the MCP client, so stdout/stderr aren't
@@ -200,4 +205,30 @@ check_not_interactive <- function(call = caller_env()) {
       call = call
     )
   }
+}
+
+mcp_discover <- function() {
+  sock <- nanonext::socket("poly")
+  on.exit(nanonext:::reap(sock))
+  cv <- nanonext::cv()
+  monitor <- nanonext::monitor(sock, cv)
+  suppressWarnings(
+    for (i in seq_len(1024L)) {
+      nanonext::dial(sock, url = sprintf("%s%d", acquaint_socket, i), autostart = NA) &&
+        break
+    }
+  )
+  pipes <- nanonext::read_monitor(monitor)
+  res <- lapply(seq_along(pipes), function(x) nanonext::recv_aio(sock))
+  lapply(pipes, function(x) nanonext::send_aio(sock, "", mode = "raw", pipe = x))
+  nanonext::collect_aio_(res)
+}
+
+select_server <- function(i) {
+  lapply(the$proxy_socket[["dialer"]], nanonext::reap)
+  attr(the$proxy_socket, "dialer") <- NULL
+  nanonext::dial(
+    the$proxy_socket,
+    url = sprintf("%s%d", acquaint_socket, as.integer(i))
+  )
 }
