@@ -7,12 +7,9 @@ mcp_server <- function() {
   # TODO: should this actually be a check for being called within Rscript or not?
   check_not_interactive()
 
+  the$reader_socket <- nanonext::read_stdin()
   the$server_socket <- nanonext::socket("poly")
   nanonext::dial(the$server_socket, url = sprintf("%s%d", acquaint_socket, 1L))
-
-  # Note that we're using file("stdin") instead of stdin(), which are not the
-  # same.
-  the$f <- file("stdin", open = "r")
 
   schedule_handle_message_from_client()
   schedule_handle_message_from_host()
@@ -23,15 +20,11 @@ mcp_server <- function() {
   }
 }
 
-handle_message_from_client <- function(fdstatus) {
-  buf <- ""
+handle_message_from_client <- function(line) {
   schedule_handle_message_from_client()
   # TODO: Read multiple lines all at once (because the client can send
   # multiple requests quickly), and then handle each line separately.
   # Otherwise, the message throughput will be bound by the polling rate.
-  line <- readLines(the$f, n = 1)
-  # TODO: If stdin is closed, we should exit. Not sure there's a way to detect
-  # that stdin has been closed without writing C code, though.
 
   if (length(line) == 0) {
     return()
@@ -39,13 +32,11 @@ handle_message_from_client <- function(fdstatus) {
 
   logcat("FROM CLIENT: ", line)
 
-  buf <- paste0(c(buf, line), collapse = "\n")
-
   data <- NULL
 
   tryCatch(
     {
-      data <- jsonlite::parse_json(buf)
+      data <- jsonlite::parse_json(line)
     },
     error = function(e) {
       # Invalid JSON. Possibly unfinished multi-line JSON message?
@@ -79,7 +70,7 @@ handle_message_from_client <- function(fdstatus) {
 
     cat_json(res)
   } else if (data$method == "tools/call") {
-    result <- forward_request(buf)
+    result <- forward_request(line)
 
     # } else if (data$method == "prompts/list") {
     # } else if (data$method == "resources/list") {
@@ -95,12 +86,11 @@ handle_message_from_client <- function(fdstatus) {
     ))
   }
 
-  buf <- ""
 }
 
 schedule_handle_message_from_client <- function() {
-  # Schedule the callback to run when stdin (fd 0) has input.
-  later::later_fd(handle_message_from_client, readfds = 0L)
+  r <- nanonext::recv_aio(the$reader_socket, mode = "string")
+  promises::as.promise(r)$then(handle_message_from_client)
 }
 
 handle_message_from_host <- function(data) {
@@ -112,7 +102,7 @@ handle_message_from_host <- function(data) {
 
   logcat("FROM HOST: ", data)
 
-  # The response_text is already JSON, so we'll use cat() instead of cat_json()
+  # The response_text is already JSON, so we don't need to use cat_json()
   nanonext::write_stdout(data)
 }
 
@@ -209,7 +199,7 @@ check_not_interactive <- function(call = caller_env()) {
 
 mcp_discover <- function() {
   sock <- nanonext::socket("poly")
-  on.exit(nanonext:::reap(sock))
+  on.exit(nanonext::reap(sock))
   cv <- nanonext::cv()
   monitor <- nanonext::monitor(sock, cv)
   suppressWarnings(
