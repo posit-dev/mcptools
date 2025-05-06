@@ -57,7 +57,7 @@ Or, to use with Claude Code, you might type in a terminal:
 claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"
 ```
 
-Then, in your R session, call `acquaint::mcp_hostr()`.
+Then, in your R session, call `acquaint::mcp_host()`.
 
 ## Example
 
