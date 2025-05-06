@@ -8,3 +8,5 @@
 ^pkgdown$
 ^\.github$
 inst/hex
+^[\.]?air\.toml$
+^\.vscode$
