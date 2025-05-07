@@ -9,11 +9,11 @@ mcp_server <- function() {
 
   cv <- nanonext::cv()
   reader_socket <- nanonext::read_stdin()
-  on.exit(close(reader_socket))
+  on.exit(nanonext::reap(reader_socket))
   nanonext::pipe_notify(reader_socket, cv, remove = TRUE, flag = TRUE)
 
   the$server_socket <- nanonext::socket("poly")
-  on.exit(close(the$server_socket), add = TRUE)
+  on.exit(nanonext::reap(the$server_socket), add = TRUE)
   nanonext::dial(the$server_socket, url = sprintf("%s%d", acquaint_socket, 1L))
 
   client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
