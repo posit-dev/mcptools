@@ -33,7 +33,10 @@ list_r_sessions_tool <-
       "List the R sessions that are available to access.",
       "R sessions which have run `acquaint::mcp_host()` will appear here.",
       "In general, do not use this tool unless asked to list or",
-      "select a specific R session."
+      "select a specific R session.",
+      "Given the output of this tool, report the users to the user.",
+      "Do NOT make a choice of R session based on the results of the tool",
+      "and call select_r_session unless the user asks you to specifically."
     )
   )
 
@@ -56,6 +59,9 @@ select_r_session_tool <-
       "In general, do not use this tool unless asked to select a specific R",
       "session; the tools available to you have a default R session",
       "that is usually the one the user wants.",
+      "Do not call this tool immediately after calling list_r_sessions",
+      "unless you've been asked to select an R session and haven't yet",
+      "called list_r_sessions.",
       "Your choice of session will persist after the tool is called; only",
       "call this tool more than once if you need to switch between sessions."
     ),
