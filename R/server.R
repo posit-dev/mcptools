@@ -80,10 +80,19 @@ handle_message_from_client <- function(line) {
 
     cat_json(res)
   } else if (data$method == "tools/call") {
-    result <- forward_request(line)
-
-    # } else if (data$method == "prompts/list") {
-    # } else if (data$method == "resources/list") {
+    tool_name <- data$params$name
+    if (tool_name %in% c("list_r_sessions", "select_r_session")) {
+      # two tools provided by acquaint itself which must be executed in
+      # the server session rather than a host (#18)
+      result <- as_tool_call_result(
+        data,
+        do.call(tool_name, data$params$arguments)
+      )
+      logcat(c("FROM SERVER: ", to_json(result)))
+      cat_json(result)
+    } else {
+      result <- forward_request(line)
+    }
   } else if (is.null(data$id)) {
     # If there is no `id` in the request, then this is a notification and the
     # client does not expect a response.
@@ -151,10 +160,9 @@ capabilities <- function() {
   )
 }
 
-# Hacky way of getting tools from btw
+# TODO: btw now surfaces a btw_tools() function that can be passed
+# directly to `tool_as_json()` along with .acquaint_tools (#12)
 get_all_btw_tools <- function() {
-  dummy_provider <- ellmer::Provider("dummy", "dummy", "dummy")
-
   .btw_tools <- getNamespace("btw")[[".btw_tools"]]
   tools <- lapply(unname(.btw_tools), function(tool_obj) {
     tool <- tool_obj$tool()
@@ -163,19 +171,27 @@ get_all_btw_tools <- function() {
       return(NULL)
     }
 
-    as_json <- getNamespace("ellmer")[["as_json"]]
-    inputSchema <- compact(as_json(dummy_provider, tool@arguments))
-    # This field is present but shouldn't be
-    inputSchema$description <- NULL
-
-    list(
-      name = tool@name,
-      description = tool@description,
-      inputSchema = inputSchema
-    )
+    tool_as_json(tool)
   })
 
+  tools <- c(tools, lapply(.acquaint_tools, tool_as_json))
+
   compact(tools)
+}
+
+tool_as_json <- function(tool) {
+  dummy_provider <- ellmer::Provider("dummy", "dummy", "dummy")
+
+  as_json <- getNamespace("ellmer")[["as_json"]]
+  inputSchema <- compact(as_json(dummy_provider, tool@arguments))
+  # This field is present but shouldn't be
+  inputSchema$description <- NULL
+
+  list(
+    name = tool@name,
+    description = tool@description,
+    inputSchema = inputSchema
+  )
 }
 
 compact <- function(.x) {
@@ -193,37 +209,4 @@ check_not_interactive <- function(call = caller_env()) {
       call = call
     )
   }
-}
-
-mcp_discover <- function() {
-  sock <- nanonext::socket("poly")
-  on.exit(nanonext::reap(sock))
-  cv <- nanonext::cv()
-  monitor <- nanonext::monitor(sock, cv)
-  suppressWarnings(
-    for (i in seq_len(1024L)) {
-      nanonext::dial(
-        sock,
-        url = sprintf("%s%d", acquaint_socket, i),
-        autostart = NA
-      ) &&
-        break
-    }
-  )
-  pipes <- nanonext::read_monitor(monitor)
-  res <- lapply(seq_along(pipes), function(x) nanonext::recv_aio(sock))
-  lapply(
-    pipes,
-    function(x) nanonext::send_aio(sock, "", mode = "raw", pipe = x)
-  )
-  nanonext::collect_aio_(res)
-}
-
-select_host <- function(i) {
-  lapply(the$server_socket[["dialer"]], nanonext::reap)
-  attr(the$server_socket, "dialer") <- NULL
-  nanonext::dial(
-    the$server_socket,
-    url = sprintf("%s%d", acquaint_socket, as.integer(i))
-  )
 }

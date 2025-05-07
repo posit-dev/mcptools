@@ -66,6 +66,7 @@ mcp_host <- function() {
       i <- i + 1L
     }
   )
+  the$i <- i
 
   schedule_handle_message_from_server()
 }
@@ -76,13 +77,16 @@ handle_message_from_server <- function(msg) {
 
   # cat("RECV :", msg, "\n", sep = "", file = stderr())
   if (!nzchar(msg)) {
-    return(nanonext::send_aio(the$host_socket, commandArgs(), pipe = pipe))
+    return(nanonext::send_aio(the$host_socket, describe_session(), pipe = pipe))
   }
   data <- jsonlite::parse_json(msg)
 
   if (data$method == "tools/call") {
     name <- data$params$name
-    fn <- getNamespace("btw")[[name]]
+
+    # TODO: retrieve the function definitions directly from the configured tools
+    # (#12)
+    fn <- getNamespace("btw")[[name]] %||% getNamespace("acquaint")[[name]]
     args <- data$params$arguments
 
     # HACK for btw_tool_env_describe_environment. In the JSON, it will have
@@ -96,18 +100,7 @@ handle_message_from_server <- function(msg) {
     tool_call_result <- do.call(fn, args)
     # cat(paste(capture.output(str(body)), collapse="\n"), file=stderr())
 
-    body <- jsonrpc_response(
-      data$id,
-      list(
-        content = list(
-          list(
-            type = "text",
-            text = paste(tool_call_result, collapse = "\n")
-          )
-        ),
-        isError = FALSE
-      )
-    )
+    body <- as_tool_call_result(data, tool_call_result)
   } else {
     body <- jsonrpc_response(
       data$id,
@@ -121,6 +114,21 @@ handle_message_from_server <- function(msg) {
     to_json(body),
     mode = "raw",
     pipe = pipe
+  )
+}
+
+as_tool_call_result <- function(data, result) {
+  jsonrpc_response(
+    data$id,
+    list(
+      content = list(
+        list(
+          type = "text",
+          text = paste(result, collapse = "\n")
+        )
+      ),
+      isError = FALSE
+    )
   )
 }
 
@@ -140,4 +148,20 @@ schedule_handle_message_from_server <- function() {
 # Given a vector or list, drop all the NULL items in it
 drop_nulls <- function(x) {
   x[!vapply(x, is.null, FUN.VALUE = logical(1))]
+}
+
+# Enough information for the user to be able to identify which
+# session is which when using `list_r_sessions()` (#18)
+describe_session <- function() {
+ sprintf("%d: %s (%s)", the$i, basename(getwd()), infer_ide())
+}
+
+infer_ide <- function() {
+  first_cmd_arg <- commandArgs()[1]
+  switch(
+    first_cmd_arg,
+    ark = "Positron",
+    RStudio = "RStudio",
+    first_cmd_arg
+  )
 }
