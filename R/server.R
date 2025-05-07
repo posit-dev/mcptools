@@ -7,24 +7,32 @@ mcp_server <- function() {
   # TODO: should this actually be a check for being called within Rscript or not?
   check_not_interactive()
 
+  cv <- nanonext::cv()
   the$reader_socket <- nanonext::read_stdin()
   the$server_socket <- nanonext::socket("poly")
   nanonext::dial(the$server_socket, url = sprintf("%s%d", acquaint_socket, 1L))
 
-  schedule_handle_message_from_client()
-  schedule_handle_message_from_host()
+  client <- nanonext::recv_aio(the$reader_socket, mode = "string", cv = cv)
+  host <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
 
-  # Pump the event loop
-  while (TRUE) {
-    later::run_now(Inf)
+  repeat {
+
+    nanonext::wait(cv) || break
+
+    if (!nanonext::unresolved(host)) {
+      handle_message_from_host(host$data)
+      host <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
+    }
+    if (!nanonext::unresolved(client)) {
+      handle_message_from_client(client$data)
+      client <- nanonext::recv_aio(the$reader_socket, mode = "string", cv = cv)
+    }
+
   }
+
 }
 
 handle_message_from_client <- function(line) {
-  schedule_handle_message_from_client()
-  # TODO: Read multiple lines all at once (because the client can send
-  # multiple requests quickly), and then handle each line separately.
-  # Otherwise, the message throughput will be bound by the polling rate.
 
   if (length(line) == 0) {
     return()
@@ -88,27 +96,15 @@ handle_message_from_client <- function(line) {
 
 }
 
-schedule_handle_message_from_client <- function() {
-  r <- nanonext::recv_aio(the$reader_socket, mode = "string")
-  promises::as.promise(r)$then(handle_message_from_client)
-}
-
 handle_message_from_host <- function(data) {
   if (!is.character(data)) {
     return()
   }
 
-  schedule_handle_message_from_host()
-
   logcat(c("FROM HOST: ", data))
 
   # The response_text is already JSON, so we don't need to use cat_json()
   nanonext::write_stdout(data)
-}
-
-schedule_handle_message_from_host <- function() {
-  r <- nanonext::recv_aio(the$server_socket, mode = "string")
-  promises::as.promise(r)$then(handle_message_from_host)
 }
 
 forward_request <- function(data) {

@@ -27,7 +27,6 @@ Imports:
     cli,
     ellmer,
     jsonlite,
-    later,
     nanonext (>= 1.5.2.9015),
     promises,
     rlang
