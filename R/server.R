@@ -8,11 +8,15 @@ mcp_server <- function() {
   check_not_interactive()
 
   cv <- nanonext::cv()
-  the$reader_socket <- nanonext::read_stdin()
+  reader_socket <- nanonext::read_stdin()
+  on.exit(close(reader_socket))
+  nanonext::pipe_notify(reader_socket, cv, remove = TRUE, flag = TRUE)
+
   the$server_socket <- nanonext::socket("poly")
+  on.exit(close(the$server_socket), add = TRUE)
   nanonext::dial(the$server_socket, url = sprintf("%s%d", acquaint_socket, 1L))
 
-  client <- nanonext::recv_aio(the$reader_socket, mode = "string", cv = cv)
+  client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
   host <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
 
   repeat {
@@ -25,7 +29,7 @@ mcp_server <- function() {
     }
     if (!nanonext::unresolved(client)) {
       handle_message_from_client(client$data)
-      client <- nanonext::recv_aio(the$reader_socket, mode = "string", cv = cv)
+      client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
     }
 
   }
