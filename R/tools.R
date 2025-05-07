@@ -22,8 +22,7 @@ list_r_sessions <- function() {
     pipes,
     function(x) nanonext::send_aio(sock, "", mode = "raw", pipe = x)
   )
-  # Convert the list result from nanonext to string
-  btw::btw_this(nanonext::collect_aio_(res))
+  sort(as.character(nanonext::collect_aio_(res)))
 }
 
 list_r_sessions_tool <-
