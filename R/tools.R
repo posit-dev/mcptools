@@ -44,7 +44,7 @@ select_r_session <- function(i) {
     the$server_socket,
     url = sprintf("%s%d", acquaint_socket, as.integer(i))
   )
-  paste0("Selected session ", i, "successfully.")
+  paste0("Selected session ", i, " successfully.")
 }
 
 select_r_session_tool <-
