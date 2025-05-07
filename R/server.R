@@ -79,10 +79,19 @@ handle_message_from_client <- function(fdstatus) {
 
     cat_json(res)
   } else if (data$method == "tools/call") {
-    result <- forward_request(buf)
-
-    # } else if (data$method == "prompts/list") {
-    # } else if (data$method == "resources/list") {
+    tool_name <- data$params$name
+    if (tool_name %in% c("list_r_sessions", "select_r_session")) {
+      # two tools provided by acquaint itself which must be executed in
+      # the server session rather than a host (#18)
+      result <- as_tool_call_result(
+        data,
+        do.call(tool_name, data$params$arguments)
+      )
+      logcat(c("FROM SERVER: ", to_json(result)))
+      cat_json(result)
+    } else {
+      result <- forward_request(buf)
+    }
   } else if (is.null(data$id)) {
     # If there is no `id` in the request, then this is a notification and the
     # client does not expect a response.

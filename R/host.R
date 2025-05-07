@@ -99,18 +99,7 @@ handle_message_from_server <- function(msg) {
     tool_call_result <- do.call(fn, args)
     # cat(paste(capture.output(str(body)), collapse="\n"), file=stderr())
 
-    body <- jsonrpc_response(
-      data$id,
-      list(
-        content = list(
-          list(
-            type = "text",
-            text = paste(tool_call_result, collapse = "\n")
-          )
-        ),
-        isError = FALSE
-      )
-    )
+    body <- as_tool_call_result(data, tool_call_result)
   } else {
     body <- jsonrpc_response(
       data$id,
@@ -124,6 +113,21 @@ handle_message_from_server <- function(msg) {
     to_json(body),
     mode = "raw",
     pipe = pipe
+  )
+}
+
+as_tool_call_result <- function(data, result) {
+  jsonrpc_response(
+    data$id,
+    list(
+      content = list(
+        list(
+          type = "text",
+          text = paste(result, collapse = "\n")
+        )
+      ),
+      isError = FALSE
+    )
   )
 }
 
