@@ -153,7 +153,7 @@ drop_nulls <- function(x) {
 # Enough information for the user to be able to identify which
 # session is which when using `list_r_sessions()` (#18)
 describe_session <- function() {
-  paste0(the$i, ": ", basename(getwd()), " (", infer_ide(), ")")
+ sprintf("%d: %s (%s)", the$i, basename(getwd()), infer_ide())
 }
 
 infer_ide <- function() {
