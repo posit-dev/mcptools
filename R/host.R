@@ -76,7 +76,7 @@ handle_message_from_server <- function(msg) {
 
   # cat("RECV :", msg, "\n", sep = "", file = stderr())
   if (!nzchar(msg)) {
-    return(nanonext::send_aio(the$host_socket, commandArgs(), pipe = pipe))
+    return(nanonext::send_aio(the$host_socket, describe_session(), pipe = pipe))
   }
   data <- jsonlite::parse_json(msg)
 
@@ -147,4 +147,20 @@ schedule_handle_message_from_server <- function() {
 # Given a vector or list, drop all the NULL items in it
 drop_nulls <- function(x) {
   x[!vapply(x, is.null, FUN.VALUE = logical(1))]
+}
+
+# Enough information for the user to be able to identify which
+# session is which when using `list_r_sessions()` (#18)
+describe_session <- function() {
+  paste0(basename(getwd()), " (", infer_ide(), ")")
+}
+
+infer_ide <- function() {
+  first_cmd_arg <- commandArgs()[1]
+  switch(
+    first_cmd_arg,
+    ark = "Positron",
+    RStudio = "RStudio",
+    first_cmd_arg
+  )
 }
