@@ -19,9 +19,7 @@ mcp_server <- function() {
   client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
   host <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
 
-  repeat {
-
-    nanonext::wait(cv) || break
+  while (nanonext::wait(cv)) {
 
     if (!nanonext::unresolved(host)) {
       handle_message_from_host(host$data)
