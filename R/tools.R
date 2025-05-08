@@ -1,5 +1,5 @@
 # These two functions are supplied to the client as tools and allow the client
-# to discover R sessions which have called `acquaint::mcp_host()`. They
+# to discover R sessions which have called `acquaint::mcp_session()`. They
 # are "model-facing" rather than user-facing.
 list_r_sessions <- function() {
   sock <- nanonext::socket("poly")
@@ -13,7 +13,8 @@ list_r_sessions <- function() {
           sock,
           url = sprintf("%s%d", acquaint_socket, i),
           autostart = NA
-        ) && i > 8L
+        ) &&
+          i > 8L
       )
         break
     }
@@ -35,7 +36,7 @@ list_r_sessions_tool <-
     .fun = list_r_sessions,
     .description = paste(
       "List the R sessions that are available to access.",
-      "R sessions which have run `acquaint::mcp_host()` will appear here.",
+      "R sessions which have run `acquaint::mcp_session()` will appear here.",
       "In the output, start each session with 'Session #' and do NOT otherwise",
       "prefix any index numbers to the output.",
       "In general, do not use this tool unless asked to list or",
@@ -60,7 +61,7 @@ select_r_session_tool <-
   ellmer::tool(
     .fun = select_r_session,
     .description = paste(
-      "Choose the R session host of interest.",
+      "Choose the R session of interest.",
       "Use the `list_r_sessions` tool to discover potential sessions.",
       "In general, do not use this tool unless asked to select a specific R",
       "session; the tools available to you have a default R session",
@@ -71,7 +72,7 @@ select_r_session_tool <-
       "Your choice of session will persist after the tool is called; only",
       "call this tool more than once if you need to switch between sessions."
     ),
-    i = ellmer::type_integer("The index of the host session to select.")
+    i = ellmer::type_integer("The index of the R session to select.")
   )
 
 .acquaint_tools <- list(list_r_sessions_tool, select_r_session_tool)

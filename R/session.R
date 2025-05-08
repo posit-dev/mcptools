@@ -30,36 +30,36 @@
 #'
 #' **mcp_server() is not intended for interactive use.**
 #'
-#' The server interfaces with the MCP client on behalf of the host in
-#' your R session. **Use [mcp_host()] to start the host in your R session.**
-#' Place a call to `acquaint::mcp_host()` in your `.Rprofile`, perhaps with
-#' `usethis::edit_r_profile()`, to start a host for every interactive R session
-#' you start.
+#' The server interfaces with the MCP client on behalf of your R session.
+#' **Use [mcp_session()] to make your R session available to the server.**
+#' Place a call to `acquaint::mcp_session()` in your `.Rprofile`, perhaps with
+#' `usethis::edit_r_profile()`, to make every interactive R session you start
+#' available to the server.
 #'
 #' @examples
 #' if (interactive()) {
-#' mcp_host()
+#' mcp_session()
 #' }
 #'
 #' @name mcp
 #' @export
-mcp_host <- function() {
-  # HACK: If a host is already running in one session via `.Rprofile`,
-  # `mcp_host()` will be called again when the client runs the command
-  # Rscript -e "acquaint::mcp_server()" and the existing host will be wiped.
-  # Returning early in this case allows for the desired R session host to be
-  # running already before the client initiates the server.
+mcp_session <- function() {
+  # HACK: If a session is already available from another session via `.Rprofile`,
+  # `mcp_session()` will be called again when the client runs the command
+  # Rscript -e "acquaint::mcp_server()" and the existing session connection
+  # will be wiped. Returning early in this case allows for the desired R
+  # session to be running already before the client initiates the server.
   if (!interactive()) {
     return(invisible())
   }
 
-  the$host_socket <- nanonext::socket("poly")
+  the$session_socket <- nanonext::socket("poly")
   i <- 1L
   suppressWarnings(
     while (i < 1024L) {
       # prevent indefinite loop
       nanonext::listen(
-        the$host_socket,
+        the$session_socket,
         url = sprintf("%s%d", acquaint_socket, i)
       ) ||
         break
@@ -79,7 +79,7 @@ handle_message_from_server <- function(msg) {
   if (!nzchar(msg)) {
     return(
       nanonext::send_aio(
-        the$host_socket,
+        the$session_socket,
         describe_session(),
         mode = "raw",
         pipe = pipe
@@ -117,7 +117,7 @@ handle_message_from_server <- function(msg) {
   # cat("SEND:", to_json(body), "\n", sep = "", file = stderr())
 
   nanonext::send_aio(
-    the$host_socket,
+    the$session_socket,
     to_json(body),
     mode = "raw",
     pipe = pipe
@@ -140,7 +140,7 @@ as_tool_call_result <- function(data, result) {
 }
 
 schedule_handle_message_from_server <- function() {
-  the$raio <- nanonext::recv_aio(the$host_socket, mode = "string")
+  the$raio <- nanonext::recv_aio(the$session_socket, mode = "string")
   promises::as.promise(the$raio)$then(handle_message_from_server)$catch(
     function(
       e
@@ -160,7 +160,7 @@ drop_nulls <- function(x) {
 # Enough information for the user to be able to identify which
 # session is which when using `list_r_sessions()` (#18)
 describe_session <- function() {
- sprintf("%d: %s (%s)", the$session, basename(getwd()), infer_ide())
+  sprintf("%d: %s (%s)", the$session, basename(getwd()), infer_ide())
 }
 
 infer_ide <- function() {

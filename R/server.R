@@ -1,5 +1,5 @@
 # The MCP server is a proxy. It takes input on stdin, and when the input forms
-# valid JSON, it will send the JSON to the host. Then, when it receives the
+# valid JSON, it will send the JSON to the session. Then, when it receives the
 # response, it will print the response to stdout.
 #' @rdname mcp
 #' @export
@@ -17,25 +17,21 @@ mcp_server <- function() {
   nanonext::dial(the$server_socket, url = sprintf("%s%d", acquaint_socket, 1L))
 
   client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
-  host <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
+  session <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
 
   while (nanonext::wait(cv)) {
-
-    if (!nanonext::unresolved(host)) {
-      handle_message_from_host(host$data)
-      host <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
+    if (!nanonext::unresolved(session)) {
+      handle_message_from_session(session$data)
+      session <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
     }
     if (!nanonext::unresolved(client)) {
       handle_message_from_client(client$data)
       client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
     }
-
   }
-
 }
 
 handle_message_from_client <- function(line) {
-
   if (length(line) == 0) {
     return()
   }
@@ -83,7 +79,7 @@ handle_message_from_client <- function(line) {
     tool_name <- data$params$name
     if (tool_name %in% c("list_r_sessions", "select_r_session")) {
       # two tools provided by acquaint itself which must be executed in
-      # the server session rather than a host (#18)
+      # the server rather than a session (#18)
       result <- as_tool_call_result(
         data,
         do.call(tool_name, data$params$arguments)
@@ -104,22 +100,21 @@ handle_message_from_client <- function(line) {
       error = list(code = -32601, message = "Method not found")
     ))
   }
-
 }
 
-handle_message_from_host <- function(data) {
+handle_message_from_session <- function(data) {
   if (!is.character(data)) {
     return()
   }
 
-  logcat(c("FROM HOST: ", data))
+  logcat(c("FROM SESSION: ", data))
 
   # The response_text is already JSON, so we don't need to use cat_json()
   nanonext::write_stdout(data)
 }
 
 forward_request <- function(data) {
-  logcat(c("TO HOST: ", data))
+  logcat(c("TO SESSION: ", data))
 
   nanonext::send_aio(the$server_socket, data, mode = "raw")
 }
