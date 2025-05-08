@@ -22,7 +22,7 @@ list_r_sessions <- function() {
   pipes <- nanonext::read_monitor(monitor)
   res <- lapply(
     pipes,
-    function(x) nanonext::recv_aio(sock, mode = "string")
+    function(x) nanonext::recv_aio(sock, mode = "string", timeout = 5000L)
   )
   lapply(
     pipes,
@@ -47,14 +47,14 @@ list_r_sessions_tool <-
     )
   )
 
-select_r_session <- function(i) {
+select_r_session <- function(session) {
   nanonext::reap(the$server_socket[["dialer"]][[1L]])
   attr(the$server_socket, "dialer") <- NULL
   nanonext::dial(
     the$server_socket,
-    url = sprintf("%s%d", acquaint_socket, as.integer(i))
+    url = sprintf("%s%d", acquaint_socket, session)
   )
-  paste0("Selected session ", i, " successfully.")
+  sprintf("Selected session %d successfully.", session)
 }
 
 select_r_session_tool <-
@@ -72,7 +72,7 @@ select_r_session_tool <-
       "Your choice of session will persist after the tool is called; only",
       "call this tool more than once if you need to switch between sessions."
     ),
-    i = ellmer::type_integer("The index of the R session to select.")
+    session = ellmer::type_integer("The R session number to select.")
   )
 
 get_acquaint_tools <- function() {
