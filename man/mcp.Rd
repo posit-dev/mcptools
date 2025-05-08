@@ -39,11 +39,11 @@ Or, to use with Claude Code, you might type in a terminal:
 
 \strong{mcp_server() is not intended for interactive use.}
 
-The server interfaces with the MCP client on behalf of the host in
-your R session. \strong{Use \code{\link[=mcp_session]{mcp_session()}} to start the host in your R session.}
+The server interfaces with the MCP client on behalf of your R session.
+\strong{Use \code{\link[=mcp_session]{mcp_session()}} to make your R session available to the server.}
 Place a call to \code{acquaint::mcp_session()} in your \code{.Rprofile}, perhaps with
-\code{usethis::edit_r_profile()}, to start a host for every interactive R session
-you start.
+\code{usethis::edit_r_profile()}, to make every interactive R session you start
+available to the server.
 }
 
 \examples{
