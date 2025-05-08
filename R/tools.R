@@ -46,7 +46,7 @@ list_r_sessions_tool <-
   )
 
 select_r_session <- function(i) {
-  lapply(the$server_socket[["dialer"]], nanonext::reap)
+  nanonext::reap(the$server_socket[["dialer"]][[1L]])
   attr(the$server_socket, "dialer") <- NULL
   nanonext::dial(
     the$server_socket,
