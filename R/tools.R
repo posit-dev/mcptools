@@ -76,13 +76,14 @@ select_r_session_tool <-
   )
 
 get_acquaint_tools <- function() {
-  c(
+  res <- c(
     btw::btw_tools(),
     list(
-      list_r_sessions = list_r_sessions_tool,
-      select_r_session = select_r_session_tool
+      list_r_sessions_tool,
+      select_r_session_tool
     )
   )
+  set_names(res, vapply(res, \(x) x@name, character(1)))
 }
 
 get_acquaint_tools_as_json <- function() {
