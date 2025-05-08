@@ -1,6 +1,6 @@
 the <- new_environment()
 
-acquaint_socket <- "ipc:///tmp/acquaint-socket"
+acquaint_socket <- NULL
 
 jsonrpc_response <- function(id, result = NULL, error = NULL) {
   if (!xor(is.null(result), is.null(error))) {
