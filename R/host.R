@@ -66,7 +66,7 @@ mcp_host <- function() {
       i <- i + 1L
     }
   )
-  the$i <- i
+  the$session <- i
 
   schedule_handle_message_from_server()
 }
@@ -160,7 +160,7 @@ drop_nulls <- function(x) {
 # Enough information for the user to be able to identify which
 # session is which when using `list_r_sessions()` (#18)
 describe_session <- function() {
- sprintf("%d: %s (%s)", the$i, basename(getwd()), infer_ide())
+ sprintf("%d: %s (%s)", the$session, basename(getwd()), infer_ide())
 }
 
 infer_ide <- function() {

@@ -36,7 +36,8 @@ list_r_sessions_tool <-
     .description = paste(
       "List the R sessions that are available to access.",
       "R sessions which have run `acquaint::mcp_host()` will appear here.",
-      "Include the session number 'i' in the output.",
+      "In the output, start each session with 'Session #' and do NOT otherwise",
+      "prefix any index numbers to the output.",
       "In general, do not use this tool unless asked to list or",
       "select a specific R session.",
       "Given the output of this tool, report the users to the user.",
