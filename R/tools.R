@@ -8,16 +8,21 @@ list_r_sessions <- function() {
   monitor <- nanonext::monitor(sock, cv)
   suppressWarnings(
     for (i in seq_len(1024L)) {
-      nanonext::dial(
-        sock,
-        url = sprintf("%s%d", acquaint_socket, i),
-        autostart = NA
-      ) &&
+      if (
+        nanonext::dial(
+          sock,
+          url = sprintf("%s%d", acquaint_socket, i),
+          autostart = NA
+        ) && i > 8L
+      )
         break
     }
   )
   pipes <- nanonext::read_monitor(monitor)
-  res <- lapply(seq_along(pipes), function(x) nanonext::recv_aio(sock))
+  res <- lapply(
+    pipes,
+    function(x) nanonext::recv_aio(sock, mode = "string")
+  )
   lapply(
     pipes,
     function(x) nanonext::send_aio(sock, "", mode = "raw", pipe = x)
@@ -31,6 +36,7 @@ list_r_sessions_tool <-
     .description = paste(
       "List the R sessions that are available to access.",
       "R sessions which have run `acquaint::mcp_host()` will appear here.",
+      "Include the session number 'i' in the output.",
       "In general, do not use this tool unless asked to list or",
       "select a specific R session.",
       "Given the output of this tool, report the users to the user.",

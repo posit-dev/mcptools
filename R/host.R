@@ -77,7 +77,14 @@ handle_message_from_server <- function(msg) {
 
   # cat("RECV :", msg, "\n", sep = "", file = stderr())
   if (!nzchar(msg)) {
-    return(nanonext::send_aio(the$host_socket, describe_session(), pipe = pipe))
+    return(
+      nanonext::send_aio(
+        the$host_socket,
+        describe_session(),
+        mode = "raw",
+        pipe = pipe
+      )
+    )
   }
   data <- jsonlite::parse_json(msg)
 
