@@ -75,4 +75,19 @@ select_r_session_tool <-
     i = ellmer::type_integer("The index of the R session to select.")
   )
 
-.acquaint_tools <- list(list_r_sessions_tool, select_r_session_tool)
+get_acquaint_tools <- function() {
+  res <- c(
+    btw::btw_tools(),
+    list(
+      list_r_sessions_tool,
+      select_r_session_tool
+    )
+  )
+  set_names(res, vapply(res, \(x) x@name, character(1)))
+}
+
+get_acquaint_tools_as_json <- function() {
+  tools <- lapply(unname(get_acquaint_tools()), tool_as_json)
+
+  compact(tools)
+}

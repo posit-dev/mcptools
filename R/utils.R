@@ -30,6 +30,3 @@ to_json <- function(x, ...) {
 }
 
 interactive <- NULL
-
-# Unused, but to silence R CMD check on use of imports
-.unused <- function() if (FALSE) btw::btw()

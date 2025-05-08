@@ -70,7 +70,7 @@ handle_message_from_client <- function(line) {
     res <- jsonrpc_response(
       data$id,
       list(
-        tools = get_all_btw_tools()
+        tools = get_acquaint_tools_as_json()
       )
     )
 
@@ -153,25 +153,6 @@ capabilities <- function() {
     ),
     instructions = "This provides information about a running R session."
   )
-}
-
-# TODO: btw now surfaces a btw_tools() function that can be passed
-# directly to `tool_as_json()` along with .acquaint_tools (#12)
-get_all_btw_tools <- function() {
-  .btw_tools <- getNamespace("btw")[[".btw_tools"]]
-  tools <- lapply(unname(.btw_tools), function(tool_obj) {
-    tool <- tool_obj$tool()
-
-    if (is.null(tool)) {
-      return(NULL)
-    }
-
-    tool_as_json(tool)
-  })
-
-  tools <- c(tools, lapply(.acquaint_tools, tool_as_json))
-
-  compact(tools)
 }
 
 tool_as_json <- function(tool) {
