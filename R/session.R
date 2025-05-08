@@ -91,7 +91,7 @@ handle_message_from_server <- function(msg) {
   if (data$method == "tools/call") {
     name <- data$params$name
 
-    fn <- get_acquaint_tools()[[name]]
+    fn <- get_acquaint_tools()[[name]]@fun
     args <- data$params$arguments
 
     # HACK for btw_tool_env_describe_environment. In the JSON, it will have
