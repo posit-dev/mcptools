@@ -31,21 +31,21 @@
 #' **mcp_server() is not intended for interactive use.**
 #'
 #' The server interfaces with the MCP client on behalf of the host in
-#' your R session. **Use [mcp_host()] to start the host in your R session.**
-#' Place a call to `acquaint::mcp_host()` in your `.Rprofile`, perhaps with
+#' your R session. **Use [mcp_session()] to start the host in your R session.**
+#' Place a call to `acquaint::mcp_session()` in your `.Rprofile`, perhaps with
 #' `usethis::edit_r_profile()`, to start a host for every interactive R session
 #' you start.
 #'
 #' @examples
 #' if (interactive()) {
-#' mcp_host()
+#' mcp_session()
 #' }
 #'
 #' @name mcp
 #' @export
-mcp_host <- function() {
+mcp_session <- function() {
   # HACK: If a host is already running in one session via `.Rprofile`,
-  # `mcp_host()` will be called again when the client runs the command
+  # `mcp_session()` will be called again when the client runs the command
   # Rscript -e "acquaint::mcp_server()" and the existing host will be wiped.
   # Returning early in this case allows for the desired R session host to be
   # running already before the client initiates the server.
@@ -160,7 +160,7 @@ drop_nulls <- function(x) {
 # Enough information for the user to be able to identify which
 # session is which when using `list_r_sessions()` (#18)
 describe_session <- function() {
- sprintf("%d: %s (%s)", the$session, basename(getwd()), infer_ide())
+  sprintf("%d: %s (%s)", the$session, basename(getwd()), infer_ide())
 }
 
 infer_ide <- function() {

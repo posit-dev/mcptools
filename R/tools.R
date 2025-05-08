@@ -1,5 +1,5 @@
 # These two functions are supplied to the client as tools and allow the client
-# to discover R sessions which have called `acquaint::mcp_host()`. They
+# to discover R sessions which have called `acquaint::mcp_session()`. They
 # are "model-facing" rather than user-facing.
 list_r_sessions <- function() {
   sock <- nanonext::socket("poly")
@@ -13,7 +13,8 @@ list_r_sessions <- function() {
           sock,
           url = sprintf("%s%d", acquaint_socket, i),
           autostart = NA
-        ) && i > 8L
+        ) &&
+          i > 8L
       )
         break
     }
@@ -35,7 +36,7 @@ list_r_sessions_tool <-
     .fun = list_r_sessions,
     .description = paste(
       "List the R sessions that are available to access.",
-      "R sessions which have run `acquaint::mcp_host()` will appear here.",
+      "R sessions which have run `acquaint::mcp_session()` will appear here.",
       "In the output, start each session with 'Session #' and do NOT otherwise",
       "prefix any index numbers to the output.",
       "In general, do not use this tool unless asked to list or",

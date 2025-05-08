@@ -2,11 +2,11 @@
 % Please edit documentation in R/host.R, R/server.R
 \name{mcp}
 \alias{mcp}
-\alias{mcp_host}
+\alias{mcp_session}
 \alias{mcp_server}
 \title{Model context protocol for your R session}
 \usage{
-mcp_host()
+mcp_session()
 
 mcp_server()
 }
@@ -40,15 +40,15 @@ Or, to use with Claude Code, you might type in a terminal:
 \strong{mcp_server() is not intended for interactive use.}
 
 The server interfaces with the MCP client on behalf of the host in
-your R session. \strong{Use \code{\link[=mcp_host]{mcp_host()}} to start the host in your R session.}
-Place a call to \code{acquaint::mcp_host()} in your \code{.Rprofile}, perhaps with
+your R session. \strong{Use \code{\link[=mcp_session]{mcp_session()}} to start the host in your R session.}
+Place a call to \code{acquaint::mcp_session()} in your \code{.Rprofile}, perhaps with
 \code{usethis::edit_r_profile()}, to start a host for every interactive R session
 you start.
 }
 
 \examples{
 if (interactive()) {
-mcp_host()
+mcp_session()
 }
 
 }
