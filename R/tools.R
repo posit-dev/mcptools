@@ -10,7 +10,7 @@ list_r_sessions <- function() {
     if (
       nanonext::dial(
         sock,
-        url = sprintf("%s%d", acquaint_socket, i),
+        url = sprintf("%s%d", the$socket_url, i),
         autostart = NA,
         fail = "none"
       ) &&
@@ -51,7 +51,7 @@ select_r_session <- function(session) {
   attr(the$server_socket, "dialer") <- NULL
   nanonext::dial(
     the$server_socket,
-    url = sprintf("%s%d", acquaint_socket, session)
+    url = sprintf("%s%d", the$socket_url, session)
   )
   sprintf("Selected session %d successfully.", session)
 }

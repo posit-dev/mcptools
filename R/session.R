@@ -59,7 +59,7 @@ mcp_session <- function() {
     # prevent indefinite loop
     nanonext::listen(
       the$session_socket,
-      url = sprintf("%s%d", acquaint_socket, i),
+      url = sprintf("%s%d", the$socket_url, i),
       fail = "none"
     ) ||
       break

@@ -1,7 +1,5 @@
 the <- new_environment()
 
-acquaint_socket <- NULL
-
 jsonrpc_response <- function(id, result = NULL, error = NULL) {
   if (!xor(is.null(result), is.null(error))) {
     warning("Either `result` or `error` must be provided, but not both.")
