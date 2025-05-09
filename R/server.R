@@ -14,7 +14,7 @@ mcp_server <- function() {
 
   the$server_socket <- nanonext::socket("poly")
   on.exit(nanonext::reap(the$server_socket), add = TRUE)
-  nanonext::dial(the$server_socket, url = sprintf("%s%d", acquaint_socket, 1L))
+  nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
 
   client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
   session <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
