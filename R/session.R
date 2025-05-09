@@ -55,17 +55,16 @@ mcp_session <- function() {
 
   the$session_socket <- nanonext::socket("poly")
   i <- 1L
-  suppressWarnings(
-    while (i < 1024L) {
-      # prevent indefinite loop
-      nanonext::listen(
-        the$session_socket,
-        url = sprintf("%s%d", acquaint_socket, i)
-      ) ||
-        break
-      i <- i + 1L
-    }
-  )
+  while (i < 1024L) {
+    # prevent indefinite loop
+    nanonext::listen(
+      the$session_socket,
+      url = sprintf("%s%d", acquaint_socket, i),
+      fail = "none"
+    ) ||
+      break
+    i <- i + 1L
+  }
   the$session <- i
 
   schedule_handle_message_from_server()

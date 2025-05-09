@@ -27,7 +27,7 @@ Imports:
     cli,
     ellmer,
     jsonlite,
-    nanonext (>= 1.5.2.9016),
+    nanonext (>= 1.5.2.9019),
     promises,
     rlang
 Depends: R (>= 4.1.0)

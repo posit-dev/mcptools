@@ -6,19 +6,18 @@ list_r_sessions <- function() {
   on.exit(nanonext::reap(sock))
   cv <- nanonext::cv()
   monitor <- nanonext::monitor(sock, cv)
-  suppressWarnings(
-    for (i in seq_len(1024L)) {
-      if (
-        nanonext::dial(
-          sock,
-          url = sprintf("%s%d", acquaint_socket, i),
-          autostart = NA
-        ) &&
-          i > 8L
-      )
-        break
-    }
-  )
+  for (i in seq_len(1024L)) {
+    if (
+      nanonext::dial(
+        sock,
+        url = sprintf("%s%d", acquaint_socket, i),
+        autostart = NA,
+        fail = "none"
+      ) &&
+      i > 8L
+    )
+      break
+  }
   pipes <- nanonext::read_monitor(monitor)
   res <- lapply(
     pipes,
