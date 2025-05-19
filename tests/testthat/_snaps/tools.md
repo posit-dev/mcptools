@@ -22,3 +22,4 @@
     Condition
       Error in `mcp_set_tools()`:
       ! The tool names list_r_sessions and select_r_session are reserved by acquaint.
+
