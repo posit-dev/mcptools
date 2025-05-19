@@ -67,8 +67,6 @@ handle_message_from_client <- function(line) {
     res <- jsonrpc_response(data$id, capabilities())
     cat_json(res)
   } else if (data$method == "tools/list") {
-    logcat("Going to list tools...")
-    logcat(c("This many tools: ", length(get_acquaint_tools())))
     res <- jsonrpc_response(
       data$id,
       list(
@@ -77,7 +75,6 @@ handle_message_from_client <- function(line) {
     )
 
     cat_json(res)
-    logcat("Listed tools.")
   } else if (data$method == "tools/call") {
     tool_name <- data$params$name
     if (tool_name %in% c("list_r_sessions", "select_r_session")) {
