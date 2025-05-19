@@ -1,9 +1,9 @@
-test_that("set_acquaint_tools works", {
+test_that("mcp_set_tools works", {
   old_option <- getOption("acquaint_tools")
   on.exit(options(.acquaint_tools = old_option))
 
   # must be a list
-  expect_snapshot(error = TRUE, set_acquaint_tools("boop"))
+  expect_snapshot(error = TRUE, mcp_set_tools("boop"))
 
   tool_rnorm <- ellmer::tool(
     rnorm,
@@ -19,13 +19,13 @@ test_that("set_acquaint_tools works", {
   tool_rnorm_list <- list(tool_rnorm)
 
   # tools themselves need to be in a list
-  expect_snapshot(error = TRUE, set_acquaint_tools(tool_rnorm))
+  expect_snapshot(error = TRUE, mcp_set_tools(tool_rnorm))
 
   # uses reserved name
   tool_rnorm@name <- "list_r_sessions"
-  expect_snapshot(error = TRUE, set_acquaint_tools(list(tool_rnorm)))
+  expect_snapshot(error = TRUE, mcp_set_tools(list(tool_rnorm)))
 
-  expect_equal(set_acquaint_tools(tool_rnorm_list), tool_rnorm_list)
+  expect_equal(mcp_set_tools(tool_rnorm_list), tool_rnorm_list)
   expect_equal(
     names(get_acquaint_tools()),
     c("rnorm", "list_r_sessions", "select_r_session")

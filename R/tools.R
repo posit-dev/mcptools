@@ -34,12 +34,12 @@
 #' )
 #'
 #' # supply only one tool, tool_rnorm
-#' set_acquaint_tools(list(tool_rnorm))
+#' mcp_set_tools(list(tool_rnorm))
 #'
 #' # supply both tool_rnorm and `btw_tools()`
-#' set_acquaint_tools(c(list(tool_rnorm), btw::btw_tools()))
+#' mcp_set_tools(c(list(tool_rnorm), btw::btw_tools()))
 #' @export
-set_acquaint_tools <- function(x) {
+mcp_set_tools <- function(x) {
   check_acquaint_tools(x)
 
   options(.acquaint_tools = x)
