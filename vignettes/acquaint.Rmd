@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-The acquaint package allows users to enable apps like Claude Desktop and Claude Code to run R code using the Model Context Protocol (MCP). This vignette highlights the basics of using acquaint before delving a bit further into the design for more advanced users.
+The acquaint package enables apps like Claude Desktop and Claude Code to run R code using the Model Context Protocol (MCP). This vignette highlights the basics of using acquaint before delving a bit further into advanced usage.
 
 ```{r}
 #| label: setup
@@ -42,17 +42,17 @@ In the case you have some client that you want to connect to R, everything will 
 
 Then, you're good to go!
 
-(If, instead, you're interested in "the other direction," where R itself is the client—presumably via ellmer—and you'd like to grab context from other MCP servers, keep an eye out for an upcoming release of ellmer. \[TODO: add link here\].)
+(If, instead, you're interested in "the other direction," where R itself is the client—presumably via ellmer—and you'd like to grab context from other MCP servers, keep an eye out for additions here.) <!--# \[TODO: still up in thei air whether this will live in ellmer or acquaint.\] -->
 
 ## Multiple clients and R sessions
 
 While a single client and a single R session probably covers many users' use cases, acquaint supports multiple clients and multiple R sessions. For example, for the former, you may be both chatting in Claude Desktop and running Claude Code in a terminal somewhere. Or, in the multiple R sessions situation, you may have two or more Positron instances running at once, with different data science projects in each.
 
-**As for multiple clients,** this will "just work";there's nothing to keep in mind here.
+**As for multiple clients,** this will "just work"; there's nothing to keep in mind here.
 
-**As for multiple R sessions**, acquaint will choose a default R session for your model to talk to without the model knowing it even had multiple options. So, you might have a project "goats" open in one Positron window and another project, "sheep", open in another Positron window. acquaint provides models with two tools to facilitate toggling between sessions. The first, `list_r_sessions()`, allows the client to "discover" R sessions available to it by their working directory and (inferred) IDE. Then, the tool `select_r_session()` allows the client to (persistently) choose an R session. So, you could write "In my goats R session, \[some question\]." In that case, the model might call `list_r_sessions()` to find the full identifier for that goats session, then `select_r_session()`, then whatever other tools it will use to respond to your question. Notably, if you ask a follow-up question (and you haven't closed the Positron window with goats pulled up in the meantime) in the same client chat, the client doesn't need to use `list_r_sessions()` and `select_r_session()` again, and can just call whatever tools it needs to answer your follow-up. \[TODO: include links to example chats here\]
+**As for multiple R sessions**, acquaint will choose a default R session for your model to talk to without the client knowing it even had multiple options. So, you might have a project "goats" open in one Positron window and another project, "sheep", open in another Positron window. acquaint provides models with two tools to facilitate toggling between sessions. The first, `list_r_sessions()`, allows the client to "discover" R sessions available to it by their working directory and (inferred) IDE. Then, the tool `select_r_session()` allows the client to (persistently) choose an R session. So, you could write "In my goats R session, \[some question\]." In that case, the model might call `list_r_sessions()` to find the full identifier for that goats session, then `select_r_session()`, then whatever other tools it will use to respond to your question. Notably, if you ask a follow-up question (and you haven't closed the Positron window with goats pulled up in the meantime) in the same client chat, the client doesn't need to use `list_r_sessions()` and `select_r_session()` again, and can just call whatever tools it needs to answer your follow-up. <!--# [TODO: include links to example chats here] -->
 
-**As for both multiple clients and multiple R sessions**, this will generally "just work." That said, do note that clients can only be connected to one R session at a time. For most clients, like Claude Code, this isn't much of an issue. For chat apps like Claude Desktop, though, you may run into hiccups when you have multiple chats actively going at the same time. For example, imagine I ask Claude via Claude Desktop about some problem in my R session "goats" and then, a moment later, spin up a different chat and ask about my "sheep" project. In the second chat, Claude will likely use `select_r_session()` to choose the "sheep" project. If I then go back to the chat about "goats" and ask a follow-up, the R session that any tool calls dispatch to will actually be the "sheep" project. If the tool call, say, reads documentation, this isn't an issue. If the tool call describe some variable in the global environment, though, the value of that variable may not exist in—or be different in—the "sheep" project. \[TODO: include a link to the "secret password" chat.\]
+**As for both multiple clients and multiple R sessions**, this will generally "just work." That said, do note that clients can only be connected to one R session at a time. For most clients, like Claude Code, this isn't much of an issue. For chat apps like Claude Desktop, though, you may run into hiccups when you have multiple chats actively going at the same time. For example, imagine I ask Claude via Claude Desktop about some problem in my R session "goats" and then, a moment later, spin up a different chat and ask about my "sheep" project. In the second chat, Claude will likely use `select_r_session()` to choose the "sheep" project. If I then go back to the chat about "goats" and ask a follow-up, the R session that any tool calls dispatch to will actually also be the "sheep" project. If the tool call, say, reads documentation, this isn't an issue. If the tool call describe some variable in the global environment, though, the value of that variable may not exist in—or be different in—the "sheep" project. <!--# [TODO: include a link to the "secret password" chat.] -->
 
 ## Custom tools
 
@@ -67,11 +67,10 @@ By default, acquaint supplies clients with `btw::btw_tools()`, a set of atomic t
 Users might be interested in extending these tools or supplying completely different ones. For example, you might register:
 
 -   A set of tools specifically focused on R package development (e.g. various wrappers of [devtools](https://devtools.r-lib.org/) and [testthat](https://testthat.r-lib.org/)) that could be hooked up to Claude Code to make a package development assistant.
-
-<!-- -->
-
 -   For the brave, a tool `run_r_code()` that allows a client to run whatever R code it wants.
 
-You can configure any set of tools that could be passed to the `$set_tools()` method of an ellmer Chat object as the tools that acquaint will supply to clients. To do so, supply a list of outputs from `ellmer::tool()` to `acquaint::mcp_set_tools()` *inside of your .Rprofile*. It's important that `mcp_set_tools()` is called inside of your .Rprofile so that it's run every time R starts. That way, when clients start and run the configured command `Rscript`, `Rscript` will first run `mcp_set_tools()` so that, when the client asks the server what tools are available, the server can describe specifically the new tools you've configured. Relatedly, you'll need to make sure that your code that specifies the new tools can run in a fresh R session; be sure to either namespace functions from libraries (like `ellmer::tool()` instead of `tool()`) or load the libraries entirely. \[TODO: provide an example of registering the `rnorm()` tool.\]
+You can configure any set of tools that could be passed to the `$set_tools()` method of an ellmer Chat object as the tools that acquaint will supply to clients. To do so, supply a list of outputs from `ellmer::tool()` to `acquaint::mcp_set_tools()` *inside of your .Rprofile*. It's important that `mcp_set_tools()` is called inside of your .Rprofile so that it's run every time R starts. That way, when clients start and run the configured command `Rscript`, `Rscript` will first run `mcp_set_tools()` so that, when the client asks the server what tools are available, the server can describe specifically the new tools you've configured. Relatedly, you'll need to make sure that your code that specifies the new tools can run in a fresh R session; be sure to either namespace functions from libraries (like `ellmer::tool()` instead of `tool()`) or load the libraries entirely.
+
+<!--# \[TODO: provide an example of registering the `rnorm()` tool.\] -->
 
 Note that, if you'd like to supply some custom tools *in addition to* the default tools from btw, you'll need to write `acquaint::mcp_set_tools(c(btw::btw_tools(), your_custom_tools))`.
