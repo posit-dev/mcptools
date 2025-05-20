@@ -27,7 +27,7 @@ RoxygenNote: 7.3.2
 Imports: 
     btw (>= 0.0.1.9000),
     cli,
-    ellmer,
+    ellmer (>= 0.2.0),
     jsonlite,
     nanonext (>= 1.5.2.9019),
     promises,
