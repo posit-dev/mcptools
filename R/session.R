@@ -36,6 +36,12 @@
 #' `usethis::edit_r_profile()`, to make every interactive R session you start
 #' available to the server.
 #'
+#' @seealso
+#' - [mcp_set_tools()] allows you to register any ellmer tools as the tools
+#' that will be provided to the client.
+#' - The "Getting started with acquaint" vignette at
+#' `vignette("acquaint", package = "acquaint")` delves into further detail
+#' on setup and customization.
 #' @examples
 #' if (interactive()) {
 #' mcp_session()

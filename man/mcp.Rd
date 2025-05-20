@@ -52,3 +52,12 @@ mcp_session()
 }
 
 }
+\seealso{
+\itemize{
+\item \code{\link[=mcp_set_tools]{mcp_set_tools()}} allows you to register any ellmer tools as the tools
+that will be provided to the client.
+\item The "Getting started with acquaint" vignette at
+\code{vignette("acquaint", package = "acquaint")} delves into further detail
+on setup and customization.
+}
+}

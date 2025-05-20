@@ -59,6 +59,8 @@ claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"
 
 Then, in your R session, call `acquaint::mcp_session()`.
 
+For a more thorough introduction, see the vignette "Getting started with acquaint" with `vignette("acquaint", package = "acquaint")`.
+
 ## Example
 
 In Claude Desktop, I'll write the following:
