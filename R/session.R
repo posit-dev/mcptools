@@ -109,7 +109,7 @@ handle_message_from_server <- function(msg) {
 
     error_message <- NULL
     tool_call_result <- tryCatch(do.call(fn, args), error = \(e) {
-      error_message <- conditionMessage(e)
+      error_message <<- conditionMessage(e)
       substitute()
     })
 
