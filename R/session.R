@@ -107,10 +107,21 @@ handle_message_from_server <- function(msg) {
       }
     }
 
-    tool_call_result <- do.call(fn, args)
+    error_message <- NULL
+    tool_call_result <- tryCatch(do.call(fn, args), error = \(e) {
+      error_message <- conditionMessage(e)
+      substitute()
+    })
+
+    body <- if (missing(tool_call_result))
+      jsonrpc_response(
+        data$id,
+        error = list(code = -32603, message = error_message)
+      ) else
+        as_tool_call_result(data, tool_call_result)
+
     # cat(paste(capture.output(str(body)), collapse="\n"), file=stderr())
 
-    body <- as_tool_call_result(data, tool_call_result)
   } else {
     body <- jsonrpc_response(
       data$id,
@@ -145,10 +156,8 @@ as_tool_call_result <- function(data, result) {
 schedule_handle_message_from_server <- function() {
   the$raio <- nanonext::recv_aio(the$session_socket, mode = "string")
   promises::as.promise(the$raio)$then(handle_message_from_server)$catch(
-    function(
-      e
-    ) {
-      print(e)
+    \(e) {
+      # no op but ensures promise is never rejected
     }
   )
 }
