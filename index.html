@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Model Context Protocol For Your R Session • acquaint</title>
+<title>Model Context Protocol Server For Your R Sessions • acquaint</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Model Context Protocol For Your R Session">
-<meta name="description" content="The goal of acquaint is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with acquaint can peruse package documentation and learn to use R packages even if they weren't included in their training data.">
-<meta property="og:description" content="The goal of acquaint is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with acquaint can peruse package documentation and learn to use R packages even if they weren't included in their training data.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Model Context Protocol Server For Your R Sessions">
+<meta name="description" content="Implements a model context protocol (MCP) server for your R sessions, allowing MCP-compatible apps like Claude Desktop and Claude Code to run R code in your active R sessions in order to better answer questions. By default, the package supplies a set of tools that allow models to inspect your R environment and peruse package documentation, but supports arbitrary R functions as tools.">
+<meta property="og:description" content="Implements a model context protocol (MCP) server for your R sessions, allowing MCP-compatible apps like Claude Desktop and Claude Code to run R code in your active R sessions in order to better answer questions. By default, the package supplies a set of tools that allow models to inspect your R environment and peruse package documentation, but supports arbitrary R functions as tools.">
 <meta property="og:image" content="https://simonpcouch.github.io/acquaint/logo.png">
 </head>
 <body>
@@ -55,7 +55,7 @@
 </div>
 <!-- badges: start -->
 
-<p>acquaint implements a <a href="https://modelcontextprotocol.io/" class="external-link">Model Context Protocol</a> (MCP) for your R session. When configured with acquaint, tools like Claude Desktop and Claude Code can:</p>
+<p>acquaint implements a <a href="https://modelcontextprotocol.io/" class="external-link">Model Context Protocol</a> (MCP) for your R sessions. When configured with acquaint, MCP-enabled tools like Claude Desktop and Claude Code can run R code <em>in the sessions you have running</em> to answer your questions. By default, acquaint allows tools to:</p>
 <ul>
 <li>Peruse the documentation of packages you have installed,</li>
 <li>Check out the objects in your global environment, and</li>
@@ -81,7 +81,7 @@
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Or, to use with Claude Code, you might type in a terminal:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">-s</span> <span class="st">"user"</span> r-acquaint Rscript <span class="at">-e</span> <span class="st">"acquaint::mcp_server()"</span></span></code></pre></div>
-<p>Then, in your R session, call <code><a href="reference/mcp.html">acquaint::mcp_session()</a></code>.</p>
+<p>Then, in your R session, call <code><a href="reference/mcp.html">acquaint::mcp_session()</a></code>. (You might include a call to this function in your .Rprofile, perhaps using <code>usethis::edit_r_profile()</code>.)</p>
 <p>For a more thorough introduction, see the vignette “Getting started with acquaint” with <code><a href="articles/acquaint.html">vignette("acquaint", package = "acquaint")</a></code>.</p>
 </div>
 <div class="section level2">
