@@ -13,9 +13,10 @@ status](https://www.r-pkg.org/badges/version/acquaint)](https://CRAN.R-project.o
 <!-- badges: end -->
 
 acquaint implements a [Model Context
-Protocol](https://modelcontextprotocol.io/) (MCP) for your R session.
-When configured with acquaint, tools like Claude Desktop and Claude Code
-can:
+Protocol](https://modelcontextprotocol.io/) (MCP) for your R sessions.
+When configured with acquaint, MCP-enabled tools like Claude Desktop and
+Claude Code can run R code *in the sessions you have running* to answer
+your questions. By default, acquaint allows tools to:
 
 - Peruse the documentation of packages you have installed,
 - Check out the objects in your global environment, and
@@ -54,7 +55,9 @@ Or, to use with Claude Code, you might type in a terminal:
 claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"
 ```
 
-Then, in your R session, call `acquaint::mcp_session()`.
+Then, in your R session, call `acquaint::mcp_session()`. (You might
+include a call to this function in your .Rprofile, perhaps using
+`usethis::edit_r_profile()`.)
 
 For a more thorough introduction, see the vignette “Getting started with
 acquaint” with `vignette("acquaint", package = "acquaint")`.

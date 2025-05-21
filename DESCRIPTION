@@ -1,5 +1,5 @@
 Package: acquaint
-Title: Model Context Protocol For Your R Session
+Title: Model Context Protocol Server For Your R Sessions
 Version: 0.0.0.9000
 Authors@R: c(
     person("Simon", "Couch", , "simon.couch@posit.co", role = c("aut", "cre"),
@@ -10,11 +10,12 @@ Authors@R: c(
     person("Posit Software, PBC", role = c("cph", "fnd"),
            comment = c(ROR = "03wc8by49"))
   )
-Description: The goal of acquaint is to enable LLM-enabled tools like Claude Code to 
-    learn about the R packages you have installed using the 
-    [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). 
-    Tools configured with acquaint can peruse package documentation and learn 
-    to use R packages even if they weren't included in their training data.
+Description: Implements a model context protocol (MCP) server for your R 
+    sessions, allowing MCP-compatible apps like Claude Desktop and Claude 
+    Code to run R code in your active R sessions in order to better answer 
+    questions. By default, the package supplies a set of tools that allow models 
+    to inspect your R environment and peruse package documentation, but 
+    supports arbitrary R functions as tools.
 License: MIT + file LICENSE
 Suggests: 
     knitr,

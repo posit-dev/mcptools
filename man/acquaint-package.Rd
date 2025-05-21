@@ -4,11 +4,11 @@
 \name{acquaint-package}
 \alias{acquaint}
 \alias{acquaint-package}
-\title{acquaint: Model Context Protocol For Your R Session}
+\title{acquaint: Model Context Protocol Server For Your R Sessions}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-The goal of acquaint is to enable LLM-enabled tools like Claude Code to learn about the R packages you have installed using the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Tools configured with acquaint can peruse package documentation and learn to use R packages even if they weren't included in their training data.
+Implements a model context protocol (MCP) server for your R sessions, allowing MCP-compatible apps like Claude Desktop and Claude Code to run R code in your active R sessions in order to better answer questions. By default, the package supplies a set of tools that allow models to inspect your R environment and peruse package documentation, but supports arbitrary R functions as tools.
 }
 \seealso{
 Useful links:
