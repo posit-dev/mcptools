@@ -21,7 +21,8 @@ can:
 - Check out the objects in your global environment, and
 - Retrieve metadata about your session and platform.
 
-> IMPORTANT: This is an early proof of concept. Use at your own risk!
+> IMPORTANT: This package is highly experimental and its interface may
+> change rapidly!
 
 ## Installation
 

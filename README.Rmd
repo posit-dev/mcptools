@@ -28,7 +28,7 @@ acquaint implements a [Model Context Protocol](https://modelcontextprotocol.io/)
 * Retrieve metadata about your session and platform.
 
 > IMPORTANT:
-> This is an early proof of concept. Use at your own risk!
+> This package is highly experimental and its interface may change rapidly!
 
 ## Installation
 
