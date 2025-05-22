@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-acquaint implements a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) for your R sessions. When configured with acquaint, MCP-enabled tools like Claude Desktop and Claude Code can run R code _in the sessions you have running_ to answer your questions. While the package supports configuring arbitrary R functions, acquaint provides a default set of tools [from btw](https://posit-dev.github.io/btw/) to:
+acquaint implements a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for your R sessions. When configured with acquaint, MCP-enabled tools like Claude Desktop and Claude Code can run R code _in the sessions you have running_ to answer your questions. While the package supports configuring arbitrary R functions, acquaint provides a default set of tools [from btw](https://posit-dev.github.io/btw/) to:
 
 * Peruse the documentation of packages you have installed,
 * Check out the objects in your global environment, and
@@ -35,7 +35,7 @@ acquaint implements a [Model Context Protocol](https://modelcontextprotocol.io/)
 You can install the development version of acquaint like so:
 
 ```r
-pak::pak("simonpcouch/acquaint")
+pak::pak("posit-dev/acquaint")
 ```
 
 acquaint can be hooked up to any application that supports MCP. For example, to use with Claude Desktop, you might paste the following in your Claude Desktop configuration (on macOS, at  `~/Library/Application Support/Claude/claude_desktop_config.json`):

@@ -13,10 +13,12 @@ status](https://www.r-pkg.org/badges/version/acquaint)](https://CRAN.R-project.o
 <!-- badges: end -->
 
 acquaint implements a [Model Context
-Protocol](https://modelcontextprotocol.io/) (MCP) for your R sessions.
-When configured with acquaint, MCP-enabled tools like Claude Desktop and
-Claude Code can run R code *in the sessions you have running* to answer
-your questions. By default, acquaint allows tools to:
+Protocol](https://modelcontextprotocol.io/) (MCP) server for your R
+sessions. When configured with acquaint, MCP-enabled tools like Claude
+Desktop and Claude Code can run R code *in the sessions you have
+running* to answer your questions. While the package supports
+configuring arbitrary R functions, acquaint provides a default set of
+tools [from btw](https://posit-dev.github.io/btw/) to:
 
 - Peruse the documentation of packages you have installed,
 - Check out the objects in your global environment, and
@@ -30,7 +32,7 @@ your questions. By default, acquaint allows tools to:
 You can install the development version of acquaint like so:
 
 ``` r
-pak::pak("simonpcouch/acquaint")
+pak::pak("posit-dev/acquaint")
 ```
 
 acquaint can be hooked up to any application that supports MCP. For
@@ -57,7 +59,8 @@ claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"
 
 Then, in your R session, call `acquaint::mcp_session()`. (You might
 include a call to this function in your .Rprofile, perhaps using
-`usethis::edit_r_profile()`.)
+`usethis::edit_r_profile()`, to automatically register every session you
+start up.)
 
 For a more thorough introduction, see the vignette “Getting started with
 acquaint” with `vignette("acquaint", package = "acquaint")`.
