@@ -55,7 +55,7 @@
 </div>
 <!-- badges: start -->
 
-<p>acquaint implements a <a href="https://modelcontextprotocol.io/" class="external-link">Model Context Protocol</a> (MCP) for your R sessions. When configured with acquaint, MCP-enabled tools like Claude Desktop and Claude Code can run R code <em>in the sessions you have running</em> to answer your questions. By default, acquaint allows tools to:</p>
+<p>acquaint implements a <a href="https://modelcontextprotocol.io/" class="external-link">Model Context Protocol</a> (MCP) server for your R sessions. When configured with acquaint, MCP-enabled tools like Claude Desktop and Claude Code can run R code <em>in the sessions you have running</em> to answer your questions. While the package supports configuring arbitrary R functions, acquaint provides a default set of tools <a href="https://posit-dev.github.io/btw/" class="external-link">from btw</a> to:</p>
 <ul>
 <li>Peruse the documentation of packages you have installed,</li>
 <li>Check out the objects in your global environment, and</li>
@@ -69,7 +69,7 @@
 </h2>
 <p>You can install the development version of acquaint like so:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"simonpcouch/acquaint"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"posit-dev/acquaint"</span><span class="op">)</span></span></code></pre></div>
 <p>acquaint can be hooked up to any application that supports MCP. For example, to use with Claude Desktop, you might paste the following in your Claude Desktop configuration (on macOS, at <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>):</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -81,7 +81,7 @@
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Or, to use with Claude Code, you might type in a terminal:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">-s</span> <span class="st">"user"</span> r-acquaint Rscript <span class="at">-e</span> <span class="st">"acquaint::mcp_server()"</span></span></code></pre></div>
-<p>Then, in your R session, call <code><a href="reference/mcp.html">acquaint::mcp_session()</a></code>. (You might include a call to this function in your .Rprofile, perhaps using <code>usethis::edit_r_profile()</code>.)</p>
+<p>Then, in your R session, call <code><a href="reference/mcp.html">acquaint::mcp_session()</a></code>. (You might include a call to this function in your .Rprofile, perhaps using <code>usethis::edit_r_profile()</code>, to automatically register every session you start up.)</p>
 <p>For a more thorough introduction, see the vignette “Getting started with acquaint” with <code><a href="articles/acquaint.html">vignette("acquaint", package = "acquaint")</a></code>.</p>
 </div>
 <div class="section level2">
