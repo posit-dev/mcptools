@@ -118,7 +118,6 @@ handle_message_from_server <- function(msg) {
     )
 
     # cat(paste(capture.output(str(body)), collapse="\n"), file=stderr())
-
   } else {
     body <- jsonrpc_response(
       data$id,
@@ -136,6 +135,12 @@ handle_message_from_server <- function(msg) {
 }
 
 as_tool_call_result <- function(data, result) {
+  is_error <- FALSE
+  if (inherits(result, "btw::BtwToolResult")) {
+    is_error <- !is.null(result@error)
+    result <- result@value %||% result@error
+  }
+
   jsonrpc_response(
     data$id,
     list(
@@ -145,7 +150,7 @@ as_tool_call_result <- function(data, result) {
           text = paste(result, collapse = "\n")
         )
       ),
-      isError = FALSE
+      isError = is_error
     )
   )
 }
