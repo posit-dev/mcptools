@@ -80,7 +80,7 @@
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="fu">}</span></span>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Or, to use with Claude Code, you might type in a terminal:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">-s</span> <span class="st">"user"</span> r-acquaint Rscript <span class="at">-e</span> <span class="st">"acquaint::mcp_server()"</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">-s</span> <span class="st">"user"</span> r-acquaint <span class="at">--</span> Rscript <span class="at">-e</span> <span class="st">"acquaint::mcp_server()"</span></span></code></pre></div>
 <p>Then, in your R session, call <code><a href="reference/mcp.html">acquaint::mcp_session()</a></code>. (You might include a call to this function in your .Rprofile, perhaps using <code>usethis::edit_r_profile()</code>, to automatically register every session you start up.)</p>
 <p>For a more thorough introduction, see the vignette “Getting started with acquaint” with <code><a href="articles/acquaint.html">vignette("acquaint", package = "acquaint")</a></code>.</p>
 </div>
