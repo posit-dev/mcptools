@@ -79,7 +79,7 @@ command and arguments are <code>Rscript</code> and
 <code>-e "acquaint::mcp_server()"</code>. Different clients register
 this command in different ways. For example, to use acquaint with the
 client Claude Code, you might write
-<code>claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"</code>.</p></li>
+<code>claude mcp add -s "user" r-acquaint -- Rscript -e "acquaint::mcp_server()"</code>.</p></li>
 <li><p><strong>Sessions</strong> are the R sessions that the client
 ultimately talks to. So, if you have an RStudio or Positron window open,
 those applications automatically start up an R session that the client
