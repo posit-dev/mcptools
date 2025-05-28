@@ -28,7 +28,7 @@ acquaint is built around three main concepts:
 
 -   **Clients** are the apps you'd like to connect an R session to, like Claude Desktop of Claude Code. acquaint supports any client that supports MCP.
 
--   Clients talk to your R sessions using a **server**. Each client that supports MCP will provide some entry point to configure a command and any additional arguments with the client. acquaint's command and arguments are `Rscript` and `-e "acquaint::mcp_server()"`. Different clients register this command in different ways. For example, to use acquaint with the client Claude Code, you might write `claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"`.
+-   Clients talk to your R sessions using a **server**. Each client that supports MCP will provide some entry point to configure a command and any additional arguments with the client. acquaint's command and arguments are `Rscript` and `-e "acquaint::mcp_server()"`. Different clients register this command in different ways. For example, to use acquaint with the client Claude Code, you might write `claude mcp add -s "user" r-acquaint -- Rscript -e "acquaint::mcp_server()"`.
 
 -   **Sessions** are the R sessions that the client ultimately talks to. So, if you have an RStudio or Positron window open, those applications automatically start up an R session that the client could potentially talk to. To "opt in" your R sessions to be discovered by clients, run the R code `acquaint::mcp_session()`. You'll likely want to run this code every time you start up R; to do so, add `acquaint::mcp_session()` to your `.Rprofile`, perhaps by first calling `usethis::edit_r_profile()`.
 
