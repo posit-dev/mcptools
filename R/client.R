@@ -118,7 +118,7 @@ servers_as_ellmer_tools <- function() {
 }
 
 server_as_ellmer_tools <- function(server) {
-  tools_tbl <- tibble::as_tibble(server$tools$tools)
+  tools_tbl <- server$tools$tools
 
   tools_out <- list()
   for (i in seq_len(nrow(tools_tbl))) {
