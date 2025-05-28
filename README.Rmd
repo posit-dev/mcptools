@@ -13,12 +13,12 @@ knitr::opts_chunk$set(
 )
 ```
 
-# acquaint <a href="https://simonpcouch.github.io/acquaint/"><img src="man/figures/logo.png" align="right" height="240" alt="A hexagonal logo showing a sparse, forested path opening up into a well-trodden meadow path." /></a>
+# acquaint <a href="https://posit-dev.github.io/acquaint/"><img src="man/figures/logo.png" align="right" height="240" alt="A hexagonal logo showing a sparse, forested path opening up into a well-trodden meadow path." /></a>
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN status](https://www.r-pkg.org/badges/version/acquaint)](https://CRAN.R-project.org/package=acquaint)
-[![R-CMD-check](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/posit-dev/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/posit-dev/acquaint/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 acquaint implements a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for your R sessions. When configured with acquaint, MCP-enabled tools like Claude Desktop and Claude Code can run R code _in the sessions you have running_ to answer your questions. While the package supports configuring arbitrary R functions, acquaint provides a default set of tools [from btw](https://posit-dev.github.io/btw/) to:

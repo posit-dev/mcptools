@@ -13,9 +13,9 @@ Implements a model context protocol (MCP) server for your R sessions, allowing M
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/simonpcouch/acquaint}
-  \item \url{https://simonpcouch.github.io/acquaint/}
-  \item Report bugs at \url{https://github.com/simonpcouch/acquaint/issues}
+  \item \url{https://github.com/posit-dev/acquaint}
+  \item \url{https://posit-dev.github.io/acquaint/}
+  \item Report bugs at \url{https://github.com/posit-dev/acquaint/issues}
 }
 
 }
