@@ -54,7 +54,7 @@ your Claude Desktop configuration (on macOS, at
 Or, to use with Claude Code, you might type in a terminal:
 
 ``` bash
-claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"
+claude mcp add -s "user" r-acquaint -- Rscript -e "acquaint::mcp_server()"
 ```
 
 Then, in your R session, call `acquaint::mcp_session()`. (You might
