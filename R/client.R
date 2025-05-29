@@ -64,18 +64,25 @@ the$mcp_servers <- list()
 #' @name client
 #' @export
 mcp_tools <- function() {
-  config_file <- get_mcp_config()
-  config <- jsonlite::fromJSON(readLines(config_file))$mcpServers
+  config <- read_mcp_config()
+  if (length(config) == 0) {
+    return(list())
+  }
 
   for (i in seq_along(config)) {
     config_i <- config[[i]]
     name_i <- names(config)[i]
+    config_i_env <- if ("env" %in% names(config_i)) {
+      unlist(config_i$env)
+    } else {
+      NULL
+    }
 
     process <- processx::process$new(
       # seems like the R process has a different PATH than process_exec
       command = Sys.which(config_i$command),
       args = config_i$args,
-      env = unlist(config_i$env),
+      env = config_i_env,
       stdin = "|",
       stdout = "|",
       stderr = "|"
@@ -106,6 +113,45 @@ get_mcp_config <- function() {
     ".acquaint_config",
     default = file.path("~", ".config", "acquaint", "config.json")
   )
+}
+
+read_mcp_config <- function(call = caller_env()) {
+  config_file <- get_mcp_config()
+  config_lines <- readLines(config_file)
+
+  if (length(config_lines) == 0) {
+    return(list())
+  }
+
+  tryCatch(
+    {
+      config <- jsonlite::fromJSON(config_lines)
+    },
+    error = function(e) {
+      cli::cli_abort(
+        c(
+          "Configuration processing failed",
+          i = "The configuration file {.file {config_file}} must be valid JSON."
+        ),
+        call = call,
+        parent = e
+      )
+    }
+  )
+
+  if (!"mcpServers" %in% names(config)) {
+    cli::cli_abort(
+      cli::cli_abort(
+        c(
+          "Configuration processing failed.",
+          i = "{.file {config_file}} must have a top-level {.field mcpServers} entry."
+        ),
+        call = call
+      )
+    )
+  }
+
+  config$mcpServers
 }
 
 add_mcp_server <- function(process, name) {
