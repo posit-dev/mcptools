@@ -11,6 +11,10 @@ the$mcp_servers <- list()
 #' Collect ellmer chats with tools from MCP servers
 #'
 #' @description
+#' These functions implement R as an MCP _client_, so that ellmer chats can
+#' register functionality from third-party MCP servers such as those listed
+#' here: <https://github.com/modelcontextprotocol/servers>.
+#'
 #' `mcp_tools()` fetches tools from MCP servers configured in the acquaint
 #' server config file at `set_mcp_config()` and converts them to a list of
 #' tools compatible with the `$set_tools()` method of [ellmer::Chat] objects.
@@ -22,6 +26,10 @@ the$mcp_servers <- list()
 #' `file.path("~", ".config", "acquaint", "config.json")`; you can edit that
 #' file with `file.edit(file.path("~", ".config", "acquaint", "config.json"))`,
 #' or you can supply an alternative file path with `set_mcp_config()`.
+#'
+#' The acquaint config file should be valid json with an entry `mcpServers`.
+#' That entry should contain named elements, each with at least a `command`
+#' and `args` entry.
 #'
 #' For example, to configure `mcp_tools()` with GitHub's official MCP Server
 #' <https://github.com/github/github-mcp-server>, I could write the following
@@ -48,6 +56,10 @@ the$mcp_servers <- list()
 #' }
 #' ```
 #'
+#' @returns
+#' * `mcp_tools()` returns a list of ellmer tools that can be passed directly
+#' to the `$set_tools()` method of an [ellmer::Chat] object.
+#' * `set_mcp_config()` returns the path to the new MCP config file, invisibly.
 #'
 #' @name client
 #' @export
@@ -90,7 +102,7 @@ set_mcp_config <- function(file) {
 }
 
 get_mcp_config <- function() {
-  getOption(
+  res <- getOption(
     ".acquaint_config",
     default = file.path("~", ".config", "acquaint", "config.json")
   )

@@ -15,7 +15,18 @@ set_mcp_config(file)
 configuration file. If one is not configured, acquaint will look for one in
 \code{file.path("~", ".config", "acquaint", "config.json")}.}
 }
+\value{
+\itemize{
+\item \code{mcp_tools()} returns a list of ellmer tools that can be passed directly
+to the \verb{$set_tools()} method of an \link[ellmer:Chat]{ellmer::Chat} object.
+\item \code{set_mcp_config()} returns the path to the new MCP config file, invisibly.
+}
+}
 \description{
+These functions implement R as an MCP \emph{client}, so that ellmer chats can
+register functionality from third-party MCP servers such as those listed
+here: \url{https://github.com/modelcontextprotocol/servers}.
+
 \code{mcp_tools()} fetches tools from MCP servers configured in the acquaint
 server config file at \code{set_mcp_config()} and converts them to a list of
 tools compatible with the \verb{$set_tools()} method of \link[ellmer:Chat]{ellmer::Chat} objects.
@@ -28,6 +39,10 @@ By default, the package will look to
 \code{file.path("~", ".config", "acquaint", "config.json")}; you can edit that
 file with \code{file.edit(file.path("~", ".config", "acquaint", "config.json"))},
 or you can supply an alternative file path with \code{set_mcp_config()}.
+
+The acquaint config file should be valid json with an entry \code{mcpServers}.
+That entry should contain named elements, each with at least a \code{command}
+and \code{args} entry.
 
 For example, to configure \code{mcp_tools()} with GitHub's official MCP Server
 \url{https://github.com/github/github-mcp-server}, I could write the following
