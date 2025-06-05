@@ -101,11 +101,13 @@ handle_message_from_client <- function(line) {
   } else if (data$method == "tools/call") {
     tool_name <- data$params$name
     if (
+      # two tools provided by acquaint itself which must be executed in
+      # the server rather than a session (#18)
       tool_name %in%
         c("list_r_sessions", "select_r_session") ||
+        # with no sessions available, just execute tools in the server (#36)
         !the$server_has_sessions
     ) {
-      # execute in server: required tools or no sessions available
       handle_request(data)
     } else {
       result <- forward_request(line)
