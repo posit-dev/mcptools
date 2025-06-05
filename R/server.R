@@ -218,7 +218,7 @@ has_connected_sessions <- function() {
         timeout = 10L
       )
       nanonext::call_aio(aio)
-      !is_error_value(aio$result)
+      !nanonext::is_error_value(aio$result)
     },
     error = function(e) FALSE
   )
