@@ -162,3 +162,36 @@ get_acquaint_tools_as_json <- function() {
 
   compact(tools)
 }
+
+execute_tool_call <- function(data) {
+  tool_name <- data$params$name
+  
+  tools <- get_acquaint_tools()
+  if (!tool_name %in% names(tools)) {
+    return(jsonrpc_response(
+      data$id,
+      error = list(code = -32601, message = "Method not found")
+    ))
+  }
+  
+  fn <- tools[[tool_name]]@fun
+  args <- data$params$arguments
+  
+  # HACK for btw_tool_env_describe_environment. In the JSON, it will have
+  # `"items": []`, and that translates to an empty list, but we want NULL.
+  if (tool_name == "btw_tool_env_describe_environment") {
+    if (identical(args$items, list())) {
+      args$items <- NULL
+    }
+  }
+  
+  tryCatch(
+    as_tool_call_result(data, do.call(fn, args)),
+    error = function(e) {
+      jsonrpc_response(
+        data$id,
+        error = list(code = -32603, message = conditionMessage(e))
+      )
+    }
+  )
+}

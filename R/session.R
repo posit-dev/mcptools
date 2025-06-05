@@ -94,30 +94,7 @@ handle_message_from_server <- function(msg) {
   data <- jsonlite::parse_json(msg)
 
   if (data$method == "tools/call") {
-    name <- data$params$name
-
-    fn <- get_acquaint_tools()[[name]]@fun
-    args <- data$params$arguments
-
-    # HACK for btw_tool_env_describe_environment. In the JSON, it will have
-    # `"items": []`, and that translates to an empty list, but we want NULL.
-    if (name == "btw_tool_env_describe_environment") {
-      if (identical(args$items, list())) {
-        args$items <- NULL
-      }
-    }
-
-    body <- tryCatch(
-      as_tool_call_result(data, do.call(fn, args)),
-      error = \(e) {
-        jsonrpc_response(
-          data$id,
-          error = list(code = -32603, message = conditionMessage(e))
-        )
-      }
-    )
-
-    # cat(paste(capture.output(str(body)), collapse="\n"), file=stderr())
+    body <- execute_tool_call(data)
   } else {
     body <- jsonrpc_response(
       data$id,
