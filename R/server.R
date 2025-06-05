@@ -48,7 +48,7 @@ mcp_server <- function() {
           )
         }
       } else if (length(removed_pipes) > 0) {
-        the$server_has_sessions <- has_connected_sessions()
+        the$server_has_sessions <- length(list_r_sessions()) > 0
       }
     }
   }
@@ -208,22 +208,6 @@ check_not_interactive <- function(call = caller_env()) {
       call = call
     )
   }
-}
-
-has_connected_sessions <- function() {
-  tryCatch(
-    {
-      aio <- nanonext::send_aio(
-        the$server_socket,
-        "",
-        mode = "raw",
-        timeout = 10L
-      )
-      nanonext::call_aio(aio)
-      !nanonext::is_error_value(aio$result)
-    },
-    error = function(e) FALSE
-  )
 }
 
 handle_request <- function(data) {
