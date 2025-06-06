@@ -28,7 +28,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     btw (>= 0.0.1.9000),
-    carrier,
     cli,
     ellmer (>= 0.2.0),
     jsonlite,

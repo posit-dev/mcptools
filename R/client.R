@@ -282,40 +282,30 @@ as_ellmer_type <- function(prop_name, prop_def, required_fields = character()) {
 }
 
 # the output of this function is the function that the ellmer tool will
-# reference. it will just invoke the right tool from `the$mcp_servers`.
+# reference. it has the "right" argument formals and carries along the server
+# and tool it's associated with; when the outputted function is called, it just
+# invokes the right tool from `the$mcp_servers` with the supplied arguments
 tool_ref <- function(server, tool, arguments) {
-  args_list <- setNames(vector("list", length = length(arguments)), arguments)
-
-  # the actual formals of the function need to match the argument
-  # descriptions in the tool object, so call the generic tool wrapper
-  # (which can accept ...) via a wrapper with the proper formals.
-  #
-  # we get the formals via the function environment, so enclose it in a
-  # tool-specific env via `crate()`.
-  carrier::crate(
-    {
-      res <- function() {
-        args <- mget(arguments, envir = environment())
-        do.call(
-          call_tool,
-          c(
-            compact(args),
-            list(
-              server = server,
-              tool = tool
-            )
-          )
-        )
-      }
-      formals(res) <- args_list
-      res
-    },
-    server = server,
-    tool = tool,
-    arguments = arguments,
-    compact = compact,
-    call_tool = call_tool
+  f <- function() {
+  }
+  formals(f) <- setNames(
+    rep(list(quote(expr = )), length(arguments)),
+    arguments
   )
+
+  body(f) <- substitute(
+    {
+      call_info <- match.call()
+      tool_args <- lapply(call_info[-1], eval)
+      do.call(
+        call_tool,
+        c(tool_args, list(server = server_val, tool = tool_val))
+      )
+    },
+    list(server_val = server, tool_val = tool)
+  )
+
+  f
 }
 
 call_tool <- function(..., server, tool) {
