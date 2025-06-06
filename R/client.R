@@ -178,6 +178,10 @@ servers_as_ellmer_tools <- function() {
 server_as_ellmer_tools <- function(server) {
   tools_tbl <- server$tools$tools
 
+  if (length(tools_tbl) == 0) {
+    return(list())
+  }
+
   tools_out <- list()
   for (i in seq_len(nrow(tools_tbl))) {
     tool_description <- tools_tbl[[i, "description"]]
