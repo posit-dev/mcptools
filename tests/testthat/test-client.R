@@ -1,5 +1,8 @@
 test_that("mcp_tools works", {
   skip_if(identical(Sys.getenv("GITHUB_PAT"), ""))
+  # actions/docker-setup-docker not available on ARM macOS
+  skip_on_os("mac")
+
   tmp_file <- withr::local_tempfile()
 
   # example configuration: official GitHub MCP server
