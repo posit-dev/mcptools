@@ -176,17 +176,12 @@ servers_as_ellmer_tools <- function() {
 }
 
 server_as_ellmer_tools <- function(server) {
-  tools_tbl <- server$tools$tools
-
-  if (length(tools_tbl) == 0) {
-    return(list())
-  }
+  tools <- server$tools$tools
 
   tools_out <- list()
-  for (i in seq_len(nrow(tools_tbl))) {
-    tool_description <- tools_tbl[[i, "description"]]
-    tool_name <- tools_tbl[[i, "name"]]
-    tool_arguments <- as_tool_arguments(tools_tbl[i, ]$inputSchema$properties)
+  for (i in seq_along(tools)) {
+    tool <- tools[[i]]
+    tool_arguments <- as_ellmer_types(tool)
     tools_out[[i]] <-
       do.call(
         ellmer::tool,
@@ -194,11 +189,11 @@ server_as_ellmer_tools <- function(server) {
           list(
             .fun = tool_ref(
               server = server$name,
-              tool = tool_name,
+              tool = tool$name,
               arguments = names(tool_arguments)
             ),
-            .description = tool_description,
-            .name = tool_name
+            .description = tool$description,
+            .name = tool$name
           ),
           tool_arguments
         )
@@ -208,21 +203,81 @@ server_as_ellmer_tools <- function(server) {
   tools_out
 }
 
-as_tool_arguments <- function(x) {
-  arguments <- as.list(x)
-  compact(lapply(arguments, as_tool_argument))
+as_ellmer_types <- function(tool) {
+  properties <- tool$inputSchema$properties
+  required_fields <- tool$inputSchema$required
+
+  result <- list()
+  for (prop_name in names(properties)) {
+    result[[prop_name]] <- as_ellmer_type(
+      prop_name,
+      properties[[prop_name]],
+      required_fields
+    )
+  }
+
+  result
 }
 
-as_tool_argument <- function(arg) {
-  if (is.na(arg$type)) {
+as_ellmer_type <- function(prop_name, prop_def, required_fields = character()) {
+  type <- prop_def$type
+  description <- prop_def$description
+  is_required <- prop_name %in% required_fields
+
+  if (length(type) == 0) {
     return(NULL)
   }
-  # TODO: we can probably just assemble a call2 here?
+
   switch(
-    arg$type,
-    string = ellmer::type_string(arg$description),
-    number = ellmer::type_number(arg$description),
-    integer = ellmer::type_integer(arg$description)
+    type,
+    "string" = ellmer::type_string(
+      description = description,
+      required = is_required
+    ),
+    "number" = ellmer::type_number(
+      description = description,
+      required = is_required
+    ),
+    "integer" = ellmer::type_integer(
+      description = description,
+      required = is_required
+    ),
+    "boolean" = ellmer::type_boolean(
+      description = description,
+      required = is_required
+    ),
+    "array" = {
+      if (!is.null(prop_def$items)) {
+        items_type <- as_ellmer_type("", prop_def$items, required_fields)
+        ellmer::type_array(
+          description = description,
+          items = items_type,
+          required = is_required
+        )
+      } else {
+        ellmer::type_array(
+          description = description,
+          items = ellmer::type_string(),
+          required = is_required
+        )
+      }
+    },
+    "object" = {
+      if (!is.null(prop_def$properties)) {
+        obj_args <- list(.description = description, .required = is_required)
+        for (obj_prop_name in names(prop_def$properties)) {
+          obj_args[[obj_prop_name]] <- as_ellmer_type(
+            obj_prop_name,
+            prop_def$properties[[obj_prop_name]],
+            required_fields
+          )
+        }
+        do.call(ellmer::type_object, obj_args)
+      } else {
+        ellmer::type_object(.description = description, .required = is_required)
+      }
+    },
+    ellmer::type_string(description = description, required = is_required)
   )
 }
 
@@ -308,7 +363,7 @@ send_and_receive <- function(process, message) {
 
   if (!is.null(output) && length(output) > 0) {
     log_cat_client(c("FROM SERVER: ", output[1]))
-    return(jsonlite::fromJSON(output[1]))
+    return(jsonlite::parse_json(output[1]))
   }
 
   log_cat_client(c("ALERT: No response received after ", attempts, " attempts"))
@@ -337,15 +392,7 @@ mcp_request_initialize <- function() {
 }
 
 # step 2: send initialized notification
-# For some reason, if I send this, the buffer gets tied up and the following
-# tools/list isn't appropriately responded to.
-# Don't expect a response here, so no `receive()`
-# initialized_notification <- list(
-#   jsonrpc = "2.0",
-#   method = "notifications/initialized"
-# )
-#
-# r_process$write_input(jsonlite::toJSON(initialized_notification, auto_unbox = TRUE))
+# This is a MAY in the protocol, so omitting.
 
 # step 3: request the list of tools
 mcp_request_tools_list <- function() {
