@@ -10,3 +10,5 @@
 inst/hex
 ^[\.]?air\.toml$
 ^\.vscode$
+.claude/
+CLAUDE.md
