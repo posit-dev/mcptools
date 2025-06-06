@@ -3,7 +3,7 @@ pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
   acquaint: acquaint.html
-last_built: 2025-05-28T17:01Z
+last_built: 2025-06-06T13:09Z
 urls:
   reference: https://posit-dev.github.io/acquaint/reference
   article: https://posit-dev.github.io/acquaint/articles
