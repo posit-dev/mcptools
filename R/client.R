@@ -8,7 +8,7 @@
 # id: the current jsonrpc message id
 the$mcp_servers <- list()
 
-#' Collect ellmer chats with tools from MCP servers
+#' Define ellmer tools from MCP servers
 #'
 #' @description
 #' These functions implement R as an MCP _client_, so that ellmer chats can
@@ -21,18 +21,19 @@ the$mcp_servers <- list()
 #'
 #' @section Configuration:
 #'
-#' acquaint uses the same .json configuration file format as Claude Desktop.
-#' By default, the package will look to
+#' acquaint uses the same .json configuration file format as Claude Desktop;
+#' most MCP servers will define example .json to configure the server with
+#' Claude Desktop in their README files. By default, acquaint will look to
 #' `file.path("~", ".config", "acquaint", "config.json")`; you can edit that
 #' file with `file.edit(file.path("~", ".config", "acquaint", "config.json"))`,
 #' or you can supply an alternative file path with `set_mcp_config()`.
 #'
-#' The acquaint config file should be valid json with an entry `mcpServers`.
+#' The acquaint config file should be valid .json with an entry `mcpServers`.
 #' That entry should contain named elements, each with at least a `command`
 #' and `args` entry.
 #'
 #' For example, to configure `mcp_tools()` with GitHub's official MCP Server
-#' <https://github.com/github/github-mcp-server>, I could write the following
+#' <https://github.com/github/github-mcp-server>, you could write the following
 #' in that file:
 #'
 #' ```json

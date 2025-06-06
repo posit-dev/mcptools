@@ -4,7 +4,7 @@
 \alias{client}
 \alias{mcp_tools}
 \alias{set_mcp_config}
-\title{Collect ellmer chats with tools from MCP servers}
+\title{Define ellmer tools from MCP servers}
 \usage{
 mcp_tools()
 
@@ -34,18 +34,19 @@ tools compatible with the \verb{$set_tools()} method of \link[ellmer:Chat]{ellme
 \section{Configuration}{
 
 
-acquaint uses the same .json configuration file format as Claude Desktop.
-By default, the package will look to
+acquaint uses the same .json configuration file format as Claude Desktop;
+most MCP servers will define example .json to configure the server with
+Claude Desktop in their README files. By default, acquaint will look to
 \code{file.path("~", ".config", "acquaint", "config.json")}; you can edit that
 file with \code{file.edit(file.path("~", ".config", "acquaint", "config.json"))},
 or you can supply an alternative file path with \code{set_mcp_config()}.
 
-The acquaint config file should be valid json with an entry \code{mcpServers}.
+The acquaint config file should be valid .json with an entry \code{mcpServers}.
 That entry should contain named elements, each with at least a \code{command}
 and \code{args} entry.
 
 For example, to configure \code{mcp_tools()} with GitHub's official MCP Server
-\url{https://github.com/github/github-mcp-server}, I could write the following
+\url{https://github.com/github/github-mcp-server}, you could write the following
 in that file:
 
 \if{html}{\out{<div class="sourceCode json">}}\preformatted{\{
