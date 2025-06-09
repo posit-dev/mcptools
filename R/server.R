@@ -16,40 +16,17 @@ mcp_server <- function() {
   on.exit(nanonext::reap(the$server_socket), add = TRUE)
   nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
 
-  the$session_monitor <- nanonext::monitor(the$server_socket, cv)
-  the$server_has_sessions <- FALSE
-
   client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
-  session <- NULL
+  session <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
 
   while (nanonext::wait(cv)) {
-    if (!is.null(session) && !nanonext::unresolved(session)) {
+    if (!nanonext::unresolved(session)) {
       handle_message_from_session(session$data)
-      the$server_has_sessions <- TRUE
       session <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
     }
     if (!nanonext::unresolved(client)) {
       handle_message_from_client(client$data)
       client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
-    }
-
-    pipe_changes <- nanonext::read_monitor(the$session_monitor)
-    if (!is.null(pipe_changes)) {
-      active_pipes <- pipe_changes[pipe_changes > 0]
-      removed_pipes <- pipe_changes[pipe_changes < 0]
-
-      if (length(active_pipes) > 0) {
-        the$server_has_sessions <- TRUE
-        if (is.null(session)) {
-          session <- nanonext::recv_aio(
-            the$server_socket,
-            mode = "string",
-            cv = cv
-          )
-        }
-      } else if (length(removed_pipes) > 0) {
-        the$server_has_sessions <- length(list_r_sessions()) > 0
-      }
     }
   }
 }
@@ -106,7 +83,7 @@ handle_message_from_client <- function(line) {
       tool_name %in%
         c("list_r_sessions", "select_r_session") ||
         # with no sessions available, just execute tools in the server (#36)
-        !the$server_has_sessions
+      !nanonext::stat(the$server_socket, "pipes")
     ) {
       handle_request(data)
     } else {
