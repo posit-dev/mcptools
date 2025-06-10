@@ -77,15 +77,15 @@ handle_message_from_client <- function(line) {
     cat_json(res)
   } else if (data$method == "tools/call") {
     tool_name <- data$params$name
-    if (tool_name %in% c("list_r_sessions", "select_r_session")) {
+    if (
       # two tools provided by acquaint itself which must be executed in
       # the server rather than a session (#18)
-      result <- as_tool_call_result(
-        data,
-        do.call(tool_name, data$params$arguments)
-      )
-      logcat(c("FROM SERVER: ", to_json(result)))
-      cat_json(result)
+      tool_name %in%
+        c("list_r_sessions", "select_r_session") ||
+        # with no sessions available, just execute tools in the server (#36)
+      !nanonext::stat(the$server_socket, "pipes")
+    ) {
+      handle_request(data)
     } else {
       result <- forward_request(line)
     }
@@ -185,4 +185,10 @@ check_not_interactive <- function(call = caller_env()) {
       call = call
     )
   }
+}
+
+handle_request <- function(data) {
+  result <- execute_tool_call(data)
+  logcat(c("FROM SERVER: ", to_json(result)))
+  cat_json(result)
 }
