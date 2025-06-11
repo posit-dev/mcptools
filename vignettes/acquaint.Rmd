@@ -34,11 +34,7 @@ acquaint is built around three main concepts:
 
 (In case this caught your eye: yes, the server is itself an R session. In acquaint's documentation, we'll always refer to the server R session just as the server; the fact that it's implemented in R is only a technical detail.)
 
-In the case you have some client that you want to connect to R, everything will "just work" after these two steps:
-
-1\) Configure the command `Rscript -e "acquaint::mcp_server()"` according to your client's instructions.
-
-2\) Add `acquaint::mcp_session()` to your `.Rprofile`, perhaps by first calling `usethis::edit_r_profile()`.
+In the case you have some client that you want to connect to R, **all you need to do is configure the command** `Rscript -e "acquaint::mcp_server()"` according to your client's instructions. Optionally, if you'd like the server to be able to access variables in active R sessions, add `acquaint::mcp_session()` to your `.Rprofile`, perhaps by first calling `usethis::edit_r_profile()`.
 
 Then, you're good to go!
 
