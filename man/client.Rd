@@ -3,23 +3,27 @@
 \name{client}
 \alias{client}
 \alias{mcp_tools}
-\alias{set_mcp_config}
+\alias{mcp_client_config}
 \title{Define ellmer tools from MCP servers}
 \usage{
-mcp_tools()
+mcp_tools(path = mcp_client_config())
 
-set_mcp_config(file)
+mcp_client_config(path = NULL)
 }
 \arguments{
-\item{file}{A single string indicating the path to the acquaint MCP servers
-configuration file. If one is not configured, acquaint will look for one in
+\item{path}{A single string indicating the path to the acquaint MCP servers
+configuration file. If one is not supplied, acquaint will look for one at
+the file path configured with the option \code{.acquaint_config}, falling back to
 \code{file.path("~", ".config", "acquaint", "config.json")}.}
 }
 \value{
 \itemize{
 \item \code{mcp_tools()} returns a list of ellmer tools that can be passed directly
-to the \verb{$set_tools()} method of an \link[ellmer:Chat]{ellmer::Chat} object.
-\item \code{set_mcp_config()} returns the path to the new MCP config file, invisibly.
+to the \verb{$set_tools()} method of an \link[ellmer:Chat]{ellmer::Chat} object. If the file at
+\code{path} doesn't exist, an error.
+\item \code{mcp_client_config()} returns the path to the MCP config file.
+Set the option \code{.acquaint_config} to change the default config
+file path in \code{mcp_tools()}.
 }
 }
 \description{
@@ -28,7 +32,7 @@ register functionality from third-party MCP servers such as those listed
 here: \url{https://github.com/modelcontextprotocol/servers}.
 
 \code{mcp_tools()} fetches tools from MCP servers configured in the acquaint
-server config file at \code{set_mcp_config()} and converts them to a list of
+server config file at \code{mcp_client_config()} and converts them to a list of
 tools compatible with the \verb{$set_tools()} method of \link[ellmer:Chat]{ellmer::Chat} objects.
 }
 \section{Configuration}{
@@ -38,8 +42,7 @@ acquaint uses the same .json configuration file format as Claude Desktop;
 most MCP servers will define example .json to configure the server with
 Claude Desktop in their README files. By default, acquaint will look to
 \code{file.path("~", ".config", "acquaint", "config.json")}; you can edit that
-file with \code{file.edit(file.path("~", ".config", "acquaint", "config.json"))},
-or you can supply an alternative file path with \code{set_mcp_config()}.
+file with \code{file.edit(file.path("~", ".config", "acquaint", "config.json"))}.
 
 The acquaint config file should be valid .json with an entry \code{mcpServers}.
 That entry should contain named elements, each with at least a \code{command}

@@ -41,3 +41,46 @@ test_that("mcp_tools works", {
   ))
   expect_null(last_user_turn@contents[[1]]@error)
 })
+
+test_that("mcp_client_config() returns path when provided", {
+  expect_equal(mcp_client_config("some/path/"), "some/path/")
+})
+
+test_that("mcp_client_config() uses option when path is NULL", {
+  withr::local_options(.acquaint_config = "/option/path")
+  expect_equal(mcp_client_config(), "/option/path")
+})
+
+test_that("mcp_client_config() uses default when no option set", {
+  withr::local_options(.acquaint_config = NULL)
+  expect_equal(mcp_client_config(), default_mcp_client_config())
+})
+
+test_that("mcp_tools() errors informatively when file doesn't exist", {
+  expect_snapshot(read_mcp_config("nonexistent/file/"), error = TRUE)
+})
+
+test_that("mcp_tools() errors informatively with invalid JSON", {
+  tmp_file <- withr::local_tempfile()
+  writeLines("invalid json", tmp_file)
+  expect_snapshot(read_mcp_config(tmp_file), error = TRUE)
+})
+
+test_that("mcp_tools() errors informatively without mcpServers entry", {
+  tmp_file <- withr::local_tempfile()
+  config <- list(otherField = "value")
+  writeLines(jsonlite::toJSON(config), tmp_file)
+  expect_snapshot(read_mcp_config(tmp_file), error = TRUE)
+})
+
+test_that("mcp_tools() returns mcpServers when valid", {
+  tmp_file <- withr::local_tempfile()
+  config <- list(
+    mcpServers = list(
+      server1 = list(command = "test", args = c("arg1"))
+    )
+  )
+  writeLines(jsonlite::toJSON(config), tmp_file)
+  result <- read_mcp_config(tmp_file)
+  expect_equal(result, config$mcpServers)
+})

@@ -16,8 +16,13 @@ the$mcp_servers <- list()
 #' here: <https://github.com/modelcontextprotocol/servers>.
 #'
 #' `mcp_tools()` fetches tools from MCP servers configured in the acquaint
-#' server config file at `set_mcp_config()` and converts them to a list of
+#' server config file at `mcp_client_config()` and converts them to a list of
 #' tools compatible with the `$set_tools()` method of [ellmer::Chat] objects.
+#'
+#' @param path A single string indicating the path to the acquaint MCP servers
+#' configuration file. If one is not supplied, acquaint will look for one at
+#' the file path configured with the option `.acquaint_config`, falling back to
+#' `file.path("~", ".config", "acquaint", "config.json")`.
 #'
 #' @section Configuration:
 #'
@@ -25,8 +30,7 @@ the$mcp_servers <- list()
 #' most MCP servers will define example .json to configure the server with
 #' Claude Desktop in their README files. By default, acquaint will look to
 #' `file.path("~", ".config", "acquaint", "config.json")`; you can edit that
-#' file with `file.edit(file.path("~", ".config", "acquaint", "config.json"))`,
-#' or you can supply an alternative file path with `set_mcp_config()`.
+#' file with `file.edit(file.path("~", ".config", "acquaint", "config.json"))`.
 #'
 #' The acquaint config file should be valid .json with an entry `mcpServers`.
 #' That entry should contain named elements, each with at least a `command`
@@ -59,13 +63,16 @@ the$mcp_servers <- list()
 #'
 #' @returns
 #' * `mcp_tools()` returns a list of ellmer tools that can be passed directly
-#' to the `$set_tools()` method of an [ellmer::Chat] object.
-#' * `set_mcp_config()` returns the path to the new MCP config file, invisibly.
+#' to the `$set_tools()` method of an [ellmer::Chat] object. If the file at
+#' `path` doesn't exist, an error.
+#' * `mcp_client_config()` returns the path to the MCP config file.
+#' Set the option `.acquaint_config` to change the default config
+#' file path in `mcp_tools()`.
 #'
 #' @name client
 #' @export
-mcp_tools <- function() {
-  config <- read_mcp_config()
+mcp_tools <- function(path = mcp_client_config()) {
+  config <- read_mcp_config(path)
   if (length(config) == 0) {
     return(list())
   }
@@ -95,31 +102,29 @@ mcp_tools <- function() {
   servers_as_ellmer_tools()
 }
 
-#' @param file A single string indicating the path to the acquaint MCP servers
-#' configuration file. If one is not configured, acquaint will look for one in
-#' `file.path("~", ".config", "acquaint", "config.json")`.
-#'
 #' @rdname client
 #' @export
-set_mcp_config <- function(file) {
-  if (file.exists(file)) {
-    cli::cli_abort("{.arg file} must exist.")
+mcp_client_config <- function(path = NULL) {
+  if (!is.null(path)) {
+    return(path)
   }
-  options(.acquaint_config = file)
-  invisible(file)
-}
 
-get_mcp_config <- function() {
-  res <- getOption(
+  getOption(
     ".acquaint_config",
-    default = file.path("~", ".config", "acquaint", "config.json")
+    default = default_mcp_client_config()
   )
 }
 
-read_mcp_config <- function(call = caller_env()) {
-  config_file <- get_mcp_config()
-  config_lines <- readLines(config_file)
+default_mcp_client_config <- function() {
+  file.path("~", ".config", "acquaint", "config.json")
+}
 
+read_mcp_config <- function(path, call = caller_env()) {
+  if (!file.exists(path)) {
+    error_no_mcp_config(call = call)
+  }
+
+  config_lines <- readLines(path)
   if (length(config_lines) == 0) {
     return(list())
   }
@@ -132,7 +137,7 @@ read_mcp_config <- function(call = caller_env()) {
       cli::cli_abort(
         c(
           "Configuration processing failed",
-          i = "The configuration file {.file {config_file}} must be valid JSON."
+          i = "The configuration file {.arg path} must be valid JSON."
         ),
         call = call,
         parent = e
@@ -145,7 +150,7 @@ read_mcp_config <- function(call = caller_env()) {
       cli::cli_abort(
         c(
           "Configuration processing failed.",
-          i = "{.file {config_file}} must have a top-level {.field mcpServers} entry."
+          i = "{.arg path} must have a top-level {.field mcpServers} entry."
         ),
         call = call
       )
@@ -153,6 +158,18 @@ read_mcp_config <- function(call = caller_env()) {
   }
 
   config$mcpServers
+}
+
+
+error_no_mcp_config <- function(call) {
+  cli::cli_abort(
+    c(
+      "The acquaint MCP client configuration file does not exist.",
+      "Supply a non-NULL file {.arg path} or create a file at the default 
+       configuration location {.file {default_mcp_client_config}}."
+    ),
+    call = call
+  )
 }
 
 add_mcp_server <- function(process, name) {
@@ -287,8 +304,7 @@ as_ellmer_type <- function(prop_name, prop_def, required_fields = character()) {
 # and tool it's associated with; when the outputted function is called, it just
 # invokes the right tool from `the$mcp_servers` with the supplied arguments
 tool_ref <- function(server, tool, arguments) {
-  f <- function() {
-  }
+  f <- function() {}
   formals(f) <- setNames(
     rep(list(quote(expr = )), length(arguments)),
     arguments
