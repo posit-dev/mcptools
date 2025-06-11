@@ -57,20 +57,20 @@ test_that("mcp_client_config() uses default when no option set", {
 })
 
 test_that("mcp_tools() errors informatively when file doesn't exist", {
-  expect_snapshot(read_mcp_config("nonexistent/file/"), error = TRUE)
+  expect_snapshot(mcp_tools("nonexistent/file/"), error = TRUE)
 })
 
 test_that("mcp_tools() errors informatively with invalid JSON", {
   tmp_file <- withr::local_tempfile()
   writeLines("invalid json", tmp_file)
-  expect_snapshot(read_mcp_config(tmp_file), error = TRUE)
+  expect_snapshot(mcp_tools(tmp_file), error = TRUE)
 })
 
 test_that("mcp_tools() errors informatively without mcpServers entry", {
   tmp_file <- withr::local_tempfile()
   config <- list(otherField = "value")
   writeLines(jsonlite::toJSON(config), tmp_file)
-  expect_snapshot(read_mcp_config(tmp_file), error = TRUE)
+  expect_snapshot(mcp_tools(tmp_file), error = TRUE)
 })
 
 test_that("mcp_tools() returns mcpServers when valid", {

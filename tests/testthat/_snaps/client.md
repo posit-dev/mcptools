@@ -1,17 +1,18 @@
 # mcp_tools() errors informatively when file doesn't exist
 
     Code
-      read_mcp_config("nonexistent/file/")
+      mcp_tools("nonexistent/file/")
     Condition
-      Error in `as.character()`:
-      ! cannot coerce type 'closure' to vector of type 'character'
+      Error in `mcp_tools()`:
+      ! The acquaint MCP client configuration file does not exist.
+      i Supply a non-NULL file `path` or create a file at the default configuration location '~/.config/acquaint/config.json'.
 
 # mcp_tools() errors informatively with invalid JSON
 
     Code
-      read_mcp_config(tmp_file)
+      mcp_tools(tmp_file)
     Condition
-      Error:
+      Error in `mcp_tools()`:
       ! Configuration processing failed
       i The configuration file `path` must be valid JSON.
       Caused by error:
@@ -22,9 +23,9 @@
 # mcp_tools() errors informatively without mcpServers entry
 
     Code
-      read_mcp_config(tmp_file)
+      mcp_tools(tmp_file)
     Condition
-      Error:
+      Error in `mcp_tools()`:
       ! Configuration processing failed.
       i `path` must have a top-level mcpServers entry.
 

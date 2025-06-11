@@ -165,8 +165,8 @@ error_no_mcp_config <- function(call) {
   cli::cli_abort(
     c(
       "The acquaint MCP client configuration file does not exist.",
-      "Supply a non-NULL file {.arg path} or create a file at the default 
-       configuration location {.file {default_mcp_client_config}}."
+      i = "Supply a non-NULL file {.arg path} or create a file at the default 
+           configuration location {.file {default_mcp_client_config()}}."
     ),
     call = call
   )
