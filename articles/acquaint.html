@@ -95,13 +95,12 @@ session. In acquaint’s documentation, we’ll always refer to the server R
 session just as the server; the fact that it’s implemented in R is only
 a technical detail.)</p>
 <p>In the case you have some client that you want to connect to R,
-everything will “just work” after these two steps:</p>
-<p>1) Configure the command
+<strong>all you need to do is configure the command</strong>
 <code>Rscript -e "acquaint::mcp_server()"</code> according to your
-client’s instructions.</p>
-<p>2) Add <code><a href="../reference/mcp.html">acquaint::mcp_session()</a></code> to your
-<code>.Rprofile</code>, perhaps by first calling
-<code>usethis::edit_r_profile()</code>.</p>
+client’s instructions. Optionally, if you’d like the server to be able
+to access variables in active R sessions, add
+<code><a href="../reference/mcp.html">acquaint::mcp_session()</a></code> to your <code>.Rprofile</code>,
+perhaps by first calling <code>usethis::edit_r_profile()</code>.</p>
 <p>Then, you’re good to go!</p>
 <p>(If, instead, you’re interested in “the other direction,” where R
 itself is the client—presumably via ellmer—and you’d like to grab
