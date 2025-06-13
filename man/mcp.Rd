@@ -52,7 +52,9 @@ available to the server.
 }
 
 \examples{
-if (!interactive()) {
+# should only be run non-interactively, and will block the current R process
+# once called.
+if (FALSE) {
 # to just start a server with btw tools:
 mcp_server()
 
