@@ -1,11 +1,37 @@
 # The MCP server is a proxy. It takes input on stdin, and when the input forms
 # valid JSON, it will send the JSON to the session. Then, when it receives the
 # response, it will print the response to stdout.
+#' @param tools A list of tools created with [ellmer::tool()] that will be
+#' available from the server. Any list that could be passed to `Chat$set_tools()`
+#' can be passed here. By default, the package will use [btw::btw_tools()].
+#'
 #' @rdname mcp
 #' @export
-mcp_server <- function() {
+#'
+#' @examples
+#' # should only be run non-interactively, and will block the current R process
+#' # once called.
+#' if (FALSE) {
+#' # to just start a server with btw tools:
+#' mcp_server()
+#'
+#' # to do so with non-default tools:
+#' library(ellmer)
+#'
+#' tool_rnorm <- tool(
+#'   rnorm,
+#'   "Draw numbers from a random normal distribution",
+#'   n = type_integer("The number of observations. Must be a positive integer."),
+#'   mean = type_number("The mean value of the distribution."),
+#'   sd = type_number("The standard deviation of the distribution. Must be a non-negative number.")
+#' )
+#'
+#' mcp_server(tools = list(tool_rnorm))
+#' }
+mcp_server <- function(tools = btw::btw_tools()) {
   # TODO: should this actually be a check for being called within Rscript or not?
   check_not_interactive()
+  set_server_tools(tools)
 
   cv <- nanonext::cv()
   reader_socket <- nanonext::read_stdin()
@@ -83,17 +109,16 @@ handle_message_from_client <- function(line) {
       tool_name %in%
         c("list_r_sessions", "select_r_session") ||
         # with no sessions available, just execute tools in the server (#36)
-      !nanonext::stat(the$server_socket, "pipes")
+        !nanonext::stat(the$server_socket, "pipes")
     ) {
       handle_request(data)
     } else {
-      result <- forward_request(line)
+      result <- forward_request(data)
     }
   } else if (is.null(data$id)) {
     # If there is no `id` in the request, then this is a notification and the
     # client does not expect a response.
-    if (data$method == "notifications/initialized") {
-    }
+    if (data$method == "notifications/initialized") {}
   } else {
     cat_json(jsonrpc_response(
       data$id,
@@ -114,9 +139,15 @@ handle_message_from_session <- function(data) {
 }
 
 forward_request <- function(data) {
-  logcat(c("TO SESSION: ", data))
+  logcat(c("TO SESSION: ", jsonlite::toJSON(data)))
 
-  nanonext::send_aio(the$server_socket, data, mode = "raw")
+  prepared <- append_tool_fn(data)
+
+  if (inherits(prepared, "jsonrpc_error")) {
+    return(prepared)
+  }
+
+  nanonext::send_aio(the$server_socket, prepared, mode = "serial")
 }
 
 # This process will be launched by the MCP client, so stdout/stderr aren't
@@ -188,7 +219,38 @@ check_not_interactive <- function(call = caller_env()) {
 }
 
 handle_request <- function(data) {
-  result <- execute_tool_call(data)
+  prepared <- append_tool_fn(data)
+
+  if (inherits(prepared, "jsonrpc_error")) {
+    result <- prepared
+  } else {
+    result <- execute_tool_call(prepared)
+  }
+
   logcat(c("FROM SERVER: ", to_json(result)))
   cat_json(result)
+}
+
+# the session needs access to the function called by the server; in addition
+# to the raw jsonrpc request, append the relevant R function if the request
+# is a `tools/call`
+append_tool_fn <- function(data) {
+  if (!identical(data$method, "tools/call")) {
+    return(data)
+  }
+
+  tool_name <- data$params$name
+
+  if (!tool_name %in% names(get_acquaint_tools())) {
+    return(structure(
+      jsonrpc_response(
+        data$id,
+        error = list(code = -32601, message = "Method not found")
+      ),
+      class = "jsonrpc_error"
+    ))
+  }
+
+  data$tool <- get_acquaint_tools()[[tool_name]]@fun
+  data
 }
