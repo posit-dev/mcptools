@@ -182,23 +182,16 @@ to run whatever R code it wants.</li>
 <p>You can configure any set of tools that could be passed to the
 <code>$set_tools()</code> method of an ellmer Chat object as the tools
 that acquaint will supply to clients. To do so, supply a list of outputs
-from <code><a href="https://ellmer.tidyverse.org/reference/tool.html" class="external-link">ellmer::tool()</a></code> to
-<code><a href="../reference/mcp_set_tools.html">acquaint::mcp_set_tools()</a></code> <em>inside of your
-.Rprofile</em>. It’s important that <code><a href="../reference/mcp_set_tools.html">mcp_set_tools()</a></code> is
-called inside of your .Rprofile so that it’s run every time R starts.
-That way, when clients start and run the configured command
-<code>Rscript</code>, <code>Rscript</code> will first run
-<code><a href="../reference/mcp_set_tools.html">mcp_set_tools()</a></code> so that, when the client asks the server
-what tools are available, the server can describe specifically the new
-tools you’ve configured. Relatedly, you’ll need to make sure that your
+from <code><a href="https://ellmer.tidyverse.org/reference/tool.html" class="external-link">ellmer::tool()</a></code> to the <code>tools</code> argument of
+<code><a href="../reference/mcp.html">mcp_server()</a></code>. Relatedly, you’ll need to make sure that your
 code that specifies the new tools can run in a fresh R session; be sure
 to either namespace functions from libraries (like
 <code><a href="https://ellmer.tidyverse.org/reference/tool.html" class="external-link">ellmer::tool()</a></code> instead of <code><a href="https://ellmer.tidyverse.org/reference/tool.html" class="external-link">tool()</a></code>) or load the
 libraries entirely.</p>
 <!--# \[TODO: provide an example of registering the `rnorm()` tool.\] -->
 <p>Note that, if you’d like to supply some custom tools <em>in addition
-to</em> the default tools from btw, you’ll need to write
-<code>acquaint::mcp_set_tools(c(btw::btw_tools(), your_custom_tools))</code>.</p>
+to</em> the default tools from btw, you’ll need to set
+<code>tools = (c(btw::btw_tools(), your_custom_tools))</code>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
