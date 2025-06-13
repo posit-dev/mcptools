@@ -76,12 +76,11 @@ mcp_session <- function() {
   schedule_handle_message_from_server()
 }
 
-handle_message_from_server <- function(msg) {
+handle_message_from_server <- function(data) {
   pipe <- nanonext::pipe_id(the$raio)
   schedule_handle_message_from_server()
 
-  # cat("RECV :", msg, "\n", sep = "", file = stderr())
-  if (!nzchar(msg)) {
+  if (length(data) == 0) {
     return(
       nanonext::send_aio(
         the$session_socket,
@@ -91,7 +90,6 @@ handle_message_from_server <- function(msg) {
       )
     )
   }
-  data <- jsonlite::parse_json(msg)
 
   if (data$method == "tools/call") {
     body <- execute_tool_call(data)
@@ -133,7 +131,7 @@ as_tool_call_result <- function(data, result) {
 }
 
 schedule_handle_message_from_server <- function() {
-  the$raio <- nanonext::recv_aio(the$session_socket, mode = "string")
+  the$raio <- nanonext::recv_aio(the$session_socket, mode = "serial")
   promises::as.promise(the$raio)$then(handle_message_from_server)$catch(
     \(e) {
       # no op but ensures promise is never rejected

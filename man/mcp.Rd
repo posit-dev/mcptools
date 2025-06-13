@@ -6,9 +6,14 @@
 \alias{mcp_session}
 \title{Model context protocol for your R session}
 \usage{
-mcp_server()
+mcp_server(tools = btw::btw_tools())
 
 mcp_session()
+}
+\arguments{
+\item{tools}{A list of tools created with \code{\link[ellmer:tool]{ellmer::tool()}} that will be
+available from the server. Any list that could be passed to \code{Chat$set_tools()}
+can be passed here. If \code{NULL}, the package will use \code{\link[btw:btw_tools]{btw::btw_tools()}}.}
 }
 \description{
 Together, these functions implement a model context protocol server for your
@@ -47,6 +52,23 @@ available to the server.
 }
 
 \examples{
+if (!interactive()) {
+# to just start a server with btw tools:
+mcp_server()
+
+# to do so with non-default tools:
+library(ellmer)
+
+tool_rnorm <- tool(
+  rnorm,
+  "Draw numbers from a random normal distribution",
+  n = type_integer("The number of observations. Must be a positive integer."),
+  mean = type_number("The mean value of the distribution."),
+  sd = type_number("The standard deviation of the distribution. Must be a non-negative number.")
+)
+
+mcp_server(tools = list(tool_rnorm))
+}
 if (interactive()) {
 mcp_session()
 }
