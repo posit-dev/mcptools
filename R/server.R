@@ -3,7 +3,7 @@
 # response, it will print the response to stdout.
 #' @param tools A list of tools created with [ellmer::tool()] that will be
 #' available from the server. Any list that could be passed to `Chat$set_tools()`
-#' can be passed here. If `NULL`, the package will use [btw::btw_tools()].
+#' can be passed here. By default, the package will use [btw::btw_tools()].
 #'
 #' @rdname mcp
 #' @export

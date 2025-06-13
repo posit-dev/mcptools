@@ -13,7 +13,7 @@ mcp_session()
 \arguments{
 \item{tools}{A list of tools created with \code{\link[ellmer:tool]{ellmer::tool()}} that will be
 available from the server. Any list that could be passed to \code{Chat$set_tools()}
-can be passed here. If \code{NULL}, the package will use \code{\link[btw:btw_tools]{btw::btw_tools()}}.}
+can be passed here. By default, the package will use \code{\link[btw:btw_tools]{btw::btw_tools()}}.}
 }
 \description{
 Together, these functions implement a model context protocol server for your
