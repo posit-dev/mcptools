@@ -130,6 +130,14 @@ execute_tool_call <- function(data) {
     }
   }
 
+  args <- lapply(args, function(x) {
+    if (is.list(x) && is.null(names(x))) {
+      unlist(x, use.names = FALSE)
+    } else {
+      x
+    }
+  })
+
   tryCatch(
     as_tool_call_result(data, do.call(data$tool, args)),
     error = function(e) {
