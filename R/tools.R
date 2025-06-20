@@ -1,4 +1,8 @@
 set_server_tools <- function(x, call = caller_env()) {
+  if (is.null(x)) {
+    the$server_tools <- c(list(list_r_sessions_tool, select_r_session_tool))
+    return()
+  }
   if (!is_list(x) || !all(vapply(x, inherits, logical(1), "ellmer::ToolDef"))) {
     msg <- "{.arg x} must be a list of tools created with {.fn ellmer::tool}."
     if (inherits(x, "ellmer::ToolDef")) {

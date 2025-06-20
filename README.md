@@ -16,9 +16,10 @@ acquaint implements a [Model Context
 Protocol](https://modelcontextprotocol.io/) (MCP) server for your R
 sessions. When configured with acquaint, MCP-enabled tools like Claude
 Desktop and Claude Code can run R code *in the sessions you have
-running* to answer your questions. While the package supports
-configuring arbitrary R functions, acquaint provides a default set of
-tools [from btw](https://posit-dev.github.io/btw/) to:
+running* to answer your questions. The package supports configuring
+arbitrary R functions, though you may be interested in the
+[btw](https://posit-dev.github.io/btw/) package’s integrated support for
+acquaint, which provides a default set of tools to:
 
 - Peruse the documentation of packages you have installed,
 - Check out the objects in your global environment, and
