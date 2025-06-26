@@ -34,11 +34,7 @@ acquaint is built around three main concepts:
 
 (In case this caught your eye: yes, the server is itself an R session. In acquaint's documentation, we'll always refer to the server R session just as the server; the fact that it's implemented in R is only a technical detail.)
 
-In the case you have some client that you want to connect to R, everything will "just work" after these two steps:
-
-1\) Configure the command `Rscript -e "acquaint::mcp_server()"` according to your client's instructions.
-
-2\) Add `acquaint::mcp_session()` to your `.Rprofile`, perhaps by first calling `usethis::edit_r_profile()`.
+In the case you have some client that you want to connect to R, **all you need to do is configure the command** `Rscript -e "acquaint::mcp_server()"` according to your client's instructions. Optionally, if you'd like the server to be able to access variables in active R sessions, add `acquaint::mcp_session()` to your `.Rprofile`, perhaps by first calling `usethis::edit_r_profile()`.
 
 Then, you're good to go!
 
@@ -69,8 +65,8 @@ Users might be interested in extending these tools or supplying completely diffe
 -   A set of tools specifically focused on R package development (e.g. various wrappers of [devtools](https://devtools.r-lib.org/) and [testthat](https://testthat.r-lib.org/)) that could be hooked up to Claude Code to make a package development assistant.
 -   For the brave, a tool `run_r_code()` that allows a client to run whatever R code it wants.
 
-You can configure any set of tools that could be passed to the `$set_tools()` method of an ellmer Chat object as the tools that acquaint will supply to clients. To do so, supply a list of outputs from `ellmer::tool()` to `acquaint::mcp_set_tools()` *inside of your .Rprofile*. It's important that `mcp_set_tools()` is called inside of your .Rprofile so that it's run every time R starts. That way, when clients start and run the configured command `Rscript`, `Rscript` will first run `mcp_set_tools()` so that, when the client asks the server what tools are available, the server can describe specifically the new tools you've configured. Relatedly, you'll need to make sure that your code that specifies the new tools can run in a fresh R session; be sure to either namespace functions from libraries (like `ellmer::tool()` instead of `tool()`) or load the libraries entirely.
+You can configure any set of tools that could be passed to the `$set_tools()` method of an ellmer Chat object as the tools that acquaint will supply to clients. To do so, supply a list of outputs from `ellmer::tool()` to the `tools` argument of `mcp_server()`. Relatedly, you'll need to make sure that your code that specifies the new tools can run in a fresh R session; be sure to either namespace functions from libraries (like `ellmer::tool()` instead of `tool()`) or load the libraries entirely.
 
 <!--# \[TODO: provide an example of registering the `rnorm()` tool.\] -->
 
-Note that, if you'd like to supply some custom tools *in addition to* the default tools from btw, you'll need to write `acquaint::mcp_set_tools(c(btw::btw_tools(), your_custom_tools))`.
+Note that, if you'd like to supply some custom tools *in addition to* the default tools from btw, you'll need to set `tools = (c(btw::btw_tools(), your_custom_tools))`.

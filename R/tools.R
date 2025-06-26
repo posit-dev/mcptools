@@ -1,53 +1,4 @@
-#' Set the tools available to run in your R session
-#'
-#' @description
-#' By default, acquaint supplies tools from [btw::btw_tools()] to allow clients
-#' to peruse package documentation, inspect your global environment, and query
-#' session details. This function allows you register any tools created with
-#' [ellmer::tool()] instead.
-#'
-#' A call to this function must be placed in your `.Rprofile` and the client
-#' (i.e. Claude Desktop or Claude Code) restarted in order for the new tools
-#' to be registered.
-#'
-#' acquaint will always register the tools "list_r_sessions" and
-#' "select_r_session" in addition to the tools provided here; those tool names
-#' are thus reserved for the package.
-#'
-#' @param x A list of tools created with [ellmer::tool()]. Any list that could
-#' be passed to `chat$set_tools()` can be passed here.
-#'
-#' @returns
-#' `x`, invisibly. Called for side effects. The function will error if `x` is
-#' not a list of `ellmer::ToolDef` objects or if any tool name is one of the
-#' reserved names "list_r_sessions" or "select_r_session".
-#'
-#' @examples
-#' library(ellmer)
-#'
-#' tool_rnorm <- tool(
-#'   rnorm,
-#'   "Draw numbers from a random normal distribution",
-#'   n = type_integer("The number of observations. Must be a positive integer."),
-#'   mean = type_number("The mean value of the distribution."),
-#'   sd = type_number("The standard deviation of the distribution. Must be a non-negative number.")
-#' )
-#'
-#' # supply only one tool, tool_rnorm
-#' mcp_set_tools(list(tool_rnorm))
-#'
-#' # supply both tool_rnorm and `btw_tools()`
-#' mcp_set_tools(c(list(tool_rnorm), btw::btw_tools()))
-#' @export
-mcp_set_tools <- function(x) {
-  check_acquaint_tools(x)
-
-  options(.acquaint_tools = x)
-
-  invisible(x)
-}
-
-check_acquaint_tools <- function(x, call = caller_env()) {
+set_server_tools <- function(x, call = caller_env()) {
   if (!is_list(x) || !all(vapply(x, inherits, logical(1), "ellmer::ToolDef"))) {
     msg <- "{.arg x} must be a list of tools created with {.fn ellmer::tool}."
     if (inherits(x, "ellmer::ToolDef")) {
@@ -68,6 +19,14 @@ check_acquaint_tools <- function(x, call = caller_env()) {
       call = call
     )
   }
+
+  the$server_tools <- c(
+    x,
+    list(
+      list_r_sessions_tool,
+      select_r_session_tool
+    )
+  )
 }
 
 # These two functions are supplied to the client as tools and allow the client
@@ -86,9 +45,10 @@ list_r_sessions <- function() {
         autostart = NA,
         fail = "none"
       ) &&
-      i > 8L
-    )
+        i > 8L
+    ) {
       break
+    }
   }
   pipes <- nanonext::read_monitor(monitor)
   res <- lapply(
@@ -97,7 +57,7 @@ list_r_sessions <- function() {
   )
   lapply(
     pipes,
-    function(x) nanonext::send_aio(sock, "", mode = "raw", pipe = x)
+    function(x) nanonext::send_aio(sock, character(), mode = "serial", pipe = x)
   )
   sort(as.character(nanonext::collect_aio_(res)))
 }
@@ -147,13 +107,8 @@ select_r_session_tool <-
   )
 
 get_acquaint_tools <- function() {
-  res <- c(
-    getOption(".acquaint_tools", default = btw::btw_tools()),
-    list(
-      list_r_sessions_tool,
-      select_r_session_tool
-    )
-  )
+  # must be called inside of the server session
+  res <- the$server_tools
   set_names(res, vapply(res, \(x) x@name, character(1)))
 }
 
@@ -161,4 +116,35 @@ get_acquaint_tools_as_json <- function() {
   tools <- lapply(unname(get_acquaint_tools()), tool_as_json)
 
   compact(tools)
+}
+
+execute_tool_call <- function(data) {
+  tool_name <- data$params$name
+  args <- data$params$arguments
+
+  # HACK for btw_tool_env_describe_environment. In the JSON, it will have
+  # `"items": []`, and that translates to an empty list, but we want NULL.
+  if (tool_name == "btw_tool_env_describe_environment") {
+    if (identical(args$items, list())) {
+      args$items <- NULL
+    }
+  }
+
+  args <- lapply(args, function(x) {
+    if (is.list(x) && is.null(names(x))) {
+      unlist(x, use.names = FALSE)
+    } else {
+      x
+    }
+  })
+
+  tryCatch(
+    as_tool_call_result(data, do.call(data$tool, args)),
+    error = function(e) {
+      jsonrpc_response(
+        data$id,
+        error = list(code = -32603, message = conditionMessage(e))
+      )
+    }
+  )
 }

@@ -2,6 +2,5 @@
 
 export(mcp_server)
 export(mcp_session)
-export(mcp_set_tools)
 export(mcp_tools)
 import(rlang)

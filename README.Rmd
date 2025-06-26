@@ -57,7 +57,7 @@ Or, to use with Claude Code, you might type in a terminal:
 claude mcp add -s "user" r-acquaint -- Rscript -e "acquaint::mcp_server()"
 ```
 
-Then, in your R session, call `acquaint::mcp_session()`. (You might include a call to this function in your .Rprofile, perhaps using `usethis::edit_r_profile()`, to automatically register every session you start up.)
+Then, if you'd like models to access variables in specific R sessions, call `acquaint::mcp_session()` in those sessions. (You might include a call to this function in your .Rprofile, perhaps using `usethis::edit_r_profile()`, to automatically register every session you start up.)
 
 For a more thorough introduction, see the vignette "Getting started with acquaint" with `vignette("acquaint", package = "acquaint")`.
 

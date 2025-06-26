@@ -37,8 +37,6 @@
 #' available to the server.
 #'
 #' @seealso
-#' - [mcp_set_tools()] allows you to register any ellmer tools as the tools
-#' that will be provided to the client.
 #' - The "Getting started with acquaint" vignette at
 #' `vignette("acquaint", package = "acquaint")` delves into further detail
 #' on setup and customization.
@@ -76,12 +74,11 @@ mcp_session <- function() {
   schedule_handle_message_from_server()
 }
 
-handle_message_from_server <- function(msg) {
+handle_message_from_server <- function(data) {
   pipe <- nanonext::pipe_id(the$raio)
   schedule_handle_message_from_server()
 
-  # cat("RECV :", msg, "\n", sep = "", file = stderr())
-  if (!nzchar(msg)) {
+  if (length(data) == 0) {
     return(
       nanonext::send_aio(
         the$session_socket,
@@ -91,33 +88,9 @@ handle_message_from_server <- function(msg) {
       )
     )
   }
-  data <- jsonlite::parse_json(msg)
 
   if (data$method == "tools/call") {
-    name <- data$params$name
-
-    fn <- get_acquaint_tools()[[name]]@fun
-    args <- data$params$arguments
-
-    # HACK for btw_tool_env_describe_environment. In the JSON, it will have
-    # `"items": []`, and that translates to an empty list, but we want NULL.
-    if (name == "btw_tool_env_describe_environment") {
-      if (identical(args$items, list())) {
-        args$items <- NULL
-      }
-    }
-
-    body <- tryCatch(
-      as_tool_call_result(data, do.call(fn, args)),
-      error = \(e) {
-        jsonrpc_response(
-          data$id,
-          error = list(code = -32603, message = conditionMessage(e))
-        )
-      }
-    )
-
-    # cat(paste(capture.output(str(body)), collapse="\n"), file=stderr())
+    body <- execute_tool_call(data)
   } else {
     body <- jsonrpc_response(
       data$id,
@@ -156,7 +129,7 @@ as_tool_call_result <- function(data, result) {
 }
 
 schedule_handle_message_from_server <- function() {
-  the$raio <- nanonext::recv_aio(the$session_socket, mode = "string")
+  the$raio <- nanonext::recv_aio(the$session_socket, mode = "serial")
   promises::as.promise(the$raio)$then(handle_message_from_server)$catch(
     \(e) {
       # no op but ensures promise is never rejected
