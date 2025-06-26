@@ -60,11 +60,12 @@
 </div>
 <!-- badges: start -->
 
-<p>acquaint implements a <a href="https://modelcontextprotocol.io/" class="external-link">Model Context Protocol</a> (MCP) server for your R sessions. When configured with acquaint, MCP-enabled tools like Claude Desktop and Claude Code can run R code <em>in the sessions you have running</em> to answer your questions. While the package supports configuring arbitrary R functions, acquaint provides a default set of tools <a href="https://posit-dev.github.io/btw/" class="external-link">from btw</a> to:</p>
+<p>acquaint implements the [Model Context Protocol] in R. There are two sides to acquaint:</p>
 <ul>
-<li>Peruse the documentation of packages you have installed,</li>
-<li>Check out the objects in your global environment, and</li>
-<li>Retrieve metadata about your session and platform.</li>
+<li>
+<strong>R as an MCP server</strong>: When configured with acquaint, MCP-enabled tools like Claude Desktop, Claude Code, and VS Code GitHub Copilot can run R code <em>in the sessions you have running</em> to answer your questions. While the package supports configuring arbitrary R functions, acquaint provides a default set of tools <a href="https://posit-dev.github.io/btw/" class="external-link">from btw</a> to peruse the documentation of packages you have installed, check out the objects in your global environment, and retrieve metadata about your session and platform.</li>
+<li>
+<strong>R as an MCP client</strong>: Register third-party MCP servers with ellmer chats to integrate additional context into e.g. <a href="https://github.com/posit-dev/shinychat" class="external-link">shinychat</a> and <a href="https://posit-dev.github.io/querychat/" class="external-link">querychat</a> apps.</li>
 </ul>
 <blockquote>
 <p>IMPORTANT: This package is highly experimental and its interface may change rapidly!</p>
@@ -75,6 +76,9 @@
 <p>You can install the development version of acquaint like so:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"posit-dev/acquaint"</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="r-as-an-mcp-server">R as an MCP server<a class="anchor" aria-label="anchor" href="#r-as-an-mcp-server"></a>
+</h3>
 <p>acquaint can be hooked up to any application that supports MCP. For example, to use with Claude Desktop, you might paste the following in your Claude Desktop configuration (on macOS, at <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>):</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -87,7 +91,35 @@
 <p>Or, to use with Claude Code, you might type in a terminal:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">-s</span> <span class="st">"user"</span> r-acquaint <span class="at">--</span> Rscript <span class="at">-e</span> <span class="st">"acquaint::mcp_server()"</span></span></code></pre></div>
 <p>Then, if you’d like models to access variables in specific R sessions, call <code><a href="reference/server.html">acquaint::mcp_session()</a></code> in those sessions. (You might include a call to this function in your .Rprofile, perhaps using <code>usethis::edit_r_profile()</code>, to automatically register every session you start up.)</p>
-<p>For a more thorough introduction, see the vignette “Getting started with acquaint” with <code><a href="https://posit-dev.github.io/acquaint/articles/acquaint.html">vignette("acquaint", package = "acquaint")</a></code>.</p>
+</div>
+<div class="section level3">
+<h3 id="r-as-an-mcp-client">R as an MCP client<a class="anchor" aria-label="anchor" href="#r-as-an-mcp-client"></a>
+</h3>
+<p>acquaint uses the Claude Desktop configuration file format to register third-party MCP servers, as most MCP servers provide setup instructions for Claude Desktop in their documentation. For example, here’s what the <a href="https://github.com/github/github-mcp-server" class="external-link">official GitHub MCP server</a> configuration would look like:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    <span class="dt">"github"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>      <span class="dt">"command"</span><span class="fu">:</span> <span class="st">"docker"</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>      <span class="dt">"args"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>        <span class="st">"run"</span><span class="ot">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>        <span class="st">"-i"</span><span class="ot">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>        <span class="st">"--rm"</span><span class="ot">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>        <span class="st">"-e"</span><span class="ot">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>        <span class="st">"GITHUB_PERSONAL_ACCESS_TOKEN"</span><span class="ot">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>        <span class="st">"ghcr.io/github/github-mcp-server"</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>      <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>      <span class="dt">"env"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>        <span class="dt">"GITHUB_PERSONAL_ACCESS_TOKEN"</span><span class="fu">:</span> <span class="st">"&lt;YOUR_TOKEN&gt;"</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Once the configuration file has been created (by default, acquaint will look to <code>file.path("~", ".config", "acquaint", "config.json")</code>), <code><a href="reference/client.html">mcp_tools()</a></code> will return a list of ellmer tools which you can pass directly to the <code>$set_tools()</code> method from ellmer:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>ch <span class="ot">&lt;-</span> ellmer<span class="sc">::</span><span class="fu">chat_anthropic</span>()</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>ch<span class="sc">$</span><span class="fu">set_tools</span>(<span class="fu">mcp_tools</span>())</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>ch<span class="sc">$</span><span class="fu">chat</span>(<span class="st">"What issues are open on posit-dev/acquaint?"</span>)</span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
