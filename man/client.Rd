@@ -3,12 +3,9 @@
 \name{client}
 \alias{client}
 \alias{mcp_tools}
-\alias{mcp_client_config}
 \title{Define ellmer tools from MCP servers}
 \usage{
-mcp_tools(path = mcp_client_config())
-
-mcp_client_config(path = NULL)
+mcp_tools(path = NULL)
 }
 \arguments{
 \item{path}{A single string indicating the path to the acquaint MCP servers
@@ -21,9 +18,6 @@ the file path configured with the option \code{.acquaint_config}, falling back t
 \item \code{mcp_tools()} returns a list of ellmer tools that can be passed directly
 to the \verb{$set_tools()} method of an \link[ellmer:Chat]{ellmer::Chat} object. If the file at
 \code{path} doesn't exist, an error.
-\item \code{mcp_client_config()} returns the path to the MCP config file.
-Set the option \code{.acquaint_config} to change the default config
-file path in \code{mcp_tools()}.
 }
 }
 \description{
@@ -32,7 +26,7 @@ register functionality from third-party MCP servers such as those listed
 here: \url{https://github.com/modelcontextprotocol/servers}.
 
 \code{mcp_tools()} fetches tools from MCP servers configured in the acquaint
-server config file at \code{mcp_client_config()} and converts them to a list of
+server config file and converts them to a list of
 tools compatible with the \verb{$set_tools()} method of \link[ellmer:Chat]{ellmer::Chat} objects.
 }
 \section{Configuration}{

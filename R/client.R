@@ -16,7 +16,7 @@ the$mcp_servers <- list()
 #' here: <https://github.com/modelcontextprotocol/servers>.
 #'
 #' `mcp_tools()` fetches tools from MCP servers configured in the acquaint
-#' server config file at `mcp_client_config()` and converts them to a list of
+#' server config file and converts them to a list of
 #' tools compatible with the `$set_tools()` method of [ellmer::Chat] objects.
 #'
 #' @param path A single string indicating the path to the acquaint MCP servers
@@ -65,13 +65,14 @@ the$mcp_servers <- list()
 #' * `mcp_tools()` returns a list of ellmer tools that can be passed directly
 #' to the `$set_tools()` method of an [ellmer::Chat] object. If the file at
 #' `path` doesn't exist, an error.
-#' * `mcp_client_config()` returns the path to the MCP config file.
-#' Set the option `.acquaint_config` to change the default config
-#' file path in `mcp_tools()`.
 #'
 #' @name client
 #' @export
-mcp_tools <- function(path = mcp_client_config()) {
+mcp_tools <- function(path = NULL) {
+  if (is.null(path)) {
+    path <- mcp_client_config()
+  }
+
   config <- read_mcp_config(path)
   if (length(config) == 0) {
     return(list())
@@ -102,13 +103,7 @@ mcp_tools <- function(path = mcp_client_config()) {
   servers_as_ellmer_tools()
 }
 
-#' @rdname client
-#' @export
-mcp_client_config <- function(path = NULL) {
-  if (!is.null(path)) {
-    return(path)
-  }
-
+mcp_client_config <- function() {
   getOption(
     ".acquaint_config",
     default = default_mcp_client_config()

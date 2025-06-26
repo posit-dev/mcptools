@@ -42,11 +42,7 @@ test_that("mcp_tools works", {
   expect_null(last_user_turn@contents[[1]]@error)
 })
 
-test_that("mcp_client_config() returns path when provided", {
-  expect_equal(mcp_client_config("some/path/"), "some/path/")
-})
-
-test_that("mcp_client_config() uses option when path is NULL", {
+test_that("mcp_client_config() uses option when available", {
   withr::local_options(.acquaint_config = "/option/path")
   expect_equal(mcp_client_config(), "/option/path")
 })
