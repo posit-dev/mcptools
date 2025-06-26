@@ -32,8 +32,13 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="articles/acquaint.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="articles/server.html">R as an MCP server</a></li>
+  </ul>
+</li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -81,8 +86,8 @@
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Or, to use with Claude Code, you might type in a terminal:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">-s</span> <span class="st">"user"</span> r-acquaint <span class="at">--</span> Rscript <span class="at">-e</span> <span class="st">"acquaint::mcp_server()"</span></span></code></pre></div>
-<p>Then, if you’d like models to access variables in specific R sessions, call <code><a href="reference/mcp.html">acquaint::mcp_session()</a></code> in those sessions. (You might include a call to this function in your .Rprofile, perhaps using <code>usethis::edit_r_profile()</code>, to automatically register every session you start up.)</p>
-<p>For a more thorough introduction, see the vignette “Getting started with acquaint” with <code><a href="articles/acquaint.html">vignette("acquaint", package = "acquaint")</a></code>.</p>
+<p>Then, if you’d like models to access variables in specific R sessions, call <code><a href="reference/server.html">acquaint::mcp_session()</a></code> in those sessions. (You might include a call to this function in your .Rprofile, perhaps using <code>usethis::edit_r_profile()</code>, to automatically register every session you start up.)</p>
+<p>For a more thorough introduction, see the vignette “Getting started with acquaint” with <code><a href="https://posit-dev.github.io/acquaint/articles/acquaint.html">vignette("acquaint", package = "acquaint")</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>

@@ -15,8 +15,11 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="articles/acquaint.html">Get started</a></li>
-<li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/server.html">R as an MCP server</a></li>
+  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/posit-dev/acquaint/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -60,11 +63,11 @@
 <h2 id="acquaint-architecture">acquaint Architecture<a class="anchor" aria-label="anchor" href="#acquaint-architecture"></a></h2>
 <div class="section level3">
 <h3 id="server-process">Server Process<a class="anchor" aria-label="anchor" href="#server-process"></a></h3>
-<p>The MCP server (<code><a href="reference/mcp.html">mcp_server()</a></code>) runs in its own R process and: 1. Listens on stdin for MCP client requests 2. Maintains a socket connection to R sessions 3. Routes tool calls between client and sessions</p>
+<p>The MCP server (<code><a href="reference/server.html">mcp_server()</a></code>) runs in its own R process and: 1. Listens on stdin for MCP client requests 2. Maintains a socket connection to R sessions 3. Routes tool calls between client and sessions</p>
 </div>
 <div class="section level3">
 <h3 id="session-processes">Session Processes<a class="anchor" aria-label="anchor" href="#session-processes"></a></h3>
-<p>Interactive R sessions (<code><a href="reference/mcp.html">mcp_session()</a></code>) connect to the server and: 1. Listen for tool execution requests from the server 2. Execute tools and send results back 3. Each session gets a unique ID and socket connection</p>
+<p>Interactive R sessions (<code><a href="reference/server.html">mcp_session()</a></code>) connect to the server and: 1. Listen for tool execution requests from the server 2. Execute tools and send results back 3. Each session gets a unique ID and socket connection</p>
 </div>
 <div class="section level3">
 <h3 id="message-flow">Message Flow<a class="anchor" aria-label="anchor" href="#message-flow"></a></h3>
