@@ -21,11 +21,10 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-acquaint implements a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for your R sessions. When configured with acquaint, MCP-enabled tools like Claude Desktop and Claude Code can run R code _in the sessions you have running_ to answer your questions. While the package supports configuring arbitrary R functions, acquaint provides a default set of tools [from btw](https://posit-dev.github.io/btw/) to:
+acquaint implements the [Model Context Protocol] in R. There are two sides to acquaint:
 
-* Peruse the documentation of packages you have installed,
-* Check out the objects in your global environment, and
-* Retrieve metadata about your session and platform.
+* **R as an MCP server**: When configured with acquaint, MCP-enabled tools like Claude Desktop, Claude Code, and VS Code GitHub Copilot can run R code _in the sessions you have running_ to answer your questions. While the package supports configuring arbitrary R functions, acquaint provides a default set of tools [from btw](https://posit-dev.github.io/btw/) to peruse the documentation of packages you have installed, check out the objects in your global environment, and retrieve metadata about your session and platform.
+* **R as an MCP client**: Register third-party MCP servers with ellmer chats to integrate additional context into e.g. [shinychat](https://github.com/posit-dev/shinychat) and [querychat](https://posit-dev.github.io/querychat/) apps.
 
 > IMPORTANT:
 > This package is highly experimental and its interface may change rapidly!
@@ -37,6 +36,8 @@ You can install the development version of acquaint like so:
 ```r
 pak::pak("posit-dev/acquaint")
 ```
+
+### R as an MCP server
 
 acquaint can be hooked up to any application that supports MCP. For example, to use with Claude Desktop, you might paste the following in your Claude Desktop configuration (on macOS, at  `~/Library/Application Support/Claude/claude_desktop_config.json`):
 
@@ -59,7 +60,39 @@ claude mcp add -s "user" r-acquaint -- Rscript -e "acquaint::mcp_server()"
 
 Then, if you'd like models to access variables in specific R sessions, call `acquaint::mcp_session()` in those sessions. (You might include a call to this function in your .Rprofile, perhaps using `usethis::edit_r_profile()`, to automatically register every session you start up.)
 
-For a more thorough introduction, see the vignette "Getting started with acquaint" with `vignette("acquaint", package = "acquaint")`.
+### R as an MCP client
+
+acquaint uses the Claude Desktop configuration file format to register third-party MCP servers, as most MCP servers provide setup instructions for Claude Desktop in their documentation. For example, here's what the [official GitHub MCP server](https://github.com/github/github-mcp-server) configuration would look like:
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "<YOUR_TOKEN>"
+      }
+    }
+  }
+}
+```
+
+Once the configuration file has been created (by default, acquaint will look to `file.path("~", ".config", "acquaint", "config.json")`), `mcp_tools()` will return a list of ellmer tools which you can pass directly to the `$set_tools()` method from ellmer:
+
+```
+ch <- ellmer::chat_anthropic()
+ch$set_tools(mcp_tools())
+
+ch$chat("What issues are open on posit-dev/acquaint?")
+```
 
 ## Example
 

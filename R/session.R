@@ -37,15 +37,18 @@
 #' available to the server.
 #'
 #' @seealso
-#' - The "Getting started with acquaint" vignette at
-#' `vignette("acquaint", package = "acquaint")` delves into further detail
+#' - The "R as an MCP server" vignette at
+#' `vignette("server", package = "acquaint")` delves into further detail
 #' on setup and customization.
+#' - These functions implement R as an MCP _server_. To use R as an MCP _client_,
+#' i.e. to configure tools from third-party MCP servers with ellmer chats, see
+#' [mcp_tools()].
 #' @examples
 #' if (interactive()) {
 #' mcp_session()
 #' }
 #'
-#' @name mcp
+#' @name server
 #' @export
 mcp_session <- function() {
   # HACK: If a session is already available from another session via `.Rprofile`,

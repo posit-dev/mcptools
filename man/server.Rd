@@ -2,7 +2,7 @@
 % Please edit documentation in R/server.R, R/session.R
 \name{mcp_server}
 \alias{mcp_server}
-\alias{mcp}
+\alias{server}
 \alias{mcp_session}
 \title{Model context protocol for your R session}
 \usage{
@@ -78,8 +78,11 @@ mcp_session()
 }
 \seealso{
 \itemize{
-\item The "Getting started with acquaint" vignette at
-\code{vignette("acquaint", package = "acquaint")} delves into further detail
+\item The "R as an MCP server" vignette at
+\code{vignette("server", package = "acquaint")} delves into further detail
 on setup and customization.
+\item These functions implement R as an MCP \emph{server}. To use R as an MCP \emph{client},
+i.e. to configure tools from third-party MCP servers with ellmer chats, see
+\code{\link[=mcp_tools]{mcp_tools()}}.
 }
 }

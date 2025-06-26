@@ -3,6 +3,7 @@
 \name{client}
 \alias{client}
 \alias{mcp_tools}
+\alias{mcp_client}
 \title{Define ellmer tools from MCP servers}
 \usage{
 mcp_tools(path = NULL)
@@ -67,3 +68,8 @@ in that file:
 }\if{html}{\out{</div>}}
 }
 
+\seealso{
+This function implements R as an MCP \emph{client}. To use R as an MCP \emph{server},
+i.e. to provide apps like Claude Desktop or Claude Code with access to
+R-based tools, see \code{\link[=mcp_server]{mcp_server()}}.
+}

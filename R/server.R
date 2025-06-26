@@ -5,7 +5,7 @@
 #' available from the server. Any list that could be passed to `Chat$set_tools()`
 #' can be passed here. By default, the package will use [btw::btw_tools()].
 #'
-#' @rdname mcp
+#' @rdname server
 #' @export
 #'
 #' @examples

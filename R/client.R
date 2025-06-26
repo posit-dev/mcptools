@@ -24,6 +24,11 @@ the$mcp_servers <- list()
 #' the file path configured with the option `.acquaint_config`, falling back to
 #' `file.path("~", ".config", "acquaint", "config.json")`.
 #'
+#' @seealso
+#' This function implements R as an MCP _client_. To use R as an MCP _server_,
+#' i.e. to provide apps like Claude Desktop or Claude Code with access to
+#' R-based tools, see [mcp_server()].
+#'
 #' @section Configuration:
 #'
 #' acquaint uses the same .json configuration file format as Claude Desktop;
@@ -67,6 +72,7 @@ the$mcp_servers <- list()
 #' `path` doesn't exist, an error.
 #'
 #' @name client
+#' @aliases mcp_client
 #' @export
 mcp_tools <- function(path = NULL) {
   if (is.null(path)) {

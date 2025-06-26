@@ -1,8 +1,8 @@
 ---
-title: "Getting started with acquaint"
+title: "R as an MCP server"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Getting started with acquaint}
+  %\VignetteIndexEntry{R as an MCP server}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-The acquaint package enables apps like Claude Desktop and Claude Code to run R code using the Model Context Protocol (MCP). This vignette highlights the basics of using acquaint before delving a bit further into advanced usage.
+The acquaint package enables apps like Claude Desktop, Claude Code, and VS Code GitHub Copilot to run R code using the Model Context Protocol (MCP). This vignette highlights the basics of using acquaint to launch R-based MCP servers before delving a bit further into advanced usage.
 
 ```{r}
 #| label: setup
@@ -24,21 +24,19 @@ library(acquaint)
 
 ## The basics
 
-acquaint is built around three main concepts:
+In the context of R as an MCP server, there are three main concept to understand:
 
 -   **Clients** are the apps you'd like to connect an R session to, like Claude Desktop of Claude Code. acquaint supports any client that supports MCP.
 
 -   Clients talk to your R sessions using a **server**. Each client that supports MCP will provide some entry point to configure a command and any additional arguments with the client. acquaint's command and arguments are `Rscript` and `-e "acquaint::mcp_server()"`. Different clients register this command in different ways. For example, to use acquaint with the client Claude Code, you might write `claude mcp add -s "user" r-acquaint -- Rscript -e "acquaint::mcp_server()"`.
 
--   **Sessions** are the R sessions that the client ultimately talks to. So, if you have an RStudio or Positron window open, those applications automatically start up an R session that the client could potentially talk to. To "opt in" your R sessions to be discovered by clients, run the R code `acquaint::mcp_session()`. You'll likely want to run this code every time you start up R; to do so, add `acquaint::mcp_session()` to your `.Rprofile`, perhaps by first calling `usethis::edit_r_profile()`.
+-   **Sessions** are the R sessions that the client ultimately talks to. So, if you have an RStudio or Positron window open, those applications automatically start up an R session that the client could potentially talk to. To "opt in" your R sessions to be discovered by clients, run the R code `acquaint::mcp_session()`. You might want to run this code every time you start up R; to do so, add `acquaint::mcp_session()` to your `.Rprofile`, perhaps by first calling `usethis::edit_r_profile()`. Configuring sessions is not required; if you choose not to do so, tools will be exucuted in the server itself.
 
 (In case this caught your eye: yes, the server is itself an R session. In acquaint's documentation, we'll always refer to the server R session just as the server; the fact that it's implemented in R is only a technical detail.)
 
 In the case you have some client that you want to connect to R, **all you need to do is configure the command** `Rscript -e "acquaint::mcp_server()"` according to your client's instructions. Optionally, if you'd like the server to be able to access variables in active R sessions, add `acquaint::mcp_session()` to your `.Rprofile`, perhaps by first calling `usethis::edit_r_profile()`.
 
 Then, you're good to go!
-
-(If, instead, you're interested in "the other direction," where R itself is the client—presumably via ellmer—and you'd like to grab context from other MCP servers, keep an eye out for additions here.) <!--# \[TODO: still up in thei air whether this will live in ellmer or acquaint.\] -->
 
 ## Multiple clients and R sessions
 
