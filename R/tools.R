@@ -1,8 +1,28 @@
-set_server_tools <- function(x, call = caller_env()) {
+set_server_tools <- function(x, x_arg = caller_arg(x), call = caller_env()) {
+  # evaluate eagerly so that caller arg is correct if `looks_like_r_file()`
+  # but output type isn't correct
+  force(x_arg)
+  if (looks_like_r_file(x)) {
+    x <- tryCatch(
+      {
+        source_tools(x)
+      },
+      error = function(err) {
+        cli::cli_abort(
+          "Sourcing the {.arg {x_arg}} file {.file x} failed.",
+          parent = err,
+          call = call
+        )
+      }
+    )
+  }
+
   if (!is_list(x) || !all(vapply(x, inherits, logical(1), "ellmer::ToolDef"))) {
-    msg <- "{.arg x} must be a list of tools created with {.fn ellmer::tool}."
+    msg <-
+      "{.arg {x_arg}} must be a list of tools created with {.fn ellmer::tool}
+       or a .R file path that returns a list of ellmer tools when sourced."
     if (inherits(x, "ellmer::ToolDef")) {
-      msg <- c(msg, "i" = "Did you mean to wrap {.arg x} in `list()`?")
+      msg <- c(msg, "i" = "Did you mean to wrap {.arg {x_arg}} in `list()`?")
     }
     cli::cli_abort(msg, call = call)
   }
@@ -27,6 +47,16 @@ set_server_tools <- function(x, call = caller_env()) {
       select_r_session_tool
     )
   )
+}
+
+looks_like_r_file <- function(x) {
+  is_string(x) &&
+    file.exists(x) &&
+    grepl("\\.r$", x, ignore.case = TRUE)
+}
+
+source_tools <- function(x) {
+  source(x, local = TRUE)$value
 }
 
 # These two functions are supplied to the client as tools and allow the client

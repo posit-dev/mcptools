@@ -12,7 +12,8 @@ mcp_session()
 }
 \arguments{
 \item{tools}{A list of tools created with \code{\link[ellmer:tool]{ellmer::tool()}} that will be
-available from the server. Any list that could be passed to \code{Chat$set_tools()}
+available from the server or a file path to an .R file that, when sourced,
+will return a list of tools. Any list that could be passed to \code{Chat$set_tools()}
 can be passed here. By default, the package will use \code{\link[btw:btw_tools]{btw::btw_tools()}}.}
 }
 \description{
@@ -70,7 +71,13 @@ tool_rnorm <- tool(
 )
 
 mcp_server(tools = list(tool_rnorm))
+
+# can also supply a file path as `tools`
+readLines(system.file("example-ellmer-tools.R", package = "acquaint"))
+
+mcp_server(tools = system.file("example-ellmer-tools.R", package = "acquaint"))
 }
+
 if (interactive()) {
 mcp_session()
 }
