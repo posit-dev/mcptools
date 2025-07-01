@@ -103,6 +103,13 @@ mcp_tools <- function(config = NULL) {
       stderr = "|"
     )
 
+    the$server_processes <- c(
+      the$server_processes,
+      list2(
+        !!paste0(c(config_i$command, config_i$args), collapse = " ") := process
+      )
+    )
+
     add_mcp_server(process = process, name = name_i)
   }
 

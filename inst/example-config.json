@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "acquaint": {
+      "command": "Rscript",
+      "args": [
+        "-e",
+        "acquaint::mcp_server()"
+      ]
+    }
+  }
+}
