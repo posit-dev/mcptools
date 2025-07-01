@@ -1,8 +1,16 @@
 test_that("roundtrip mcp_server and mcp_tools", {
-  # example-config configures `Rscript -e "acquaint::mcp_server()"`
   previous_server_processes <- names(the$server_processes)
 
-  tools <- mcp_tools(system.file("example-config.json", package = "acquaint"))
+  # example-config configures `Rscript -e "acquaint::mcp_server()"`
+  example_config <- readLines(system.file(
+    "example-config.json",
+    package = "acquaint"
+  ))
+  example_config <- gsub("Rscript", rscript_binary(), example_config)
+  tmp_file <- withr::local_tempfile(fileext = ".json")
+  writeLines(example_config, tmp_file)
+
+  tools <- mcp_tools(tmp_file)
   withr::defer(
     the$server_processes[[
       setdiff(names(the$server_processes), previous_server_processes)
