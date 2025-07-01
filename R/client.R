@@ -19,7 +19,7 @@ the$mcp_servers <- list()
 #' server config file and converts them to a list of
 #' tools compatible with the `$set_tools()` method of [ellmer::Chat] objects.
 #'
-#' @param path A single string indicating the path to the acquaint MCP servers
+#' @param config A single string indicating the path to the acquaint MCP servers
 #' configuration file. If one is not supplied, acquaint will look for one at
 #' the file path configured with the option `.acquaint_config`, falling back to
 #' `file.path("~", ".config", "acquaint", "config.json")`.
@@ -69,17 +69,17 @@ the$mcp_servers <- list()
 #' @returns
 #' * `mcp_tools()` returns a list of ellmer tools that can be passed directly
 #' to the `$set_tools()` method of an [ellmer::Chat] object. If the file at
-#' `path` doesn't exist, an error.
+#' `config` doesn't exist, an error.
 #'
 #' @name client
 #' @aliases mcp_client
 #' @export
-mcp_tools <- function(path = NULL) {
-  if (is.null(path)) {
-    path <- mcp_client_config()
+mcp_tools <- function(config = NULL) {
+  if (is.null(config)) {
+    config <- mcp_client_config()
   }
 
-  config <- read_mcp_config(path)
+  config <- read_mcp_config(config)
   if (length(config) == 0) {
     return(list())
   }
@@ -120,12 +120,12 @@ default_mcp_client_config <- function() {
   file.path("~", ".config", "acquaint", "config.json")
 }
 
-read_mcp_config <- function(path, call = caller_env()) {
-  if (!file.exists(path)) {
+read_mcp_config <- function(config, call = caller_env()) {
+  if (!file.exists(config)) {
     error_no_mcp_config(call = call)
   }
 
-  config_lines <- readLines(path)
+  config_lines <- readLines(config)
   if (length(config_lines) == 0) {
     return(list())
   }
@@ -138,7 +138,7 @@ read_mcp_config <- function(path, call = caller_env()) {
       cli::cli_abort(
         c(
           "Configuration processing failed",
-          i = "The configuration file {.arg path} must be valid JSON."
+          i = "The configuration file {.arg config} must be valid JSON."
         ),
         call = call,
         parent = e
@@ -151,7 +151,7 @@ read_mcp_config <- function(path, call = caller_env()) {
       cli::cli_abort(
         c(
           "Configuration processing failed.",
-          i = "{.arg path} must have a top-level {.field mcpServers} entry."
+          i = "{.arg config} must have a top-level {.field mcpServers} entry."
         ),
         call = call
       )
@@ -166,7 +166,7 @@ error_no_mcp_config <- function(call) {
   cli::cli_abort(
     c(
       "The acquaint MCP client configuration file does not exist.",
-      i = "Supply a non-NULL file {.arg path} or create a file at the default 
+      i = "Supply a non-NULL file {.arg config} or create a file at the default 
            configuration location {.file {default_mcp_client_config()}}."
     ),
     call = call

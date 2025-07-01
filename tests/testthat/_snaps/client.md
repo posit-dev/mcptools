@@ -5,7 +5,7 @@
     Condition
       Error in `mcp_tools()`:
       ! The acquaint MCP client configuration file does not exist.
-      i Supply a non-NULL file `path` or create a file at the default configuration location '~/.config/acquaint/config.json'.
+      i Supply a non-NULL file `config` or create a file at the default configuration location '~/.config/acquaint/config.json'.
 
 # mcp_tools() errors informatively with invalid JSON
 
@@ -14,7 +14,7 @@
     Condition
       Error in `mcp_tools()`:
       ! Configuration processing failed
-      i The configuration file `path` must be valid JSON.
+      i The configuration file `config` must be valid JSON.
       Caused by error:
       ! lexical error: invalid char in json text.
                                              invalid json
@@ -27,5 +27,5 @@
     Condition
       Error in `mcp_tools()`:
       ! Configuration processing failed.
-      i `path` must have a top-level mcpServers entry.
+      i `config` must have a top-level mcpServers entry.
 
