@@ -4,7 +4,7 @@
 \alias{mcp_server}
 \alias{server}
 \alias{mcp_session}
-\title{Model context protocol for your R session}
+\title{R as a server: Configure R-based tools with LLM-enabled apps}
 \usage{
 mcp_server(tools = btw::btw_tools())
 

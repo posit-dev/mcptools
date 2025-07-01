@@ -4,12 +4,12 @@
 \alias{client}
 \alias{mcp_tools}
 \alias{mcp_client}
-\title{Define ellmer tools from MCP servers}
+\title{R as a client: Define ellmer tools from MCP servers}
 \usage{
-mcp_tools(path = NULL)
+mcp_tools(config = NULL)
 }
 \arguments{
-\item{path}{A single string indicating the path to the acquaint MCP servers
+\item{config}{A single string indicating the path to the acquaint MCP servers
 configuration file. If one is not supplied, acquaint will look for one at
 the file path configured with the option \code{.acquaint_config}, falling back to
 \code{file.path("~", ".config", "acquaint", "config.json")}.}
@@ -18,7 +18,7 @@ the file path configured with the option \code{.acquaint_config}, falling back t
 \itemize{
 \item \code{mcp_tools()} returns a list of ellmer tools that can be passed directly
 to the \verb{$set_tools()} method of an \link[ellmer:Chat]{ellmer::Chat} object. If the file at
-\code{path} doesn't exist, an error.
+\code{config} doesn't exist, an error.
 }
 }
 \description{

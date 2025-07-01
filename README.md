@@ -12,8 +12,9 @@ status](https://www.r-pkg.org/badges/version/acquaint)](https://CRAN.R-project.o
 [![R-CMD-check](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-acquaint implements the \[Model Context Protocol\] in R. There are two
-sides to acquaint:
+acquaint implements the [Model Context
+Protocol](https://modelcontextprotocol.io/) in R. There are two sides to
+acquaint:
 
 - **R as an MCP server**: When configured with acquaint, MCP-enabled
   tools like Claude Desktop, Claude Code, and VS Code GitHub Copilot can

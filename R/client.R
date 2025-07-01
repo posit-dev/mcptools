@@ -8,7 +8,7 @@
 # id: the current jsonrpc message id
 the$mcp_servers <- list()
 
-#' Define ellmer tools from MCP servers
+#' R as a client: Define ellmer tools from MCP servers
 #'
 #' @description
 #' These functions implement R as an MCP _client_, so that ellmer chats can

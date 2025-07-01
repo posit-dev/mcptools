@@ -1,4 +1,4 @@
-#' Model context protocol for your R session
+#' R as a server: Configure R-based tools with LLM-enabled apps
 #'
 #' @description
 #' Together, these functions implement a model context protocol server for your
