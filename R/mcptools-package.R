@@ -1,3 +1,4 @@
+# nocov start
 #' @keywords internal
 "_PACKAGE"
 
@@ -14,3 +15,4 @@ NULL
     "ipc:///tmp/mcptools-socket"
   )
 }
+# nocov end
