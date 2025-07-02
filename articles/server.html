@@ -164,10 +164,11 @@ different in—the “sheep” project.
 <div class="section level2">
 <h2 id="custom-tools">Custom tools<a class="anchor" aria-label="anchor" href="#custom-tools"></a>
 </h2>
-<p>By default, acquaint supplies clients with
-<code><a href="https://posit-dev.github.io/btw/reference/btw_tools.html" class="external-link">btw::btw_tools()</a></code>, a set of atomic tools for data science
-from <a href="https://posit-dev.github.io/btw" class="external-link">the btw package</a>.
-These tools allow clients to:</p>
+<p>By default, acquaint supplies clients with only the necessary
+infrastructural tools to implement interaction with active sessions. You
+may be interested in using acquaint via <a href="https://posit-dev.github.io/btw" class="external-link">btw’s wrappers</a>, which provide
+a set of atomic tools for data science. These tools allow clients
+to:</p>
 <ul>
 <li><p>Peruse package documentation</p></li>
 <li><p>Describe R session information and variables from the global
@@ -193,9 +194,6 @@ to either namespace functions from libraries (like
 <code><a href="https://ellmer.tidyverse.org/reference/tool.html" class="external-link">ellmer::tool()</a></code> instead of <code><a href="https://ellmer.tidyverse.org/reference/tool.html" class="external-link">tool()</a></code>) or load the
 libraries entirely.</p>
 <!--# \[TODO: provide an example of registering the `rnorm()` tool.\] -->
-<p>Note that, if you’d like to supply some custom tools <em>in addition
-to</em> the default tools from btw, you’ll need to set
-<code>tools = (c(btw::btw_tools(), your_custom_tools))</code>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
