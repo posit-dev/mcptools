@@ -28,3 +28,35 @@ test_that("jsonrpc_response works", {
   # jsonrpc_response warns when neither result nor error provided
   expect_snapshot(.res <- jsonrpc_response("000"))
 })
+
+test_that("named_list works", {
+  # named_list creates named list with arguments
+  result <- named_list(a = 1, b = 2)
+  expect_equal(result, list(a = 1, b = 2))
+  expect_true(is.list(result))
+  expect_equal(names(result), c("a", "b"))
+
+  # named_list creates empty named list when no arguments
+  result <- named_list()
+  expect_equal(result, list(a = 1)[0])
+  expect_true(is.list(result))
+  expect_equal(length(result), 0)
+  expect_true(!is.null(names(result)))
+})
+
+test_that("to_json works", {
+  # to_json converts list to JSON with auto_unbox
+  result <- to_json(list(a = 1, b = "text"))
+  expect_true(is.character(result))
+  expect_equal(jsonlite::fromJSON(result), list(a = 1, b = "text"))
+
+  # to_json passes additional arguments to jsonlite::toJSON
+  result <- to_json(list(a = 1), pretty = TRUE)
+  expect_true(grepl("\n", result))
+
+  # to_json handles single values with auto_unbox
+  result <- to_json(list(value = 42))
+  parsed <- jsonlite::fromJSON(result)
+  expect_equal(parsed$value, 42)
+  expect_false(is.list(parsed$value))
+})
