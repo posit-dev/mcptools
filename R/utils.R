@@ -26,3 +26,7 @@ to_json <- function(x, ...) {
 }
 
 interactive <- NULL
+
+mcptools_log_file <- function() {
+  Sys.getenv("MCPTOOLS_LOG_FILE", tempfile(fileext = ".txt"))
+}

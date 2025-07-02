@@ -60,3 +60,16 @@ test_that("to_json works", {
   expect_equal(parsed$value, 42)
   expect_false(is.list(parsed$value))
 })
+
+test_that("mcptools_log_file works", {
+  # mcptools_log_file returns environment variable when set
+  withr::local_envvar(MCPTOOLS_LOG_FILE = "/custom/log/file.txt")
+  result <- mcptools_log_file()
+  expect_equal(result, "/custom/log/file.txt")
+
+  # mcptools_log_file returns tempfile when environment variable not set
+  withr::local_envvar(MCPTOOLS_LOG_FILE = NULL)
+  result <- mcptools_log_file()
+  expect_true(grepl("\\.txt$", result))
+  expect_true(file.exists(dirname(result)))
+})
