@@ -23,7 +23,7 @@ test_that("mcp_tools works", {
     )
   )
   writeLines(jsonlite::toJSON(config), tmp_file)
-  withr::local_options(.acquaint_config = tmp_file)
+  withr::local_options(.mcptools_config = tmp_file)
 
   res <- mcp_tools()
   expect_type(res, "list")
@@ -32,7 +32,7 @@ test_that("mcp_tools works", {
   skip_if(identical(Sys.getenv("ANTHROPIC_API_KEY"), ""))
   ch <- ellmer::chat_openai("Be terse", model = "gpt-4.1-mini-2025-04-14")
   ch$set_tools(res)
-  ch$chat("How many issues are there open on posit-dev/acquaint?")
+  ch$chat("How many issues are there open on posit-dev/mcptools?")
   turns <- ch$get_turns()
   last_user_turn <- turns[[length(turns) - 1]]
   expect_true(inherits(
@@ -43,12 +43,12 @@ test_that("mcp_tools works", {
 })
 
 test_that("mcp_client_config() uses option when available", {
-  withr::local_options(.acquaint_config = "/option/path")
+  withr::local_options(.mcptools_config = "/option/path")
   expect_equal(mcp_client_config(), "/option/path")
 })
 
 test_that("mcp_client_config() uses default when no option set", {
-  withr::local_options(.acquaint_config = NULL)
+  withr::local_options(.mcptools_config = NULL)
   expect_equal(mcp_client_config(), default_mcp_client_config())
 })
 

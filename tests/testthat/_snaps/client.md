@@ -4,8 +4,8 @@
       mcp_tools("nonexistent/file/")
     Condition
       Error in `mcp_tools()`:
-      ! The acquaint MCP client configuration file does not exist.
-      i Supply a non-NULL file `config` or create a file at the default configuration location '~/.config/acquaint/config.json'.
+      ! The mcptools MCP client configuration file does not exist.
+      i Supply a non-NULL file `config` or create a file at the default configuration location '~/.config/mcptools/config.json'.
 
 # mcp_tools() errors informatively with invalid JSON
 

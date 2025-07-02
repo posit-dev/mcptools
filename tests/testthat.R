@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(acquaint)
+library(mcptools)
 
-test_check("acquaint")
+test_check("mcptools")

@@ -1,10 +1,10 @@
 test_that("roundtrip mcp_server and mcp_tools", {
   previous_server_processes <- names(the$server_processes)
 
-  # example-config configures `Rscript -e "acquaint::mcp_server()"`
+  # example-config configures `Rscript -e "mcptools::mcp_server()"`
   example_config <- readLines(system.file(
     "example-config.json",
-    package = "acquaint"
+    package = "mcptools"
   ))
   example_config <- gsub("Rscript", rscript_binary(), example_config)
   tmp_file <- withr::local_tempfile(fileext = ".json")

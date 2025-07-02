@@ -1,6 +1,6 @@
 ## Overview
 
-The acquaint package uses nanonext for inter-process communication between the MCP server and R sessions. nanonext provides asynchronous messaging using the nanomsg/nng protocols.
+The mcptools package uses nanonext for inter-process communication between the MCP server and R sessions. nanonext provides asynchronous messaging using the nanomsg/nng protocols.
 
 ## Key Concepts
 
@@ -15,7 +15,7 @@ The acquaint package uses nanonext for inter-process communication between the M
 - **dial/listen**: Client dials to connect, server listens for connections
 - **pipe IDs**: poly sockets can multiplex multiple conversations
 
-## acquaint Architecture
+## mcptools Architecture
 
 ### Server Process
 The MCP server (`mcp_server()`) runs in its own R process and:
@@ -40,7 +40,7 @@ The server uses a condition variable (`cv`) to coordinate multiple async operati
 
 ## Socket URLs and Connection Management
 
-- Sessions listen on `inproc://acquaint-session-{i}` where `i` is auto-incremented
-- Server dials to `inproc://acquaint-session-1` by default
+- Sessions listen on `inproc://mcptools-session-{i}` where `i` is auto-incremented
+- Server dials to `inproc://mcptools-session-1` by default
 - `inproc://` transport is fast for same-machine communication
 - Connections are cleaned up with `nanonext::reap()` on exit

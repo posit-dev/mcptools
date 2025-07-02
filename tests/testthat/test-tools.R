@@ -16,7 +16,7 @@ test_that("set_server_tools can handle `tools` as path", {
   expect_no_condition(
     set_server_tools(system.file(
       "example-ellmer-tools.R",
-      package = "acquaint"
+      package = "mcptools"
     ))
   )
   expect_true("tool_rnorm" %in% names(the$server_tools))

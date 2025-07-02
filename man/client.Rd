@@ -9,10 +9,10 @@
 mcp_tools(config = NULL)
 }
 \arguments{
-\item{config}{A single string indicating the path to the acquaint MCP servers
-configuration file. If one is not supplied, acquaint will look for one at
-the file path configured with the option \code{.acquaint_config}, falling back to
-\code{file.path("~", ".config", "acquaint", "config.json")}.}
+\item{config}{A single string indicating the path to the mcptools MCP servers
+configuration file. If one is not supplied, mcptools will look for one at
+the file path configured with the option \code{.mcptools_config}, falling back to
+\code{file.path("~", ".config", "mcptools", "config.json")}.}
 }
 \value{
 \itemize{
@@ -26,20 +26,20 @@ These functions implement R as an MCP \emph{client}, so that ellmer chats can
 register functionality from third-party MCP servers such as those listed
 here: \url{https://github.com/modelcontextprotocol/servers}.
 
-\code{mcp_tools()} fetches tools from MCP servers configured in the acquaint
+\code{mcp_tools()} fetches tools from MCP servers configured in the mcptools
 server config file and converts them to a list of
 tools compatible with the \verb{$set_tools()} method of \link[ellmer:Chat]{ellmer::Chat} objects.
 }
 \section{Configuration}{
 
 
-acquaint uses the same .json configuration file format as Claude Desktop;
+mcptools uses the same .json configuration file format as Claude Desktop;
 most MCP servers will define example .json to configure the server with
-Claude Desktop in their README files. By default, acquaint will look to
-\code{file.path("~", ".config", "acquaint", "config.json")}; you can edit that
-file with \code{file.edit(file.path("~", ".config", "acquaint", "config.json"))}.
+Claude Desktop in their README files. By default, mcptools will look to
+\code{file.path("~", ".config", "mcptools", "config.json")}; you can edit that
+file with \code{file.edit(file.path("~", ".config", "mcptools", "config.json"))}.
 
-The acquaint config file should be valid .json with an entry \code{mcpServers}.
+The mcptools config file should be valid .json with an entry \code{mcpServers}.
 That entry should contain named elements, each with at least a \code{command}
 and \code{args} entry.
 
