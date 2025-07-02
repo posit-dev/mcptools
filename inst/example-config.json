@@ -1,10 +1,10 @@
 {
   "mcpServers": {
-    "acquaint": {
+    "mcptools": {
       "command": "Rscript",
       "args": [
         "-e",
-        "acquaint::mcp_server()"
+        "mcptools::mcp_server()"
       ]
     }
   }

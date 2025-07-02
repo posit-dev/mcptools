@@ -31,9 +31,9 @@ Claude Desktop configuration (on macOS, at
 
 \if{html}{\out{<div class="sourceCode json">}}\preformatted{\{
   "mcpServers": \{
-    "r-acquaint": \{
+    "r-mcptools": \{
       "command": "Rscript",
-      "args": ["-e", "acquaint::mcp_server()"]
+      "args": ["-e", "mcptools::mcp_server()"]
     \}
   \}
 \}
@@ -41,14 +41,14 @@ Claude Desktop configuration (on macOS, at
 
 Or, to use with Claude Code, you might type in a terminal:
 
-\if{html}{\out{<div class="sourceCode bash">}}\preformatted{claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"
+\if{html}{\out{<div class="sourceCode bash">}}\preformatted{claude mcp add -s "user" r-mcptools Rscript -e "mcptools::mcp_server()"
 }\if{html}{\out{</div>}}
 
 \strong{mcp_server() is not intended for interactive use.}
 
 The server interfaces with the MCP client on behalf of your R session.
 \strong{Use \code{\link[=mcp_session]{mcp_session()}} to make your R session available to the server.}
-Place a call to \code{acquaint::mcp_session()} in your \code{.Rprofile}, perhaps with
+Place a call to \code{mcptools::mcp_session()} in your \code{.Rprofile}, perhaps with
 \code{usethis::edit_r_profile()}, to make every interactive R session you start
 available to the server.
 }
@@ -71,9 +71,9 @@ tool_rnorm <- tool(
 mcp_server(tools = list(tool_rnorm))
 
 # can also supply a file path as `tools`
-readLines(system.file("example-ellmer-tools.R", package = "acquaint"))
+readLines(system.file("example-ellmer-tools.R", package = "mcptools"))
 
-mcp_server(tools = system.file("example-ellmer-tools.R", package = "acquaint"))
+mcp_server(tools = system.file("example-ellmer-tools.R", package = "mcptools"))
 }
 if (interactive()) {
 mcp_session()
@@ -83,7 +83,7 @@ mcp_session()
 \seealso{
 \itemize{
 \item The "R as an MCP server" vignette at
-\code{vignette("server", package = "acquaint")} delves into further detail
+\code{vignette("server", package = "mcptools")} delves into further detail
 on setup and customization.
 \item These functions implement R as an MCP \emph{server}. To use R as an MCP \emph{client},
 i.e. to configure tools from third-party MCP servers with ellmer chats, see

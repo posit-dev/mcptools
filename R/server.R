@@ -28,9 +28,9 @@
 #' mcp_server(tools = list(tool_rnorm))
 #'
 #' # can also supply a file path as `tools`
-#' readLines(system.file("example-ellmer-tools.R", package = "acquaint"))
+#' readLines(system.file("example-ellmer-tools.R", package = "mcptools"))
 #'
-#' mcp_server(tools = system.file("example-ellmer-tools.R", package = "acquaint"))
+#' mcp_server(tools = system.file("example-ellmer-tools.R", package = "mcptools"))
 #' }
 mcp_server <- function(tools = NULL) {
   # TODO: should this actually be a check for being called within Rscript or not?
@@ -100,7 +100,7 @@ handle_message_from_client <- function(line) {
     res <- jsonrpc_response(
       data$id,
       list(
-        tools = get_acquaint_tools_as_json()
+        tools = get_mcptools_tools_as_json()
       )
     )
 
@@ -108,7 +108,7 @@ handle_message_from_client <- function(line) {
   } else if (data$method == "tools/call") {
     tool_name <- data$params$name
     if (
-      # two tools provided by acquaint itself which must be executed in
+      # two tools provided by mcptools itself which must be executed in
       # the server rather than a session (#18)
       tool_name %in%
         c("list_r_sessions", "select_r_session") ||
@@ -158,7 +158,7 @@ forward_request <- function(data) {
 # visible. This function will log output to the `logfile` so that you can view
 # it.
 logcat <- function(x, ..., append = TRUE) {
-  log_file <- acquaint_log_file()
+  log_file <- mcptools_log_file()
   cat(x, "\n", sep = "", append = append, file = log_file)
 }
 
@@ -183,7 +183,7 @@ capabilities <- function() {
       )
     ),
     serverInfo = list(
-      name = "R acquaint server",
+      name = "R mcptools server",
       version = "0.0.1"
     ),
     instructions = "This provides information about a running R session."
@@ -245,7 +245,7 @@ append_tool_fn <- function(data) {
 
   tool_name <- data$params$name
 
-  if (!tool_name %in% names(get_acquaint_tools())) {
+  if (!tool_name %in% names(get_mcptools_tools())) {
     return(structure(
       jsonrpc_response(
         data$id,
@@ -255,6 +255,6 @@ append_tool_fn <- function(data) {
     ))
   }
 
-  data$tool <- get_acquaint_tools()[[tool_name]]@fun
+  data$tool <- get_mcptools_tools()[[tool_name]]@fun
   data
 }

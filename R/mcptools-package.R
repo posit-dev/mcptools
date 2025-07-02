@@ -9,8 +9,8 @@ NULL
 .onLoad <- function(libname, pkgname) {
   the$socket_url <- switch(
     Sys.info()[["sysname"]],
-    Linux = "abstract://acquaint-socket",
-    Windows = "ipc://acquaint-socket",
-    "ipc:///tmp/acquaint-socket"
+    Linux = "abstract://mcptools-socket",
+    Windows = "ipc://mcptools-socket",
+    "ipc:///tmp/mcptools-socket"
   )
 }

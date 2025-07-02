@@ -14,9 +14,9 @@
 #' ```json
 #' {
 #'   "mcpServers": {
-#'     "r-acquaint": {
+#'     "r-mcptools": {
 #'       "command": "Rscript",
-#'       "args": ["-e", "acquaint::mcp_server()"]
+#'       "args": ["-e", "mcptools::mcp_server()"]
 #'     }
 #'   }
 #' }
@@ -25,20 +25,20 @@
 #' Or, to use with Claude Code, you might type in a terminal:
 #'
 #' ```bash
-#' claude mcp add -s "user" r-acquaint Rscript -e "acquaint::mcp_server()"
+#' claude mcp add -s "user" r-mcptools Rscript -e "mcptools::mcp_server()"
 #' ```
 #'
 #' **mcp_server() is not intended for interactive use.**
 #'
 #' The server interfaces with the MCP client on behalf of your R session.
 #' **Use [mcp_session()] to make your R session available to the server.**
-#' Place a call to `acquaint::mcp_session()` in your `.Rprofile`, perhaps with
+#' Place a call to `mcptools::mcp_session()` in your `.Rprofile`, perhaps with
 #' `usethis::edit_r_profile()`, to make every interactive R session you start
 #' available to the server.
 #'
 #' @seealso
 #' - The "R as an MCP server" vignette at
-#' `vignette("server", package = "acquaint")` delves into further detail
+#' `vignette("server", package = "mcptools")` delves into further detail
 #' on setup and customization.
 #' - These functions implement R as an MCP _server_. To use R as an MCP _client_,
 #' i.e. to configure tools from third-party MCP servers with ellmer chats, see
@@ -53,7 +53,7 @@
 mcp_session <- function() {
   # HACK: If a session is already available from another session via `.Rprofile`,
   # `mcp_session()` will be called again when the client runs the command
-  # Rscript -e "acquaint::mcp_server()" and the existing session connection
+  # Rscript -e "mcptools::mcp_server()" and the existing session connection
   # will be wiped. Returning early in this case allows for the desired R
   # session to be running already before the client initiates the server.
   if (!interactive()) {

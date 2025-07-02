@@ -15,14 +15,14 @@ the$mcp_servers <- list()
 #' register functionality from third-party MCP servers such as those listed
 #' here: <https://github.com/modelcontextprotocol/servers>.
 #'
-#' `mcp_tools()` fetches tools from MCP servers configured in the acquaint
+#' `mcp_tools()` fetches tools from MCP servers configured in the mcptools
 #' server config file and converts them to a list of
 #' tools compatible with the `$set_tools()` method of [ellmer::Chat] objects.
 #'
-#' @param config A single string indicating the path to the acquaint MCP servers
-#' configuration file. If one is not supplied, acquaint will look for one at
-#' the file path configured with the option `.acquaint_config`, falling back to
-#' `file.path("~", ".config", "acquaint", "config.json")`.
+#' @param config A single string indicating the path to the mcptools MCP servers
+#' configuration file. If one is not supplied, mcptools will look for one at
+#' the file path configured with the option `.mcptools_config`, falling back to
+#' `file.path("~", ".config", "mcptools", "config.json")`.
 #'
 #' @seealso
 #' This function implements R as an MCP _client_. To use R as an MCP _server_,
@@ -31,13 +31,13 @@ the$mcp_servers <- list()
 #'
 #' @section Configuration:
 #'
-#' acquaint uses the same .json configuration file format as Claude Desktop;
+#' mcptools uses the same .json configuration file format as Claude Desktop;
 #' most MCP servers will define example .json to configure the server with
-#' Claude Desktop in their README files. By default, acquaint will look to
-#' `file.path("~", ".config", "acquaint", "config.json")`; you can edit that
-#' file with `file.edit(file.path("~", ".config", "acquaint", "config.json"))`.
+#' Claude Desktop in their README files. By default, mcptools will look to
+#' `file.path("~", ".config", "mcptools", "config.json")`; you can edit that
+#' file with `file.edit(file.path("~", ".config", "mcptools", "config.json"))`.
 #'
-#' The acquaint config file should be valid .json with an entry `mcpServers`.
+#' The mcptools config file should be valid .json with an entry `mcpServers`.
 #' That entry should contain named elements, each with at least a `command`
 #' and `args` entry.
 #'
@@ -118,13 +118,13 @@ mcp_tools <- function(config = NULL) {
 
 mcp_client_config <- function() {
   getOption(
-    ".acquaint_config",
+    ".mcptools_config",
     default = default_mcp_client_config()
   )
 }
 
 default_mcp_client_config <- function() {
-  file.path("~", ".config", "acquaint", "config.json")
+  file.path("~", ".config", "mcptools", "config.json")
 }
 
 read_mcp_config <- function(config, call = caller_env()) {
@@ -172,7 +172,7 @@ read_mcp_config <- function(config, call = caller_env()) {
 error_no_mcp_config <- function(call) {
   cli::cli_abort(
     c(
-      "The acquaint MCP client configuration file does not exist.",
+      "The mcptools MCP client configuration file does not exist.",
       i = "Supply a non-NULL file {.arg config} or create a file at the default 
            configuration location {.file {default_mcp_client_config()}}."
     ),

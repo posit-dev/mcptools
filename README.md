@@ -1,28 +1,28 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# acquaint <a href="https://simonpcouch.github.io/acquaint/"><img src="man/figures/logo.png" align="right" height="240" alt="A hexagonal logo showing a sparse, forested path opening up into a well-trodden meadow path." /></a>
+# mcptools <a href="https://simonpcouch.github.io/mcptools/"><img src="man/figures/logo.png" align="right" height="240" alt="A hexagonal logo showing a sparse, forested path opening up into a well-trodden meadow path." /></a>
 
 <!-- badges: start -->
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN
-status](https://www.r-pkg.org/badges/version/acquaint)](https://CRAN.R-project.org/package=acquaint)
-[![R-CMD-check](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml)
+status](https://www.r-pkg.org/badges/version/mcptools)](https://CRAN.R-project.org/package=mcptools)
+[![R-CMD-check](https://github.com/simonpcouch/mcptools/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonpcouch/mcptools/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-acquaint implements the [Model Context
+mcptools implements the [Model Context
 Protocol](https://modelcontextprotocol.io/) in R. There are two sides to
-acquaint:
+mcptools:
 
-- **R as an MCP server**: When configured with acquaint, MCP-enabled
+- **R as an MCP server**: When configured with mcptools, MCP-enabled
   tools like Claude Desktop, Claude Code, and VS Code GitHub Copilot can
   run R code *in the sessions you have running* to answer your
   questions. While the package supports configuring arbitrary R
   functions, you may be interested in the
   [btw](https://posit-dev.github.io/btw/) package’s integrated support
-  for acquaint, which provides a default set of tools to to peruse the
+  for mcptools, which provides a default set of tools to to peruse the
   documentation of packages you have installed, check out the objects in
   your global environment, and retrieve metadata about your session and
   platform.
@@ -36,15 +36,15 @@ acquaint:
 
 ## Installation
 
-You can install the development version of acquaint like so:
+You can install the development version of mcptools like so:
 
 ``` r
-pak::pak("posit-dev/acquaint")
+pak::pak("posit-dev/mcptools")
 ```
 
 ### R as an MCP server
 
-acquaint can be hooked up to any application that supports MCP. For
+mcptools can be hooked up to any application that supports MCP. For
 example, to use with Claude Desktop, you might paste the following in
 your Claude Desktop configuration (on macOS, at
 `~/Library/Application Support/Claude/claude_desktop_config.json`):
@@ -52,9 +52,9 @@ your Claude Desktop configuration (on macOS, at
 ``` json
 {
   "mcpServers": {
-    "r-acquaint": {
+    "r-mcptools": {
       "command": "Rscript",
-      "args": ["-e", "acquaint::mcp_server()"]
+      "args": ["-e", "mcptools::mcp_server()"]
     }
   }
 }
@@ -63,18 +63,18 @@ your Claude Desktop configuration (on macOS, at
 Or, to use with Claude Code, you might type in a terminal:
 
 ``` bash
-claude mcp add -s "user" r-acquaint -- Rscript -e "acquaint::mcp_server()"
+claude mcp add -s "user" r-mcptools -- Rscript -e "mcptools::mcp_server()"
 ```
 
 Then, if you’d like models to access variables in specific R sessions,
-call `acquaint::mcp_session()` in those sessions. (You might include a
+call `mcptools::mcp_session()` in those sessions. (You might include a
 call to this function in your .Rprofile, perhaps using
 `usethis::edit_r_profile()`, to automatically register every session you
 start up.)
 
 ### R as an MCP client
 
-acquaint uses the Claude Desktop configuration file format to register
+mcptools uses the Claude Desktop configuration file format to register
 third-party MCP servers, as most MCP servers provide setup instructions
 for Claude Desktop in their documentation. For example, here’s what the
 [official GitHub MCP
@@ -102,15 +102,15 @@ look like:
 }
 ```
 
-Once the configuration file has been created (by default, acquaint will
-look to `file.path("~", ".config", "acquaint", "config.json")`),
+Once the configuration file has been created (by default, mcptools will
+look to `file.path("~", ".config", "mcptools", "config.json")`),
 `mcp_tools()` will return a list of ellmer tools which you can pass
 directly to the `$set_tools()` method from ellmer:
 
     ch <- ellmer::chat_anthropic()
     ch$set_tools(mcp_tools())
 
-    ch$chat("What issues are open on posit-dev/acquaint?")
+    ch$chat("What issues are open on posit-dev/mcptools?")
 
 ## Example
 

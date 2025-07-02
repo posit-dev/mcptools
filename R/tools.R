@@ -40,7 +40,7 @@ set_server_tools <- function(x, x_arg = caller_arg(x), call = caller_env()) {
   ) {
     cli::cli_abort(
       "The tool names {.field list_r_sessions} and {.field select_r_session} are 
-       reserved by {.pkg acquaint}.",
+       reserved by {.pkg mcptools}.",
       call = call
     )
   }
@@ -65,7 +65,7 @@ source_tools <- function(x) {
 }
 
 # These two functions are supplied to the client as tools and allow the client
-# to discover R sessions which have called `acquaint::mcp_session()`. They
+# to discover R sessions which have called `mcptools::mcp_session()`. They
 # are "model-facing" rather than user-facing.
 list_r_sessions <- function() {
   sock <- nanonext::socket("poly")
@@ -102,7 +102,7 @@ list_r_sessions_tool <-
     .fun = list_r_sessions,
     .description = paste(
       "List the R sessions that are available to access.",
-      "R sessions which have run `acquaint::mcp_session()` will appear here.",
+      "R sessions which have run `mcptools::mcp_session()` will appear here.",
       "In the output, start each session with 'Session #' and do NOT otherwise",
       "prefix any index numbers to the output.",
       "In general, do not use this tool unless asked to list or",
@@ -141,14 +141,14 @@ select_r_session_tool <-
     session = ellmer::type_integer("The R session number to select.")
   )
 
-get_acquaint_tools <- function() {
+get_mcptools_tools <- function() {
   # must be called inside of the server session
   res <- the$server_tools
   set_names(res, vapply(res, \(x) x@name, character(1)))
 }
 
-get_acquaint_tools_as_json <- function() {
-  tools <- lapply(unname(get_acquaint_tools()), tool_as_json)
+get_mcptools_tools_as_json <- function() {
+  tools <- lapply(unname(get_mcptools_tools()), tool_as_json)
 
   compact(tools)
 }
