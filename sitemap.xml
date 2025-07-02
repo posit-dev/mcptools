@@ -1,15 +1,15 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
-<url><loc>https://posit-dev.github.io/acquaint/404.html</loc></url>
-<url><loc>https://posit-dev.github.io/acquaint/CLAUDE.html</loc></url>
-<url><loc>https://posit-dev.github.io/acquaint/LICENSE-text.html</loc></url>
-<url><loc>https://posit-dev.github.io/acquaint/LICENSE.html</loc></url>
-<url><loc>https://posit-dev.github.io/acquaint/articles/index.html</loc></url>
-<url><loc>https://posit-dev.github.io/acquaint/articles/server.html</loc></url>
-<url><loc>https://posit-dev.github.io/acquaint/authors.html</loc></url>
-<url><loc>https://posit-dev.github.io/acquaint/index.html</loc></url>
-<url><loc>https://posit-dev.github.io/acquaint/reference/acquaint-package.html</loc></url>
-<url><loc>https://posit-dev.github.io/acquaint/reference/client.html</loc></url>
-<url><loc>https://posit-dev.github.io/acquaint/reference/index.html</loc></url>
-<url><loc>https://posit-dev.github.io/acquaint/reference/server.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/404.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/CLAUDE.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/LICENSE-text.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/LICENSE.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/articles/index.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/articles/server.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/authors.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/index.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/reference/client.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/reference/index.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/reference/mcptools-package.html</loc></url>
+<url><loc>https://posit-dev.github.io/mcptools/reference/server.html</loc></url>
 </urlset>
 

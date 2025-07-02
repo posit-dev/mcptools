@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>R as an MCP server • acquaint</title>
+<title>R as an MCP server • mcptools</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -18,7 +18,7 @@
 
     <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
 
-    <a class="navbar-brand me-2" href="../index.html">acquaint</a>
+    <a class="navbar-brand me-2" href="../index.html">mcptools</a>
 
     <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
 
@@ -41,7 +41,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/posit-dev/acquaint/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/posit-dev/mcptools/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -57,19 +57,19 @@
       <img src="../logo.png" class="logo" alt=""><h1>R as an MCP server</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/posit-dev/acquaint/blob/main/vignettes/server.Rmd" class="external-link"><code>vignettes/server.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/posit-dev/mcptools/blob/main/vignettes/server.Rmd" class="external-link"><code>vignettes/server.Rmd</code></a></small>
       <div class="d-none name"><code>server.Rmd</code></div>
     </div>
 
     
     
-<p>The acquaint package enables apps like Claude Desktop, Claude Code,
+<p>The mcptools package enables apps like Claude Desktop, Claude Code,
 and VS Code GitHub Copilot to run R code using the Model Context
-Protocol (MCP). This vignette highlights the basics of using acquaint to
+Protocol (MCP). This vignette highlights the basics of using mcptools to
 launch R-based MCP servers before delving a bit further into advanced
 usage.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/posit-dev/acquaint" class="external-link">acquaint</a></span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/posit-dev/mcptools" class="external-link">mcptools</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="the-basics">The basics<a class="anchor" aria-label="anchor" href="#the-basics"></a>
 </h2>
@@ -77,37 +77,37 @@ usage.</p>
 understand:</p>
 <ul>
 <li><p><strong>Clients</strong> are the apps you’d like to connect an R
-session to, like Claude Desktop of Claude Code. acquaint supports any
+session to, like Claude Desktop of Claude Code. mcptools supports any
 client that supports MCP.</p></li>
 <li><p>Clients talk to your R sessions using a <strong>server</strong>.
 Each client that supports MCP will provide some entry point to configure
-a command and any additional arguments with the client. acquaint’s
+a command and any additional arguments with the client. mcptools’s
 command and arguments are <code>Rscript</code> and
-<code>-e "acquaint::mcp_server()"</code>. Different clients register
-this command in different ways. For example, to use acquaint with the
+<code>-e "mcptools::mcp_server()"</code>. Different clients register
+this command in different ways. For example, to use mcptools with the
 client Claude Code, you might write
-<code>claude mcp add -s "user" r-acquaint -- Rscript -e "acquaint::mcp_server()"</code>.</p></li>
+<code>claude mcp add -s "user" r-mcptools -- Rscript -e "mcptools::mcp_server()"</code>.</p></li>
 <li><p><strong>Sessions</strong> are the R sessions that the client
 ultimately talks to. So, if you have an RStudio or Positron window open,
 those applications automatically start up an R session that the client
 could potentially talk to. To “opt in” your R sessions to be discovered
-by clients, run the R code <code><a href="../reference/server.html">acquaint::mcp_session()</a></code>. You
+by clients, run the R code <code><a href="../reference/server.html">mcptools::mcp_session()</a></code>. You
 might want to run this code every time you start up R; to do so, add
-<code><a href="../reference/server.html">acquaint::mcp_session()</a></code> to your <code>.Rprofile</code>,
+<code><a href="../reference/server.html">mcptools::mcp_session()</a></code> to your <code>.Rprofile</code>,
 perhaps by first calling <code>usethis::edit_r_profile()</code>.
 Configuring sessions is not required; if you choose not to do so, tools
 will be exucuted in the server itself.</p></li>
 </ul>
 <p>(In case this caught your eye: yes, the server is itself an R
-session. In acquaint’s documentation, we’ll always refer to the server R
+session. In mcptools’s documentation, we’ll always refer to the server R
 session just as the server; the fact that it’s implemented in R is only
 a technical detail.)</p>
 <p>In the case you have some client that you want to connect to R,
 <strong>all you need to do is configure the command</strong>
-<code>Rscript -e "acquaint::mcp_server()"</code> according to your
+<code>Rscript -e "mcptools::mcp_server()"</code> according to your
 client’s instructions. Optionally, if you’d like the server to be able
 to access variables in active R sessions, add
-<code><a href="../reference/server.html">acquaint::mcp_session()</a></code> to your <code>.Rprofile</code>,
+<code><a href="../reference/server.html">mcptools::mcp_session()</a></code> to your <code>.Rprofile</code>,
 perhaps by first calling <code>usethis::edit_r_profile()</code>.</p>
 <p>Then, you’re good to go!</p>
 </div>
@@ -115,7 +115,7 @@ perhaps by first calling <code>usethis::edit_r_profile()</code>.</p>
 <h2 id="multiple-clients-and-r-sessions">Multiple clients and R sessions<a class="anchor" aria-label="anchor" href="#multiple-clients-and-r-sessions"></a>
 </h2>
 <p>While a single client and a single R session probably covers many
-users’ use cases, acquaint supports multiple clients and multiple R
+users’ use cases, mcptools supports multiple clients and multiple R
 sessions. For example, for the former, you may be both chatting in
 Claude Desktop and running Claude Code in a terminal somewhere. Or, in
 the multiple R sessions situation, you may have two or more Positron
@@ -123,11 +123,11 @@ instances running at once, with different data science projects in
 each.</p>
 <p><strong>As for multiple clients,</strong> this will “just work”;
 there’s nothing to keep in mind here.</p>
-<p><strong>As for multiple R sessions</strong>, acquaint will choose a
+<p><strong>As for multiple R sessions</strong>, mcptools will choose a
 default R session for your model to talk to without the client knowing
 it even had multiple options. So, you might have a project “goats” open
 in one Positron window and another project, “sheep”, open in another
-Positron window. acquaint provides models with two tools to facilitate
+Positron window. mcptools provides models with two tools to facilitate
 toggling between sessions. The first, <code>list_r_sessions()</code>,
 allows the client to “discover” R sessions available to it by their
 working directory and (inferred) IDE. Then, the tool
@@ -164,9 +164,9 @@ different in—the “sheep” project.
 <div class="section level2">
 <h2 id="custom-tools">Custom tools<a class="anchor" aria-label="anchor" href="#custom-tools"></a>
 </h2>
-<p>By default, acquaint supplies clients with only the necessary
+<p>By default, mcptools supplies clients with only the necessary
 infrastructural tools to implement interaction with active sessions. You
-may be interested in using acquaint via <a href="https://posit-dev.github.io/btw" class="external-link">btw’s wrappers</a>, which provide
+may be interested in using mcptools via <a href="https://posit-dev.github.io/btw" class="external-link">btw’s wrappers</a>, which provide
 a set of atomic tools for data science. These tools allow clients
 to:</p>
 <ul>
@@ -186,7 +186,7 @@ to run whatever R code it wants.</li>
 </ul>
 <p>You can configure any set of tools that could be passed to the
 <code>$set_tools()</code> method of an ellmer Chat object as the tools
-that acquaint will supply to clients. To do so, supply a list of outputs
+that mcptools will supply to clients. To do so, supply a list of outputs
 from <code><a href="https://ellmer.tidyverse.org/reference/tool.html" class="external-link">ellmer::tool()</a></code> to the <code>tools</code> argument of
 <code><a href="../reference/server.html">mcp_server()</a></code>. Relatedly, you’ll need to make sure that your
 code that specifies the new tools can run in a fresh R session; be sure

@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Model Context Protocol Server For Your R Sessions • acquaint</title>
+<title>Model Context Protocol Server For Your R Sessions • mcptools</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -13,7 +13,7 @@
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Model Context Protocol Server For Your R Sessions">
 <meta name="description" content="Implements a model context protocol (MCP) server for your R sessions, allowing MCP-compatible apps like Claude Desktop and Claude Code to run R code in your active R sessions in order to better answer questions. By default, the package supplies a set of tools that allow models to inspect your R environment and peruse package documentation, but supports arbitrary R functions as tools.">
 <meta property="og:description" content="Implements a model context protocol (MCP) server for your R sessions, allowing MCP-compatible apps like Claude Desktop and Claude Code to run R code in your active R sessions in order to better answer questions. By default, the package supplies a set of tools that allow models to inspect your R environment and peruse package documentation, but supports arbitrary R functions as tools.">
-<meta property="og:image" content="https://posit-dev.github.io/acquaint/logo.png">
+<meta property="og:image" content="https://posit-dev.github.io/mcptools/logo.png">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -21,7 +21,7 @@
 
     <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
 
-    <a class="navbar-brand me-2" href="index.html">acquaint</a>
+    <a class="navbar-brand me-2" href="index.html">mcptools</a>
 
     <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
 
@@ -44,7 +44,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/posit-dev/acquaint/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/posit-dev/mcptools/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -54,16 +54,16 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header">
-<img src="logo.png" class="logo" alt=""><h1 id="acquaint-">acquaint 
-<a class="anchor" aria-label="anchor" href="#acquaint-"></a>
+<img src="logo.png" class="logo" alt=""><h1 id="mcptools-">mcptools 
+<a class="anchor" aria-label="anchor" href="#mcptools-"></a>
 </h1>
 </div>
 <!-- badges: start -->
 
-<p>acquaint implements the <a href="https://modelcontextprotocol.io/" class="external-link">Model Context Protocol</a> in R. There are two sides to acquaint:</p>
+<p>mcptools implements the <a href="https://modelcontextprotocol.io/" class="external-link">Model Context Protocol</a> in R. There are two sides to mcptools:</p>
 <ul>
 <li>
-<strong>R as an MCP server</strong>: When configured with acquaint, MCP-enabled tools like Claude Desktop, Claude Code, and VS Code GitHub Copilot can run R code <em>in the sessions you have running</em> to answer your questions. While the package supports configuring arbitrary R functions, you may be interested in the <a href="https://posit-dev.github.io/btw/" class="external-link">btw</a> package’s integrated support for acquaint, which provides a default set of tools to to peruse the documentation of packages you have installed, check out the objects in your global environment, and retrieve metadata about your session and platform.</li>
+<strong>R as an MCP server</strong>: When configured with mcptools, MCP-enabled tools like Claude Desktop, Claude Code, and VS Code GitHub Copilot can run R code <em>in the sessions you have running</em> to answer your questions. While the package supports configuring arbitrary R functions, you may be interested in the <a href="https://posit-dev.github.io/btw/" class="external-link">btw</a> package’s integrated support for mcptools, which provides a default set of tools to to peruse the documentation of packages you have installed, check out the objects in your global environment, and retrieve metadata about your session and platform.</li>
 <li>
 <strong>R as an MCP client</strong>: Register third-party MCP servers with ellmer chats to integrate additional context into e.g. <a href="https://github.com/posit-dev/shinychat" class="external-link">shinychat</a> and <a href="https://posit-dev.github.io/querychat/" class="external-link">querychat</a> apps.</li>
 </ul>
@@ -73,29 +73,29 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of acquaint like so:</p>
+<p>You can install the development version of mcptools like so:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"posit-dev/acquaint"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"posit-dev/mcptools"</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="r-as-an-mcp-server">R as an MCP server<a class="anchor" aria-label="anchor" href="#r-as-an-mcp-server"></a>
 </h3>
-<p>acquaint can be hooked up to any application that supports MCP. For example, to use with Claude Desktop, you might paste the following in your Claude Desktop configuration (on macOS, at <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>):</p>
+<p>mcptools can be hooked up to any application that supports MCP. For example, to use with Claude Desktop, you might paste the following in your Claude Desktop configuration (on macOS, at <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>):</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>    <span class="dt">"r-acquaint"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>    <span class="dt">"r-mcptools"</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>      <span class="dt">"command"</span><span class="fu">:</span> <span class="st">"Rscript"</span><span class="fu">,</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>      <span class="dt">"args"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"-e"</span><span class="ot">,</span> <span class="st">"acquaint::mcp_server()"</span><span class="ot">]</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>      <span class="dt">"args"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"-e"</span><span class="ot">,</span> <span class="st">"mcptools::mcp_server()"</span><span class="ot">]</span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="fu">}</span></span>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Or, to use with Claude Code, you might type in a terminal:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">-s</span> <span class="st">"user"</span> r-acquaint <span class="at">--</span> Rscript <span class="at">-e</span> <span class="st">"acquaint::mcp_server()"</span></span></code></pre></div>
-<p>Then, if you’d like models to access variables in specific R sessions, call <code><a href="reference/server.html">acquaint::mcp_session()</a></code> in those sessions. (You might include a call to this function in your .Rprofile, perhaps using <code>usethis::edit_r_profile()</code>, to automatically register every session you start up.)</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">-s</span> <span class="st">"user"</span> r-mcptools <span class="at">--</span> Rscript <span class="at">-e</span> <span class="st">"mcptools::mcp_server()"</span></span></code></pre></div>
+<p>Then, if you’d like models to access variables in specific R sessions, call <code><a href="reference/server.html">mcptools::mcp_session()</a></code> in those sessions. (You might include a call to this function in your .Rprofile, perhaps using <code>usethis::edit_r_profile()</code>, to automatically register every session you start up.)</p>
 </div>
 <div class="section level3">
 <h3 id="r-as-an-mcp-client">R as an MCP client<a class="anchor" aria-label="anchor" href="#r-as-an-mcp-client"></a>
 </h3>
-<p>acquaint uses the Claude Desktop configuration file format to register third-party MCP servers, as most MCP servers provide setup instructions for Claude Desktop in their documentation. For example, here’s what the <a href="https://github.com/github/github-mcp-server" class="external-link">official GitHub MCP server</a> configuration would look like:</p>
+<p>mcptools uses the Claude Desktop configuration file format to register third-party MCP servers, as most MCP servers provide setup instructions for Claude Desktop in their documentation. For example, here’s what the <a href="https://github.com/github/github-mcp-server" class="external-link">official GitHub MCP server</a> configuration would look like:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    <span class="dt">"github"</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -114,11 +114,11 @@
 <span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>  <span class="fu">}</span></span>
 <span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<p>Once the configuration file has been created (by default, acquaint will look to <code>file.path("~", ".config", "acquaint", "config.json")</code>), <code><a href="reference/client.html">mcp_tools()</a></code> will return a list of ellmer tools which you can pass directly to the <code>$set_tools()</code> method from ellmer:</p>
+<p>Once the configuration file has been created (by default, mcptools will look to <code>file.path("~", ".config", "mcptools", "config.json")</code>), <code><a href="reference/client.html">mcp_tools()</a></code> will return a list of ellmer tools which you can pass directly to the <code>$set_tools()</code> method from ellmer:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>ch <span class="ot">&lt;-</span> ellmer<span class="sc">::</span><span class="fu">chat_anthropic</span>()</span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>ch<span class="sc">$</span><span class="fu">set_tools</span>(<span class="fu">mcp_tools</span>())</span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>ch<span class="sc">$</span><span class="fu">chat</span>(<span class="st">"What issues are open on posit-dev/acquaint?"</span>)</span></code></pre></div>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>ch<span class="sc">$</span><span class="fu">chat</span>(<span class="st">"What issues are open on posit-dev/mcptools?"</span>)</span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -140,8 +140,8 @@
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/posit-dev/acquaint/" class="external-link">Browse source code</a></li>
-<li><a href="https://github.com/posit-dev/acquaint/issues" class="external-link">Report a bug</a></li>
+<li><a href="https://github.com/posit-dev/mcptools/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/posit-dev/mcptools/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
@@ -157,7 +157,7 @@
 <div class="citation">
 <h2 data-toc-skip>Citation</h2>
 <ul class="list-unstyled">
-<li><a href="authors.html#citation">Citing acquaint</a></li>
+<li><a href="authors.html#citation">Citing mcptools</a></li>
 </ul>
 </div>
 
@@ -175,8 +175,8 @@
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
-<li><a href="https://CRAN.R-project.org/package=acquaint" class="external-link"><img src="https://www.r-pkg.org/badges/version/acquaint" alt="CRAN status"></a></li>
-<li><a href="https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/simonpcouch/acquaint/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://CRAN.R-project.org/package=mcptools" class="external-link"><img src="https://www.r-pkg.org/badges/version/mcptools" alt="CRAN status"></a></li>
+<li><a href="https://github.com/simonpcouch/mcptools/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/simonpcouch/mcptools/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
 </ul>
 </div>
 
