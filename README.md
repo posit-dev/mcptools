@@ -21,10 +21,11 @@ acquaint:
   run R code *in the sessions you have running* to answer your
   questions. While the package supports configuring arbitrary R
   functions, you may be interested in the
-  [btw](https://posit-dev.github.io/btw/) package’s integrated support for
-  acquaint, which provides a default set of tools to to peruse the 
-  documentation of packages you have installed, check out the objects in your 
-  global environment, and retrieve metadata about your session and platform.
+  [btw](https://posit-dev.github.io/btw/) package’s integrated support
+  for acquaint, which provides a default set of tools to to peruse the
+  documentation of packages you have installed, check out the objects in
+  your global environment, and retrieve metadata about your session and
+  platform.
 - **R as an MCP client**: Register third-party MCP servers with ellmer
   chats to integrate additional context into
   e.g. [shinychat](https://github.com/posit-dev/shinychat) and
