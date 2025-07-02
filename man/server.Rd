@@ -2,9 +2,9 @@
 % Please edit documentation in R/server.R, R/session.R
 \name{mcp_server}
 \alias{mcp_server}
-\alias{mcp}
+\alias{server}
 \alias{mcp_session}
-\title{Model context protocol for your R session}
+\title{R as a server: Configure R-based tools with LLM-enabled apps}
 \usage{
 mcp_server(tools = NULL)
 
@@ -12,9 +12,10 @@ mcp_session()
 }
 \arguments{
 \item{tools}{A list of tools created with \code{\link[ellmer:tool]{ellmer::tool()}} that will be
-available from the server. Any list that could be passed to \code{Chat$set_tools()}
-can be passed here. By default, the package won't serve any tools other
-than those needed to communicate with active R sessions.}
+available from the server or a file path to an .R file that, when sourced,
+will return a list of tools. Any list that could be passed to
+\code{Chat$set_tools()} can be passed here. By default, the package won't serve
+any tools other than those needed to communicate with active R sessions.}
 }
 \description{
 Together, these functions implement a model context protocol server for your
@@ -68,6 +69,11 @@ tool_rnorm <- tool(
 )
 
 mcp_server(tools = list(tool_rnorm))
+
+# can also supply a file path as `tools`
+readLines(system.file("example-ellmer-tools.R", package = "acquaint"))
+
+mcp_server(tools = system.file("example-ellmer-tools.R", package = "acquaint"))
 }
 if (interactive()) {
 mcp_session()
@@ -76,8 +82,11 @@ mcp_session()
 }
 \seealso{
 \itemize{
-\item The "Getting started with acquaint" vignette at
-\code{vignette("acquaint", package = "acquaint")} delves into further detail
+\item The "R as an MCP server" vignette at
+\code{vignette("server", package = "acquaint")} delves into further detail
 on setup and customization.
+\item These functions implement R as an MCP \emph{server}. To use R as an MCP \emph{client},
+i.e. to configure tools from third-party MCP servers with ellmer chats, see
+\code{\link[=mcp_tools]{mcp_tools()}}.
 }
 }

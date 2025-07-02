@@ -2,11 +2,12 @@
 # valid JSON, it will send the JSON to the session. Then, when it receives the
 # response, it will print the response to stdout.
 #' @param tools A list of tools created with [ellmer::tool()] that will be
-#' available from the server. Any list that could be passed to `Chat$set_tools()`
-#' can be passed here. By default, the package won't serve any tools other
-#' than those needed to communicate with active R sessions.
+#' available from the server or a file path to an .R file that, when sourced,
+#' will return a list of tools. Any list that could be passed to
+#' `Chat$set_tools()` can be passed here. By default, the package won't serve
+#' any tools other than those needed to communicate with active R sessions.
 #'
-#' @rdname mcp
+#' @rdname server
 #' @export
 #'
 #' @examples
@@ -25,6 +26,11 @@
 #' )
 #'
 #' mcp_server(tools = list(tool_rnorm))
+#'
+#' # can also supply a file path as `tools`
+#' readLines(system.file("example-ellmer-tools.R", package = "acquaint"))
+#'
+#' mcp_server(tools = system.file("example-ellmer-tools.R", package = "acquaint"))
 #' }
 mcp_server <- function(tools = NULL) {
   # TODO: should this actually be a check for being called within Rscript or not?
