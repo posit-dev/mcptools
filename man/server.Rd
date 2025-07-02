@@ -6,15 +6,16 @@
 \alias{mcp_session}
 \title{R as a server: Configure R-based tools with LLM-enabled apps}
 \usage{
-mcp_server(tools = btw::btw_tools())
+mcp_server(tools = NULL)
 
 mcp_session()
 }
 \arguments{
 \item{tools}{A list of tools created with \code{\link[ellmer:tool]{ellmer::tool()}} that will be
 available from the server or a file path to an .R file that, when sourced,
-will return a list of tools. Any list that could be passed to \code{Chat$set_tools()}
-can be passed here. By default, the package will use \code{\link[btw:btw_tools]{btw::btw_tools()}}.}
+will return a list of tools. Any list that could be passed to
+\code{Chat$set_tools()} can be passed here. By default, the package won't serve
+any tools other than those needed to communicate with active R sessions.}
 }
 \description{
 Together, these functions implement a model context protocol server for your
@@ -56,10 +57,7 @@ available to the server.
 # should only be run non-interactively, and will block the current R process
 # once called.
 if (FALSE) {
-# to just start a server with btw tools:
-mcp_server()
-
-# to do so with non-default tools:
+# to start a server with a tool to draw numbers from a random normal:
 library(ellmer)
 
 tool_rnorm <- tool(
@@ -77,7 +75,6 @@ readLines(system.file("example-ellmer-tools.R", package = "acquaint"))
 
 mcp_server(tools = system.file("example-ellmer-tools.R", package = "acquaint"))
 }
-
 if (interactive()) {
 mcp_session()
 }

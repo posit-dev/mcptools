@@ -3,8 +3,9 @@
 # response, it will print the response to stdout.
 #' @param tools A list of tools created with [ellmer::tool()] that will be
 #' available from the server or a file path to an .R file that, when sourced,
-#' will return a list of tools. Any list that could be passed to `Chat$set_tools()`
-#' can be passed here. By default, the package will use [btw::btw_tools()].
+#' will return a list of tools. Any list that could be passed to
+#' `Chat$set_tools()` can be passed here. By default, the package won't serve
+#' any tools other than those needed to communicate with active R sessions.
 #'
 #' @rdname server
 #' @export
@@ -13,10 +14,7 @@
 #' # should only be run non-interactively, and will block the current R process
 #' # once called.
 #' if (FALSE) {
-#' # to just start a server with btw tools:
-#' mcp_server()
-#'
-#' # to do so with non-default tools:
+#' # to start a server with a tool to draw numbers from a random normal:
 #' library(ellmer)
 #'
 #' tool_rnorm <- tool(
@@ -34,8 +32,7 @@
 #'
 #' mcp_server(tools = system.file("example-ellmer-tools.R", package = "acquaint"))
 #' }
-#'
-mcp_server <- function(tools = btw::btw_tools()) {
+mcp_server <- function(tools = NULL) {
   # TODO: should this actually be a check for being called within Rscript or not?
   check_not_interactive()
   set_server_tools(tools)

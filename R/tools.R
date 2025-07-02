@@ -1,4 +1,9 @@
 set_server_tools <- function(x, x_arg = caller_arg(x), call = caller_env()) {
+  if (is.null(x)) {
+    the$server_tools <- c(list(list_r_sessions_tool, select_r_session_tool))
+    return()
+  }
+
   # evaluate eagerly so that caller arg is correct if `looks_like_r_file()`
   # but output type isn't correct
   force(x_arg)

@@ -50,7 +50,7 @@ While a single client and a single R session probably covers many users' use cas
 
 ## Custom tools
 
-By default, acquaint supplies clients with `btw::btw_tools()`, a set of atomic tools for data science from [the btw package](https://posit-dev.github.io/btw). These tools allow clients to:
+By default, acquaint supplies clients with only the necessary infrastructural tools to implement interaction with active sessions. You may be interested in using acquaint via [btw's wrappers](https://posit-dev.github.io/btw), which provide a set of atomic tools for data science. These tools allow clients to:
 
 -   Peruse package documentation
 
@@ -66,5 +66,3 @@ Users might be interested in extending these tools or supplying completely diffe
 You can configure any set of tools that could be passed to the `$set_tools()` method of an ellmer Chat object as the tools that acquaint will supply to clients. To do so, supply a list of outputs from `ellmer::tool()` to the `tools` argument of `mcp_server()`. Relatedly, you'll need to make sure that your code that specifies the new tools can run in a fresh R session; be sure to either namespace functions from libraries (like `ellmer::tool()` instead of `tool()`) or load the libraries entirely.
 
 <!--# \[TODO: provide an example of registering the `rnorm()` tool.\] -->
-
-Note that, if you'd like to supply some custom tools *in addition to* the default tools from btw, you'll need to set `tools = (c(btw::btw_tools(), your_custom_tools))`.
