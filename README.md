@@ -33,6 +33,13 @@ mcptools:
 
 > IMPORTANT: This package is highly experimental and its interface may
 > change rapidly!
+>
+> This package used to be called acquaint and supplied a default set of
+> tools from [btw](https://github.com/posit-dev/btw) when R was used as
+> an MCP server. The direction of the dependency has been reversed; to
+> use the same functionality from before, transition
+> `acquaint::mcp_server()` to `btw::btw_mcp_server()` and
+> `acquaint::mcp_session()` to `btw::btw_mcp_session()`.
 
 ## Installation
 
