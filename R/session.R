@@ -153,6 +153,10 @@ describe_session <- function() {
   sprintf("%d: %s (%s)", the$session, basename(getwd()), infer_ide())
 }
 
+# assign NULL for mocking in testing
+basename <- NULL
+getwd <- NULL
+
 infer_ide <- function() {
   first_cmd_arg <- commandArgs()[1]
   switch(
