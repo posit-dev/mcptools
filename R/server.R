@@ -1,6 +1,12 @@
 # The MCP server is a proxy. It takes input on stdin, and when the input forms
 # valid JSON, it will send the JSON to the session. Then, when it receives the
 # response, it will print the response to stdout.
+#
+# nocov start
+# mark as no test coverage as, when this is tested in `test-server.R`, the
+# function is called in a separate R process and thus isn't picked up by
+# coverage tools
+
 #' @param tools A list of tools created with [ellmer::tool()] that will be
 #' available from the server or a file path to an .R file that, when sourced,
 #' will return a list of tools. Any list that could be passed to
@@ -258,3 +264,5 @@ append_tool_fn <- function(data) {
   data$tool <- get_mcptools_tools()[[tool_name]]@fun
   data
 }
+
+# nocov end
