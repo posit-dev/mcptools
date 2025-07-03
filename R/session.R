@@ -112,7 +112,7 @@ handle_message_from_server <- function(data) {
 
 as_tool_call_result <- function(data, result) {
   is_error <- FALSE
-  if (inherits(result, "btw::BtwToolResult")) {
+  if (inherits(result, "ellmer::ContentToolResult")) {
     is_error <- !is.null(result@error)
     result <- result@value %||% result@error
   }
@@ -162,3 +162,8 @@ infer_ide <- function() {
     first_cmd_arg
   )
 }
+
+# assign NULL for mocking in testing
+basename <- NULL
+getwd <- NULL
+commandArgs <- NULL
