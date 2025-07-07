@@ -73,8 +73,20 @@ usage.</p>
 <div class="section level2">
 <h2 id="the-basics">The basics<a class="anchor" aria-label="anchor" href="#the-basics"></a>
 </h2>
-<p>In the context of R as an MCP server, there are three main concept to
-understand:</p>
+<p>In the context of R as an MCP server, there are three main concepts
+to understand:</p>
+<div class="float">
+<img src="r_as_a_server.png" alt="A system architecture diagram showing three main components: Client (left), Server (center), and Session (right). The Client box lists AI coding assistants including Claude Desktop, Claude Code, Copilot Chat in VS Code, and Positron Assistant. The Server is initiated with mcp_server() and contains tools for R functions like reading package documentation, running R code, and inspecting global environment objects. Sessions can be configured with mcp_session() and can optionally connect to active R sessions, with two example projects shown: “Some R Project” and “Other R Project”."><div class="figcaption">A system architecture diagram showing three main
+components: Client (left), Server (center), and Session (right). The
+Client box lists AI coding assistants including Claude Desktop, Claude
+Code, Copilot Chat in VS Code, and Positron Assistant. The Server is
+initiated with <code><a href="../reference/server.html">mcp_server()</a></code> and contains tools for R
+functions like reading package documentation, running R code, and
+inspecting global environment objects. Sessions can be configured with
+<code><a href="../reference/server.html">mcp_session()</a></code> and can optionally connect to active R
+sessions, with two example projects shown: “Some R Project” and “Other R
+Project”.</div>
+</div>
 <ul>
 <li><p><strong>Clients</strong> are the apps you’d like to connect an R
 session to, like Claude Desktop of Claude Code. mcptools supports any
@@ -114,13 +126,13 @@ perhaps by first calling <code>usethis::edit_r_profile()</code>.</p>
 <div class="section level2">
 <h2 id="multiple-clients-and-r-sessions">Multiple clients and R sessions<a class="anchor" aria-label="anchor" href="#multiple-clients-and-r-sessions"></a>
 </h2>
-<p>While a single client and a single R session probably covers many
-users’ use cases, mcptools supports multiple clients and multiple R
-sessions. For example, for the former, you may be both chatting in
-Claude Desktop and running Claude Code in a terminal somewhere. Or, in
-the multiple R sessions situation, you may have two or more Positron
-instances running at once, with different data science projects in
-each.</p>
+<p>While a single client (and potentially a single R session) probably
+covers many users’ use cases, mcptools supports multiple clients and
+multiple R sessions. For example, for the former, you may be both
+chatting in Claude Desktop and running Claude Code in a terminal
+somewhere. Or, in the multiple R sessions situation, you may have two or
+more Positron instances running at once, with different data science
+projects in each.</p>
 <p><strong>As for multiple clients,</strong> this will “just work”;
 there’s nothing to keep in mind here.</p>
 <p><strong>As for multiple R sessions</strong>, mcptools will choose a
