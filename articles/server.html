@@ -80,10 +80,10 @@ to understand:</p>
 <li><p><strong>Clients</strong> are the apps you’d like to connect an R
 session to, like Claude Desktop of Claude Code. mcptools supports any
 client that supports MCP.</p></li>
-<li><p>Clients talk to your R sessions using a <strong>server</strong>.
-Each client that supports MCP will provide some entry point to configure
-a command and any additional arguments with the client. mcptools’s
-command and arguments are <code>Rscript</code> and
+<li><p>Clients can run R functions as tools using an MCP
+<strong>server</strong>. Each client that supports MCP will provide some
+entry point to configure a command and any additional arguments with the
+client. mcptools’s command and arguments are <code>Rscript</code> and
 <code>-e "mcptools::mcp_server()"</code>. Different clients register
 this command in different ways. For example, to use mcptools with the
 client Claude Code, you might write
@@ -96,8 +96,8 @@ by clients, run the R code <code><a href="../reference/server.html">mcptools::mc
 might want to run this code every time you start up R; to do so, add
 <code><a href="../reference/server.html">mcptools::mcp_session()</a></code> to your <code>.Rprofile</code>,
 perhaps by first calling <code>usethis::edit_r_profile()</code>.
-Configuring sessions is not required; if you choose not to do so, tools
-will be exucuted in the server itself.</p></li>
+<strong>Configuring sessions is not required</strong>; if you choose not
+to do so, tools will be executed in the server itself.</p></li>
 </ul>
 <p>(In case this caught your eye: yes, the server is itself an R
 session. In mcptools’s documentation, we’ll always refer to the server R
