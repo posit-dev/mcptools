@@ -261,7 +261,7 @@ append_tool_fn <- function(data) {
     ))
   }
 
-  data$tool <- get_mcptools_tools()[[tool_name]]@fun
+  data$tool <- tool_fun(get_mcptools_tools()[[tool_name]])
   data
 }
 

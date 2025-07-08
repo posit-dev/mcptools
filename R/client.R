@@ -208,22 +208,41 @@ server_as_ellmer_tools <- function(server) {
   for (i in seq_along(tools)) {
     tool <- tools[[i]]
     tool_arguments <- as_ellmer_types(tool)
-    tools_out[[i]] <-
-      do.call(
-        ellmer::tool,
-        c(
-          list(
-            .fun = tool_ref(
-              server = server$name,
-              tool = tool$name,
-              arguments = names(tool_arguments)
-            ),
-            .description = tool$description,
-            .name = tool$name
-          ),
-          tool_arguments
+    if (is_new_ellmer()) {
+      tools_out[[i]] <-
+        do.call(
+          ellmer::tool,
+          c(
+            list(
+              fun = tool_ref(
+                server = server$name,
+                tool = tool$name,
+                arguments = names(tool_arguments)
+              ),
+              description = tool$description,
+              arguments = tool_arguments,
+              name = tool$name
+            )
+          )
         )
-      )
+    } else {
+      tools_out[[i]] <-
+        do.call(
+          ellmer::tool,
+          c(
+            list(
+              .fun = tool_ref(
+                server = server$name,
+                tool = tool$name,
+                arguments = names(tool_arguments)
+              ),
+              .description = tool$description,
+              .name = tool$name
+            ),
+            tool_arguments
+          )
+        )
+    }
   }
 
   tools_out

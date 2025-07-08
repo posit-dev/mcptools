@@ -97,21 +97,30 @@ list_r_sessions <- function() {
   sort(as.character(nanonext::collect_aio_(res)))
 }
 
+list_r_sessions_description <- paste(
+  "List the R sessions that are available to access.",
+  "R sessions which have run `mcptools::mcp_session()` will appear here.",
+  "In the output, start each session with 'Session #' and do NOT otherwise",
+  "prefix any index numbers to the output.",
+  "In general, do not use this tool unless asked to list or",
+  "select a specific R session.",
+  "Given the output of this tool, report the users to the user.",
+  "Do NOT make a choice of R session based on the results of the tool",
+  "and call select_r_session unless the user asks you to specifically."
+)
+
 list_r_sessions_tool <-
-  ellmer::tool(
-    .fun = list_r_sessions,
-    .description = paste(
-      "List the R sessions that are available to access.",
-      "R sessions which have run `mcptools::mcp_session()` will appear here.",
-      "In the output, start each session with 'Session #' and do NOT otherwise",
-      "prefix any index numbers to the output.",
-      "In general, do not use this tool unless asked to list or",
-      "select a specific R session.",
-      "Given the output of this tool, report the users to the user.",
-      "Do NOT make a choice of R session based on the results of the tool",
-      "and call select_r_session unless the user asks you to specifically."
+  if (is_new_ellmer()) {
+    ellmer::tool(
+      fun = list_r_sessions,
+      description = list_r_sessions_description
     )
-  )
+  } else {
+    ellmer::tool(
+      .fun = list_r_sessions,
+      .description = list_r_sessions_description
+    )
+  }
 
 select_r_session <- function(session) {
   nanonext::reap(the$server_socket[["dialer"]][[1L]])
@@ -123,23 +132,35 @@ select_r_session <- function(session) {
   sprintf("Selected session %d successfully.", session)
 }
 
+select_r_session_description <- paste(
+  "Choose the R session of interest.",
+  "Use the `list_r_sessions` tool to discover potential sessions.",
+  "In general, do not use this tool unless asked to select a specific R",
+  "session; the tools available to you have a default R session",
+  "that is usually the one the user wants.",
+  "Do not call this tool immediately after calling list_r_sessions",
+  "unless you've been asked to select an R session and haven't yet",
+  "called list_r_sessions.",
+  "Your choice of session will persist after the tool is called; only",
+  "call this tool more than once if you need to switch between sessions."
+)
+
 select_r_session_tool <-
-  ellmer::tool(
-    .fun = select_r_session,
-    .description = paste(
-      "Choose the R session of interest.",
-      "Use the `list_r_sessions` tool to discover potential sessions.",
-      "In general, do not use this tool unless asked to select a specific R",
-      "session; the tools available to you have a default R session",
-      "that is usually the one the user wants.",
-      "Do not call this tool immediately after calling list_r_sessions",
-      "unless you've been asked to select an R session and haven't yet",
-      "called list_r_sessions.",
-      "Your choice of session will persist after the tool is called; only",
-      "call this tool more than once if you need to switch between sessions."
-    ),
-    session = ellmer::type_integer("The R session number to select.")
-  )
+  if (is_new_ellmer()) {
+    ellmer::tool(
+      fun = select_r_session,
+      description = select_r_session_description,
+      arguments = list(
+        session = ellmer::type_integer("The R session number to select.")
+      )
+    )
+  } else {
+    ellmer::tool(
+      .fun = select_r_session,
+      .description = select_r_session_description,
+      session = ellmer::type_integer("The R session number to select.")
+    )
+  }
 
 get_mcptools_tools <- function() {
   # must be called inside of the server session

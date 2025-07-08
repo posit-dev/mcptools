@@ -7,6 +7,8 @@
 ## usethis namespace: end
 NULL
 
+utils::globalVariables(c("packageVersion", "setNames"))
+
 .onLoad <- function(libname, pkgname) {
   the$socket_url <- switch(
     Sys.info()[["sysname"]],
