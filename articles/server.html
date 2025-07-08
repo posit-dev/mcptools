@@ -75,18 +75,7 @@ usage.</p>
 </h2>
 <p>In the context of R as an MCP server, there are three main concepts
 to understand:</p>
-<div class="float">
-<img src="r_as_a_server.png" alt="A system architecture diagram showing three main components: Client (left), Server (center), and Session (right). The Client box lists AI coding assistants including Claude Desktop, Claude Code, Copilot Chat in VS Code, and Positron Assistant. The Server is initiated with mcp_server() and contains tools for R functions like reading package documentation, running R code, and inspecting global environment objects. Sessions can be configured with mcp_session() and can optionally connect to active R sessions, with two example projects shown: “Some R Project” and “Other R Project”."><div class="figcaption">A system architecture diagram showing three main
-components: Client (left), Server (center), and Session (right). The
-Client box lists AI coding assistants including Claude Desktop, Claude
-Code, Copilot Chat in VS Code, and Positron Assistant. The Server is
-initiated with <code><a href="../reference/server.html">mcp_server()</a></code> and contains tools for R
-functions like reading package documentation, running R code, and
-inspecting global environment objects. Sessions can be configured with
-<code><a href="../reference/server.html">mcp_session()</a></code> and can optionally connect to active R
-sessions, with two example projects shown: “Some R Project” and “Other R
-Project”.</div>
-</div>
+<p><img src="https://raw.githubusercontent.com/posit-dev/mcptools/main/man/figures/r_as_a_server.png" alt="A system architecture diagram showing three main components: Client (left), Server (center), and Session (right). The Client box lists AI coding assistants including Claude Desktop, Claude Code, Copilot Chat in VS Code, and Positron Assistant. The Server is initiated with `mcp_server()` and contains tools for R functions like reading package documentation, running R code, and inspecting global environment objects. Sessions can be configured with `mcp_session()` and can optionally connect to active R sessions, with two example projects shown: 'Some R Project' and 'Other R Project'."></p>
 <ul>
 <li><p><strong>Clients</strong> are the apps you’d like to connect an R
 session to, like Claude Desktop of Claude Code. mcptools supports any
