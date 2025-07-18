@@ -34,10 +34,10 @@ platform.
 
 <img src="man/figures/r_as_a_client.png" alt="An architecture diagram showing the Client (left) with R code using the ellmer library to create a chat object and then setting tools from mcp with `mcp_tools()`, and the Server (right) containing third-party tools including GitHub (for reading PRs/Issues), Confluence (for searching), and Google Drive (for searching). Bidirectional arrows indicate communication between the client and server components." width="100%" />
 
-Register third-party MCP servers with ellmer chats to integrate
-additional context into
-e.g. [shinychat](https://github.com/posit-dev/shinychat) and
-[querychat](https://posit-dev.github.io/querychat/) apps.
+Register third-party MCP servers with
+[ellmer](https://ellmer.tidyverse.org/) chats to integrate additional
+context into e.g. [shinychat](https://github.com/posit-dev/shinychat)
+and [querychat](https://posit-dev.github.io/querychat/) apps.
 
 > NOTE:
 >

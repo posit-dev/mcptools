@@ -53,7 +53,7 @@ global environment, and retrieve metadata about your session and platform.
 knitr::include_graphics("man/figures/r_as_a_client.png")
 ```
 
-Register third-party MCP servers with ellmer
+Register third-party MCP servers with [ellmer](https://ellmer.tidyverse.org/)
 chats to integrate additional context into
 e.g. [shinychat](https://github.com/posit-dev/shinychat) and
 [querychat](https://posit-dev.github.io/querychat/) apps.
