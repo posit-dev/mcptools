@@ -99,7 +99,7 @@
 #'
 #' @name server
 #' @export
-mcp_server <- function(tools = NULL, include_session_tools = TRUE) {
+mcp_server <- function(tools = NULL, ..., include_session_tools = TRUE) {
   # TODO: should this actually be a check for being called within Rscript or not?
   check_not_interactive()
   set_server_tools(tools, include_session_tools)
