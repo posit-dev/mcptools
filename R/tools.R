@@ -1,7 +1,16 @@
-set_server_tools <- function(x, x_arg = caller_arg(x), call = caller_env()) {
+set_server_tools <- function(
+  x,
+  include_session_tools = TRUE,
+  x_arg = caller_arg(x),
+  call = caller_env()
+) {
   if (is.null(x)) {
-    the$server_tools <- c(list(list_r_sessions_tool, select_r_session_tool))
-    return()
+    if (include_session_tools) {
+      the$server_tools <- c(list(list_r_sessions_tool, select_r_session_tool))
+      return()
+    } else {
+      cli::cli_abort("No tools selected to serve", call = call)
+    }
   }
 
   # evaluate eagerly so that caller arg is correct if `looks_like_r_file()`
@@ -22,7 +31,11 @@ set_server_tools <- function(x, x_arg = caller_arg(x), call = caller_env()) {
     )
   }
 
-  if (!is_list(x) || !all(vapply(x, inherits, logical(1), "ellmer::ToolDef"))) {
+  if (!is.list(x)) {
+    x <- list(x)
+  }
+
+  if (!all(vapply(x, inherits, logical(1), "ellmer::ToolDef"))) {
     msg <-
       "{.arg {x_arg}} must be a list of tools created with {.fn ellmer::tool}
        or a .R file path that returns a list of ellmer tools when sourced."
@@ -39,19 +52,22 @@ set_server_tools <- function(x, x_arg = caller_arg(x), call = caller_env()) {
     )
   ) {
     cli::cli_abort(
-      "The tool names {.field list_r_sessions} and {.field select_r_session} are 
+      "The tool names {.field list_r_sessions} and {.field select_r_session} are
        reserved by {.pkg mcptools}.",
       call = call
     )
   }
 
-  the$server_tools <- c(
-    x,
-    list(
-      list_r_sessions_tool,
-      select_r_session_tool
+  if (include_session_tools) {
+    x <- c(
+      x,
+      list(
+        list_r_sessions_tool,
+        select_r_session_tool
+      )
     )
-  )
+  }
+  the$server_tools <- x
 }
 
 looks_like_r_file <- function(x) {

@@ -51,11 +51,8 @@
 #' Examples for Claude Code on WSL and Claude Desktop on Windows are shown
 #' at <https://github.com/posit-dev/mcptools/issues/41#issuecomment-3036617046>.
 #'
-#' @param tools A list of tools created with [ellmer::tool()] that will be
-#' available from the server or a file path to an .R file that, when sourced,
-#' will return a list of tools. Any list that could be passed to
-#' `Chat$set_tools()` can be passed here. By default, the package won't serve
-#' any tools other than those needed to communicate with interactive R sessions.
+#' @param include_session_tools Logical. Include the built-in session tools
+#' (`list_r_sessions`, `select_r_session`) that work with `mcp_session()`. Defaults to `TRUE`.
 #'
 #' @returns
 #' `mcp_server()` and `mcp_session()` are both called primarily for side-effects.
@@ -102,10 +99,10 @@
 #'
 #' @name server
 #' @export
-mcp_server <- function(tools = NULL) {
+mcp_server <- function(tools = NULL, include_session_tools = TRUE) {
   # TODO: should this actually be a check for being called within Rscript or not?
   check_not_interactive()
-  set_server_tools(tools)
+  set_server_tools(tools, include_session_tools)
 
   cv <- nanonext::cv()
   reader_socket <- nanonext::read_stdin()
