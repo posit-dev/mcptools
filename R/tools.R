@@ -9,7 +9,7 @@ set_server_tools <- function(
       the$server_tools <- c(list(list_r_sessions_tool, select_r_session_tool))
       return()
     } else {
-      cli::cli_abort("No tools selected to serve", call = call)
+      cli::cli_abort("No tools selected to serve.", call = call)
     }
   }
 
