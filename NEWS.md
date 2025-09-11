@@ -1,5 +1,7 @@
 # mcptools (development version)
 
+`mcp_server()` gains argument `include_session_tools`, allowing users to opt-out of presenting R sessions tools to clients.
+
 # mcptools 0.1.1
 
 Addressed an issue in tests on `r-devel-linux-x86_64-fedora-clang`.
