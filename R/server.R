@@ -104,26 +104,38 @@ mcp_server <- function(tools = NULL, ..., include_session_tools = TRUE) {
   check_not_interactive()
   set_server_tools(tools, include_session_tools)
 
+  the$do_sessions <- isTRUE(include_session_tools)
+
   cv <- nanonext::cv()
+
   reader_socket <- nanonext::read_stdin()
   on.exit(nanonext::reap(reader_socket))
   nanonext::pipe_notify(reader_socket, cv, remove = TRUE, flag = TRUE)
-
-  the$server_socket <- nanonext::socket("poly")
-  on.exit(nanonext::reap(the$server_socket), add = TRUE)
-  nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
-
   client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
-  session <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
 
-  while (nanonext::wait(cv)) {
-    if (!nanonext::unresolved(session)) {
-      handle_message_from_session(session$data)
-      session <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
+  if (the$do_sessions) {
+    the$server_socket <- nanonext::socket("poly")
+    on.exit(nanonext::reap(the$server_socket), add = TRUE)
+    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
+    session <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
+
+    while (nanonext::wait(cv)) {
+      if (!nanonext::unresolved(session)) {
+        handle_message_from_session(session$data)
+        session <-
+          nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
+      }
+      if (!nanonext::unresolved(client)) {
+        handle_message_from_client(client$data)
+        client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
+      }
     }
-    if (!nanonext::unresolved(client)) {
-      handle_message_from_client(client$data)
-      client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
+  } else {
+    while (nanonext::wait(cv)) {
+      if (!nanonext::unresolved(client)) {
+        handle_message_from_client(client$data)
+        client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
+      }
     }
   }
 }
@@ -175,10 +187,11 @@ handle_message_from_client <- function(line) {
   } else if (data$method == "tools/call") {
     tool_name <- data$params$name
     if (
-      # two tools provided by mcptools itself which must be executed in
-      # the server rather than a session (#18)
-      tool_name %in%
-        c("list_r_sessions", "select_r_session") ||
+      isFALSE(the$do_sessions) ||
+        # two tools provided by mcptools itself which must be executed in
+        # the server rather than a session (#18)
+        tool_name %in% c("list_r_sessions", "select_r_session") ||
+        # when session handling is disabled, never forward to sessions
         # with no sessions available, just execute tools in the server (#36)
         !nanonext::stat(the$server_socket, "pipes")
     ) {
