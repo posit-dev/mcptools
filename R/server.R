@@ -51,6 +51,11 @@
 #' Examples for Claude Code on WSL and Claude Desktop on Windows are shown
 #' at <https://github.com/posit-dev/mcptools/issues/41#issuecomment-3036617046>.
 #'
+#' @param tools Optional collection of tools to expose. Supply either a list
+#'   of objects created by [ellmer::tool()] or a path to an `.R` file that,
+#'   when sourced, yields such a list. Defaults to `NULL`, which serves only
+#'   the built-in session tools when `include_session_tools` is `TRUE`.
+#' @param ... Reserved for future use; currently ignored.
 #' @param include_session_tools Logical. Include the built-in session tools
 #' (`list_r_sessions`, `select_r_session`) that work with `mcp_session()`. Defaults to `TRUE`.
 #'
