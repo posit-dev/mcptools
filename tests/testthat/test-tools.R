@@ -45,8 +45,11 @@ test_that("set_server_tools errors informatively", {
       local = TRUE
     )
 
-  # needs to be wrapped in `list()`
-  expect_snapshot(set_server_tools(tls$value[[1]]), error = TRUE)
+  # input must be a ToolDef or list of ToolDefs
+  expect_snapshot(set_server_tools(123), error = TRUE)
+
+  # check can accept a single ToolDef
+  expect_no_error(set_server_tools(tls$value[[1]]))
 
   # select_r_session and list_r_sessions are reserved names
   tls$value[[1]]@name <- "select_r_session"

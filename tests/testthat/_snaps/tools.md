@@ -27,11 +27,10 @@
 # set_server_tools errors informatively
 
     Code
-      set_server_tools(tls$value[[1]])
+      set_server_tools(123)
     Condition
       Error:
-      ! `tls$value[[1]]` must be a list of tools created with `ellmer::tool()` or a .R file path that returns a list of ellmer tools when sourced.
-      i Did you mean to wrap `tls$value[[1]]` in `list()`?
+      ! `123` must be a list of tools created with `ellmer::tool()` or a .R file path that returns a list of ellmer tools when sourced.
 
 ---
 

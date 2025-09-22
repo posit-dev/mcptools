@@ -6,16 +6,13 @@
 \alias{mcp_session}
 \title{R as a server: Configure R-based tools with LLM-enabled apps}
 \usage{
-mcp_server(tools = NULL)
+mcp_server(tools = NULL, ..., include_session_tools = TRUE)
 
 mcp_session()
 }
 \arguments{
-\item{tools}{A list of tools created with \code{\link[ellmer:tool]{ellmer::tool()}} that will be
-available from the server or a file path to an .R file that, when sourced,
-will return a list of tools. Any list that could be passed to
-\code{Chat$set_tools()} can be passed here. By default, the package won't serve
-any tools other than those needed to communicate with interactive R sessions.}
+\item{include_session_tools}{Logical. Include the built-in session tools
+(\code{list_r_sessions}, \code{select_r_session}) that work with \code{mcp_session()}. Defaults to \code{TRUE}.}
 }
 \value{
 \code{mcp_server()} and \code{mcp_session()} are both called primarily for side-effects.
