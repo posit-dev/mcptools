@@ -1,6 +1,6 @@
 # mcptools (development version)
 
-`mcp_server()` gains argument `include_session_tools`, allowing users to opt-out of presenting R sessions tools to clients.
+`mcp_server()` gains logical argument `session_tools`, allowing users to opt-out of presenting R sessions tools to clients.
 
 # mcptools 0.1.1
 
