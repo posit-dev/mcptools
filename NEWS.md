@@ -1,6 +1,6 @@
 # mcptools (development version)
 
-* `mcp_session()` now (invisibly) returns the nanonext socket used for communicating with the server.
+* `mcp_session()` now returns invisibly the nanonext socket used for communicating with the server.
 * `mcp_server()` gains logical argument `session_tools`, allowing users to opt-out of presenting R sessions tools to clients.
 
 # mcptools 0.1.1

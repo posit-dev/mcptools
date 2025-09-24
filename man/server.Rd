@@ -29,8 +29,9 @@ side-effects.
 \item \code{mcp_server()} blocks the R process it's called in indefinitely and isn't
 intended for interactive use.
 \item \code{mcp_session()} makes the interactive R session it's called in available to
-MCP servers. It returns the \pkg{nanonext} socket used for communicating
-with the server. Call \code{\link[=close]{close()}} on the socket to stop the session.
+MCP servers. It returns invisibly the \pkg{nanonext} socket used for
+communicating with the server. Call \code{\link[=close]{close()}} on the socket to stop the
+session.
 }
 }
 \description{

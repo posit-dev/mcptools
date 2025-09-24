@@ -25,7 +25,7 @@ mcp_session <- function() {
   the$session <- i
   schedule_handle_message_from_server()
 
-  the$session_socket
+  invisible(the$session_socket)
 }
 
 handle_message_from_server <- function(data) {
