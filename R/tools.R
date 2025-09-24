@@ -125,18 +125,10 @@ list_r_sessions_description <- paste(
   "and call select_r_session unless the user asks you to specifically."
 )
 
-list_r_sessions_tool <-
-  if (is_new_ellmer()) {
-    ellmer::tool(
-      fun = list_r_sessions,
-      description = list_r_sessions_description
-    )
-  } else {
-    ellmer::tool(
-      .fun = list_r_sessions,
-      .description = list_r_sessions_description
-    )
-  }
+list_r_sessions_tool <- ellmer::tool(
+  fun = list_r_sessions,
+  description = list_r_sessions_description
+)
 
 select_r_session <- function(session) {
   nanonext::reap(the$server_socket[["dialer"]][[1L]])
@@ -161,22 +153,13 @@ select_r_session_description <- paste(
   "call this tool more than once if you need to switch between sessions."
 )
 
-select_r_session_tool <-
-  if (is_new_ellmer()) {
-    ellmer::tool(
-      fun = select_r_session,
-      description = select_r_session_description,
-      arguments = list(
-        session = ellmer::type_integer("The R session number to select.")
-      )
-    )
-  } else {
-    ellmer::tool(
-      .fun = select_r_session,
-      .description = select_r_session_description,
-      session = ellmer::type_integer("The R session number to select.")
-    )
-  }
+select_r_session_tool <- ellmer::tool(
+  fun = select_r_session,
+  description = select_r_session_description,
+  arguments = list(
+    session = ellmer::type_integer("The R session number to select.")
+  )
+)
 
 get_mcptools_tools <- function() {
   # must be called inside of the server session

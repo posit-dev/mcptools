@@ -186,7 +186,7 @@ error_no_mcp_config <- function(call) {
   cli::cli_abort(
     c(
       "The mcptools MCP client configuration file does not exist.",
-      i = "Supply a non-NULL file {.arg config} or create a file at the default 
+      i = "Supply a non-NULL file {.arg config} or create a file at the default
            configuration location {.file {default_mcp_client_config()}}."
     ),
     call = call
@@ -221,41 +221,21 @@ server_as_ellmer_tools <- function(server) {
   for (i in seq_along(tools)) {
     tool <- tools[[i]]
     tool_arguments <- as_ellmer_types(tool)
-    if (is_new_ellmer()) {
-      tools_out[[i]] <-
-        do.call(
-          ellmer::tool,
-          c(
-            list(
-              fun = tool_ref(
-                server = server$name,
-                tool = tool$name,
-                arguments = names(tool_arguments)
-              ),
-              description = tool$description,
-              arguments = tool_arguments,
-              name = tool$name
-            )
-          )
+    tools_out[[i]] <- do.call(
+      ellmer::tool,
+      c(
+        list(
+          fun = tool_ref(
+            server = server$name,
+            tool = tool$name,
+            arguments = names(tool_arguments)
+          ),
+          description = tool$description,
+          arguments = tool_arguments,
+          name = tool$name
         )
-    } else {
-      tools_out[[i]] <-
-        do.call(
-          ellmer::tool,
-          c(
-            list(
-              .fun = tool_ref(
-                server = server$name,
-                tool = tool$name,
-                arguments = names(tool_arguments)
-              ),
-              .description = tool$description,
-              .name = tool$name
-            ),
-            tool_arguments
-          )
-        )
-    }
+      )
+    )
   }
 
   tools_out

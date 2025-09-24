@@ -26,7 +26,7 @@ Depends:
     R (>= 4.1.0)
 Imports: 
     cli,
-    ellmer (>= 0.2.0),
+    ellmer (>= 0.3.0),
     jsonlite,
     nanonext (>= 1.6.0),
     processx,
