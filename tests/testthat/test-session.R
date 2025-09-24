@@ -5,7 +5,7 @@ test_that("mcp_session returns early when not interactive", {
 
 test_that("mcp_session initializes appropriate globals", {
   local_mocked_bindings(interactive = function() TRUE)
-  mcp_session()
+  expect_s3_class(mcp_session(), "nanoSocket")
   expect_s3_class(the$session_socket, "nanoSocket")
   expect_type(the$session, "integer")
 })

@@ -23,12 +23,14 @@ tools (\code{list_r_sessions}, \code{select_r_session}) that work with
 \code{mcp_session()}. Defaults to \code{TRUE}.}
 }
 \value{
-\code{mcp_server()} and \code{mcp_session()} are both called primarily for side-effects.
+\code{mcp_server()} and \code{mcp_session()} are both called primarily for their
+side-effects.
 \itemize{
 \item \code{mcp_server()} blocks the R process it's called in indefinitely and isn't
 intended for interactive use.
 \item \code{mcp_session()} makes the interactive R session it's called in available to
-MCP servers. It returns a promise via \code{\link[promises:promise]{promises::promise()}}.
+MCP servers. It returns the \pkg{nanonext} socket used for communicating
+with the server. Call \code{\link[=close]{close()}} on the socket to stop the session.
 }
 }
 \description{

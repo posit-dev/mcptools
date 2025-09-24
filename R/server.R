@@ -61,12 +61,14 @@
 #'   `mcp_session()`. Defaults to `TRUE`.
 #'
 #' @returns
-#' `mcp_server()` and `mcp_session()` are both called primarily for side-effects.
+#' `mcp_server()` and `mcp_session()` are both called primarily for their
+#'  side-effects.
 #'
 #' * `mcp_server()` blocks the R process it's called in indefinitely and isn't
 #'   intended for interactive use.
 #' * `mcp_session()` makes the interactive R session it's called in available to
-#'   MCP servers. It returns a promise via [promises::promise()].
+#'   MCP servers. It returns the \pkg{nanonext} socket used for communicating
+#'   with the server. Call [close()] on the socket to stop the session.
 #'
 #' @seealso
 #' - The "R as an MCP server" vignette at

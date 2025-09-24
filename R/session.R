@@ -23,8 +23,9 @@ mcp_session <- function() {
     i <- i + 1L
   }
   the$session <- i
-
   schedule_handle_message_from_server()
+
+  the$session_socket
 }
 
 handle_message_from_server <- function(data) {
