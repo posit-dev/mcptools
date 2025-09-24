@@ -1,11 +1,11 @@
 set_server_tools <- function(
   x,
-  include_session_tools = TRUE,
+  session_tools = TRUE,
   x_arg = caller_arg(x),
   call = caller_env()
 ) {
   if (is.null(x)) {
-    if (include_session_tools) {
+    if (session_tools) {
       the$server_tools <- c(list(list_r_sessions_tool, select_r_session_tool))
       return()
     } else {
@@ -58,7 +58,7 @@ set_server_tools <- function(
     )
   }
 
-  if (include_session_tools) {
+  if (session_tools) {
     x <- c(
       x,
       list(
