@@ -1,14 +1,6 @@
 #' @rdname server
 #' @export
 mcp_session <- function() {
-  # HACK: If a session is already available from another session via `.Rprofile`,
-  # `mcp_session()` will be called again when the client runs the command
-  # Rscript -e "mcptools::mcp_server()" and the existing session connection
-  # will be wiped. Returning early in this case allows for the desired R
-  # session to be running already before the client initiates the server.
-  if (!interactive()) {
-    return(invisible())
-  }
 
   the$session_socket <- nanonext::socket("poly")
   i <- 1L
