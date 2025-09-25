@@ -4,10 +4,9 @@
 
 ## usethis namespace: start
 #' @import rlang
+#' @importFrom stats setNames
 ## usethis namespace: end
 NULL
-
-utils::globalVariables(c("packageVersion", "setNames"))
 
 .onLoad <- function(libname, pkgname) {
   the$socket_url <- switch(
