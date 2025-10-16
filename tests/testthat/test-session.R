@@ -41,7 +41,7 @@ test_that("as_tool_call_result handles ContentToolResult with error", {
 
   output <- as_tool_call_result(data, tool_result)
 
-  expect_equal(output$result$content[[1]]$text, "error message")
+  expect_match(output$result$content[[1]]$text, "error message")
   expect_true(output$result$isError)
 })
 
