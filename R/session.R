@@ -60,13 +60,16 @@ as_tool_call_result <- function(data, result) {
     result <- result@value %||% result@error
   }
 
+  tool_string <- asNamespace("ellmer")[["tool_string"]] %||% 
+    function(x) paste(x, collapse = "\n")
+
   jsonrpc_response(
     data$id,
     list(
       content = list(
         list(
           type = "text",
-          text = paste(result, collapse = "\n")
+          text = tool_string(x)
         )
       ),
       isError = is_error
