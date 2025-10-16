@@ -69,7 +69,7 @@ as_tool_call_result <- function(data, result) {
       content = list(
         list(
           type = "text",
-          text = tool_string(x)
+          text = tool_string(result)
         )
       ),
       isError = is_error
