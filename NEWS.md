@@ -1,5 +1,6 @@
 # mcptools (development version)
 
+* `mcp_tools()` now sends and receives a `"notifications/initialized"` (#77 by @galachad).
 * `mcp_session()` now returns invisibly the nanonext socket used for communicating with the server.
 * `mcp_server()` gains logical argument `session_tools`, allowing users to opt-out of presenting R sessions tools to clients.
 

@@ -195,6 +195,7 @@ error_no_mcp_config <- function(call) {
 
 add_mcp_server <- function(process, name) {
   response_initialize <- send_and_receive(process, mcp_request_initialize())
+  send_and_receive(process, mcp_request_initialized())
   response_tools_list <- send_and_receive(process, mcp_request_tools_list())
 
   the$mcp_servers[[name]] <- list(
@@ -419,7 +420,13 @@ mcp_request_initialize <- function() {
 }
 
 # step 2: send initialized notification
-# This is a MAY in the protocol, so omitting.
+mcp_request_initialized <- function() {
+  list(
+    jsonrpc = "2.0",
+    method = "notifications/initialized"
+  )
+}
+
 
 # step 3: request the list of tools
 mcp_request_tools_list <- function() {
