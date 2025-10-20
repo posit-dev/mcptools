@@ -1,5 +1,7 @@
 # mcptools (development version)
 
+* `mcp_server()` now connects to the first session where `mcp_session()` was called _that is responsive_ rather than just the first session where `mcp_session()` was called (#63).
+
 * `mcp_server()` now formats tool results in the same way as ellmer (#78 by @gadenbuie).
 
 * `mcp_tools()` now sends and receives a `"notifications/initialized"` (#77 by @galachad).
