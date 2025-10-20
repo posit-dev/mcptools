@@ -24,9 +24,11 @@ URL: https://github.com/posit-dev/mcptools,
 BugReports: https://github.com/posit-dev/mcptools/issues
 Depends: 
     R (>= 4.1.0)
-Imports: 
+Imports:
     cli,
     ellmer (>= 0.3.0),
+    httpuv,
+    httr2,
     jsonlite,
     nanonext (>= 1.6.0),
     processx,

@@ -89,7 +89,12 @@ schedule_handle_message_from_server <- function() {
 
 # Given a vector or list, drop all the NULL items in it
 drop_nulls <- function(x) {
-  x[!vapply(x, is.null, FUN.VALUE = logical(1))]
+  is_null <- vapply(x, is.null, FUN.VALUE = logical(1))
+  keep_id <- rep(FALSE, length(x))
+  if (!is.null(names(x))) {
+    keep_id <- names(x) == "id"
+  }
+  x[!is_null | keep_id]
 }
 
 # Enough information for the user to be able to identify which
