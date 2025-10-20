@@ -32,3 +32,38 @@ test_that("check_not_interactive errors informatively", {
 
   expect_snapshot(error = TRUE, mcp_server())
 })
+
+test_that("first_responsive_session skips busy sessions", {
+  skip_on_cran()
+  skip_if(
+    length(list_r_sessions()) > 0,
+    "Active sessions present; will not tamper with them."
+  )
+  skip_on_cran()
+
+  busy <- processx::process$new(
+    rscript_binary(),
+    c("-e", "mcptools::mcp_session();Sys.sleep(1000)"),
+    stdout = "|",
+    stderr = "|"
+  )
+  withr::defer(busy$kill())
+  Sys.sleep(1)
+
+  available <- processx::process$new(
+    rscript_binary(),
+    c(
+      "-e",
+      paste(
+        "mcptools::mcp_session();",
+        "while(TRUE) {later::run_now();Sys.sleep(0.01)}"
+      )
+    ),
+    stdout = "|",
+    stderr = "|"
+  )
+  withr::defer(available$kill())
+  Sys.sleep(1)
+
+  expect_equal(first_responsive_session(), 2)
+})

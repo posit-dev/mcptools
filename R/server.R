@@ -109,7 +109,6 @@
 #' @name server
 #' @export
 mcp_server <- function(tools = NULL, ..., session_tools = TRUE) {
-
   check_not_interactive()
   nanonext::reap(the$session_socket) # in case session was started in .Rprofile
   the$sessions_enabled <- isTRUE(session_tools)
@@ -134,7 +133,15 @@ mcp_server <- function(tools = NULL, ..., session_tools = TRUE) {
 
   the$server_socket <- nanonext::socket("poly")
   on.exit(nanonext::reap(the$server_socket), add = TRUE)
-  nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
+
+  default_session <- first_responsive_session()
+  if (!is.null(default_session)) {
+    nanonext::dial(
+      the$server_socket,
+      url = sprintf("%s%d", the$socket_url, default_session)
+    )
+  }
+
   session <- nanonext::recv_aio(the$server_socket, mode = "string", cv = cv)
 
   while (nanonext::wait(cv)) {
@@ -241,6 +248,30 @@ forward_request <- function(data) {
   }
 
   nanonext::send_aio(the$server_socket, prepared, mode = "serial")
+}
+
+# pick the lowest-numbered responsive session (#63)
+first_responsive_session <- function() {
+  tryCatch(
+    {
+      # the dial in list_r_sessions itself doesn’t prove the session is
+      # responsive—require the session to actually reply and then postprocess
+      sessions <- list_r_sessions()
+      if (length(sessions) == 0) {
+        return(NULL)
+      }
+      session_ids <- suppressWarnings(as.integer(sub(":.*$", "", sessions)))
+      session_ids <- session_ids[!is.na(session_ids)]
+      if (length(session_ids) == 0) {
+        NULL
+      } else {
+        min(session_ids)
+      }
+    },
+    error = function(e) {
+      NULL
+    }
+  )
 }
 
 # This process will be launched by the MCP client, so stdout/stderr aren't
