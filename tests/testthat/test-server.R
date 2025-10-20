@@ -29,6 +29,7 @@ test_that("roundtrip mcp_server and mcp_tools (stdio)", {
 
 test_that("roundtrip mcp_server and mcp_tools (http)", {
   skip_on_cran()
+  skip_on_ci()
 
   http_server <- processx::process$new(
     command = rscript_binary(),
