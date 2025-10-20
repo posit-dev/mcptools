@@ -1,11 +1,13 @@
 test_that("mcp_session returns early when not interactive", {
   local_mocked_bindings(interactive = function() FALSE)
   expect_invisible(mcp_session())
+  withr::defer(nanonext::reap(the$session_socket))
 })
 
 test_that("mcp_session initializes appropriate globals", {
   local_mocked_bindings(interactive = function() TRUE)
   expect_s3_class(mcp_session(), "nanoSocket")
+  withr::defer(nanonext::reap(the$session_socket))
   expect_s3_class(the$session_socket, "nanoSocket")
   expect_type(the$session, "integer")
 })
