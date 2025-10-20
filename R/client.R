@@ -38,12 +38,12 @@ the$mcp_servers <- list()
 #' file with `file.edit(file.path("~", ".config", "mcptools", "config.json"))`.
 #'
 #' The mcptools config file should be valid .json with an entry `mcpServers`.
-#' That entry should contain named elements, each with at least a `command`
-#' and `args` entry.
+#' That entry should contain named elements, each configured for either
+#' **stdio** or **HTTP** transport.
 #'
-#' For example, to configure `mcp_tools()` with GitHub's official MCP Server
-#' <https://github.com/github/github-mcp-server>, you could write the following
-#' in that file:
+#' ## Local servers (via stdio)
+#'
+#' For stdio-based servers, provide `command` and `args` entries:
 #'
 #' ```json
 #' {
@@ -61,6 +61,23 @@ the$mcp_servers <- list()
 #'       "env": {
 #'         "GITHUB_PERSONAL_ACCESS_TOKEN": "<add_your_github_pat_here>"
 #'       }
+#'     }
+#'   }
+#' }
+#' ```
+#'
+#' ## Remote servers (via http)
+#'
+#' For HTTP-based servers, provide a `url` entry instead of `command`/`args`:
+#'
+#' ```json
+#' {
+#'   "mcpServers": {
+#'     "local-http": {
+#'       "url": "https://localhost:8080"
+#'     },
+#'     "remote-http": {
+#'       "url": "https://mcp.example.com/mcp"
 #'     }
 #'   }
 #' }
@@ -100,33 +117,91 @@ mcp_tools <- function(config = NULL) {
   for (i in seq_along(config)) {
     config_i <- config[[i]]
     name_i <- names(config)[i]
-    config_i_env <- if ("env" %in% names(config_i)) {
-      unlist(config_i$env)
+
+    if ("url" %in% names(config_i)) {
+      add_mcp_server_http(config = config_i, name = name_i)
     } else {
-      NULL
+      add_mcp_server_stdio(config = config_i, name = name_i)
     }
-
-    process <- processx::process$new(
-      # seems like the R process has a different PATH than process_exec
-      command = Sys.which(config_i$command),
-      args = config_i$args,
-      env = config_i_env,
-      stdin = "|",
-      stdout = "|",
-      stderr = "|"
-    )
-
-    the$server_processes <- c(
-      the$server_processes,
-      list2(
-        !!paste0(c(config_i$command, config_i$args), collapse = " ") := process
-      )
-    )
-
-    add_mcp_server(process = process, name = name_i)
   }
 
   servers_as_ellmer_tools()
+}
+
+add_mcp_server_stdio <- function(config, name) {
+  config_env <- if ("env" %in% names(config)) {
+    unlist(config$env)
+  } else {
+    NULL
+  }
+
+  process <- processx::process$new(
+    command = Sys.which(config$command),
+    args = config$args,
+    env = config_env,
+    stdin = "|",
+    stdout = "|",
+    stderr = "|"
+  )
+
+  the$server_processes <- c(
+    the$server_processes,
+    list2(
+      !!paste0(c(config$command, config$args), collapse = " ") := process
+    )
+  )
+
+  response_initialize <- send_and_receive_stdio(
+    process,
+    mcp_request_initialize()
+  )
+  send_and_receive_stdio(process, mcp_request_initialized())
+  response_tools_list <- send_and_receive_stdio(
+    process,
+    mcp_request_tools_list()
+  )
+
+  the$mcp_servers[[name]] <- list(
+    name = name,
+    type = "stdio",
+    process = process,
+    tools = response_tools_list$result,
+    id = 3
+  )
+
+  the$mcp_servers[[name]]
+}
+
+add_mcp_server_http <- function(config, name) {
+  response_initialize <- send_and_receive_http(
+    url = config$url,
+    request = mcp_request_initialize()
+  )
+
+  session_id <- response_initialize$session_id
+
+  send_and_receive_http(
+    url = config$url,
+    request = mcp_request_initialized(),
+    session_id = session_id
+  )
+
+  response_tools_list <- send_and_receive_http(
+    url = config$url,
+    request = mcp_request_tools_list(),
+    session_id = session_id
+  )
+
+  the$mcp_servers[[name]] <- list(
+    name = name,
+    type = "http",
+    url = config$url,
+    session_id = session_id,
+    tools = response_tools_list$result,
+    id = 3
+  )
+
+  the$mcp_servers[[name]]
 }
 
 mcp_client_config <- function() {
@@ -193,19 +268,34 @@ error_no_mcp_config <- function(call) {
   )
 }
 
-add_mcp_server <- function(process, name) {
-  response_initialize <- send_and_receive(process, mcp_request_initialize())
-  send_and_receive(process, mcp_request_initialized())
-  response_tools_list <- send_and_receive(process, mcp_request_tools_list())
+send_and_receive_http <- function(url, request, session_id = NULL) {
+  req <- httr2::request(url) |>
+    httr2::req_method("POST") |>
+    httr2::req_headers(
+      "Content-Type" = "application/json",
+      "Accept" = "application/json",
+      "MCP-Protocol-Version" = "2025-06-18"
+    ) |>
+    httr2::req_body_json(request)
 
-  the$mcp_servers[[name]] <- list(
-    name = name,
-    process = process,
-    tools = response_tools_list$result,
-    id = 3
-  )
+  if (!is.null(session_id)) {
+    req <- httr2::req_headers(req, "Mcp-Session-Id" = session_id)
+  }
 
-  the$mcp_servers[[name]]
+  resp <- httr2::req_perform(req)
+
+  if (httr2::resp_status(resp) == 202L || httr2::resp_body_string(resp) == "") {
+    return(NULL)
+  }
+
+  body <- httr2::resp_body_json(resp)
+
+  session_id_header <- httr2::resp_header(resp, "Mcp-Session-Id")
+  if (!is.null(session_id_header)) {
+    body$session_id <- session_id_header
+  }
+
+  body
 }
 
 servers_as_ellmer_tools <- function() {
@@ -347,13 +437,21 @@ tool_ref <- function(server, tool, arguments) {
 }
 
 call_tool <- function(..., server, tool) {
-  server_process <- the$mcp_servers[[server]]$process
-  send_and_receive(
-    server_process,
-    mcp_request_tool_call(
-      id = jsonrpc_id(server),
-      tool = tool,
-      arguments = list(...)
+  server_config <- the$mcp_servers[[server]]
+
+  request <- mcp_request_tool_call(
+    id = jsonrpc_id(server),
+    tool = tool,
+    arguments = list(...)
+  )
+
+  switch(
+    server_config$type,
+    stdio = send_and_receive_stdio(server_config$process, request),
+    http = send_and_receive_http(
+      url = server_config$url,
+      request = request,
+      session_id = server_config$session_id
     )
   )
 }
@@ -372,13 +470,11 @@ log_cat_client <- function(x, append = TRUE) {
   cat(x, "\n\n", sep = "", append = append, file = log_file)
 }
 
-send_and_receive <- function(process, message) {
-  # send the message
+send_and_receive_stdio <- function(process, message) {
   json_msg <- jsonlite::toJSON(message, auto_unbox = TRUE)
   log_cat_client(c("FROM CLIENT: ", json_msg))
   process$write_input(paste0(json_msg, "\n"))
 
-  # poll for response
   output <- NULL
   attempts <- 0
   max_attempts <- 20

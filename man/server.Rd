@@ -6,7 +6,14 @@
 \alias{mcp_session}
 \title{R as a server: Configure R-based tools with LLM-enabled apps}
 \usage{
-mcp_server(tools = NULL, ..., session_tools = TRUE)
+mcp_server(
+  tools = NULL,
+  ...,
+  type = c("stdio", "http"),
+  host = "127.0.0.1",
+  port = as.integer(Sys.getenv("MCPTOOLS_PORT", "8080")),
+  session_tools = TRUE
+)
 
 mcp_session()
 }
@@ -17,6 +24,16 @@ when sourced, yields such a list. Defaults to \code{NULL}, which serves only
 the built-in session tools when \code{session_tools} is \code{TRUE}.}
 
 \item{...}{Reserved for future use; currently ignored.}
+
+\item{type}{Transport type: \code{"stdio"} for standard input/output (default),
+or \code{"http"} for HTTP-based transport.}
+
+\item{host}{Host to bind to when using HTTP transport. Defaults to
+\code{"127.0.0.1"} (localhost) for security. Ignored for stdio transport.}
+
+\item{port}{Port to bind to when using HTTP transport. Defaults to the value
+of the \code{MCPTOOLS_PORT} environment variable, or 8080 if not set. Ignored
+for stdio transport.}
 
 \item{session_tools}{Logical value whether to include the built-in session
 tools (\code{list_r_sessions}, \code{select_r_session}) that work with
@@ -41,8 +58,9 @@ interactive R session allows those tools to execute inside of that session.
 }
 \section{Configuration}{
 
+\subsection{Local server (default, via stdio)}{
 
-\code{\link[=mcp_server]{mcp_server()}} should be configured with the MCP clients via the \code{Rscript}
+\code{\link[=mcp_server]{mcp_server()}} can be configured with MCP clients via the \code{Rscript}
 command. For example, to use with Claude Desktop, paste the following in your
 Claude Desktop configuration (on macOS, at
 \code{file.edit("~/Library/Application Support/Claude/claude_desktop_config.json")}):
@@ -61,6 +79,20 @@ Or, to use with Claude Code, you might type in a terminal:
 
 \if{html}{\out{<div class="sourceCode bash">}}\preformatted{claude mcp add -s "user" r-mcptools Rscript -e "mcptools::mcp_server()"
 }\if{html}{\out{</div>}}
+}
+
+\subsection{Remote server (via http)}{
+
+To run an HTTP server instead, use \code{type = "http"}:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Start HTTP server on default port (8080)
+mcp_server(type = "http")
+
+# Or specify custom host and port
+mcp_server(type = "http", host = "127.0.0.1", port = 9000)
+}\if{html}{\out{</div>}}
+
+The server will listen for HTTP POST requests containing JSON-RPC messages.
 
 \strong{mcp_server() is not intended for interactive use.}
 
@@ -74,6 +106,7 @@ available to the server.
 On Windows, you may need to configure the full path to the Rscript executable.
 Examples for Claude Code on WSL and Claude Desktop on Windows are shown
 at \url{https://github.com/posit-dev/mcptools/issues/41#issuecomment-3036617046}.
+}
 }
 
 \examples{

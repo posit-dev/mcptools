@@ -40,12 +40,11 @@ Claude Desktop in their README files. By default, mcptools will look to
 file with \code{file.edit(file.path("~", ".config", "mcptools", "config.json"))}.
 
 The mcptools config file should be valid .json with an entry \code{mcpServers}.
-That entry should contain named elements, each with at least a \code{command}
-and \code{args} entry.
+That entry should contain named elements, each configured for either
+\strong{stdio} or \strong{HTTP} transport.
+\subsection{Local servers (via stdio)}{
 
-For example, to configure \code{mcp_tools()} with GitHub's official MCP Server
-\url{https://github.com/github/github-mcp-server}, you could write the following
-in that file:
+For stdio-based servers, provide \code{command} and \code{args} entries:
 
 \if{html}{\out{<div class="sourceCode json">}}\preformatted{\{
   "mcpServers": \{
@@ -66,6 +65,24 @@ in that file:
   \}
 \}
 }\if{html}{\out{</div>}}
+}
+
+\subsection{Remote servers (via http)}{
+
+For HTTP-based servers, provide a \code{url} entry instead of \code{command}/\code{args}:
+
+\if{html}{\out{<div class="sourceCode json">}}\preformatted{\{
+  "mcpServers": \{
+    "local-http": \{
+      "url": "https://localhost:8080"
+    \},
+    "remote-http": \{
+      "url": "https://mcp.example.com/mcp"
+    \}
+  \}
+\}
+}\if{html}{\out{</div>}}
+}
 }
 
 \examples{

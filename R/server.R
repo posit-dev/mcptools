@@ -16,7 +16,9 @@
 #'
 #' @section Configuration:
 #'
-#' [mcp_server()] should be configured with the MCP clients via the `Rscript`
+#' ## Local server (default, via stdio)
+#'
+#' [mcp_server()] can be configured with MCP clients via the `Rscript`
 #' command. For example, to use with Claude Desktop, paste the following in your
 #' Claude Desktop configuration (on macOS, at
 #' `file.edit("~/Library/Application Support/Claude/claude_desktop_config.json")`):
@@ -38,6 +40,20 @@
 #' claude mcp add -s "user" r-mcptools Rscript -e "mcptools::mcp_server()"
 #' ```
 #'
+#' ## Remote server (via http)
+#'
+#' To run an HTTP server instead, use `type = "http"`:
+#'
+#' ```r
+#' # Start HTTP server on default port (8080)
+#' mcp_server(type = "http")
+#'
+#' # Or specify custom host and port
+#' mcp_server(type = "http", host = "127.0.0.1", port = 9000)
+#' ```
+#'
+#' The server will listen for HTTP POST requests containing JSON-RPC messages.
+#'
 #' **mcp_server() is not intended for interactive use.**
 #'
 #' The server interfaces with the MCP client. If you'd like tools to have access
@@ -56,6 +72,13 @@
 #'   when sourced, yields such a list. Defaults to `NULL`, which serves only
 #'   the built-in session tools when `session_tools` is `TRUE`.
 #' @param ... Reserved for future use; currently ignored.
+#' @param type Transport type: `"stdio"` for standard input/output (default),
+#'   or `"http"` for HTTP-based transport.
+#' @param host Host to bind to when using HTTP transport. Defaults to
+#'   `"127.0.0.1"` (localhost) for security. Ignored for stdio transport.
+#' @param port Port to bind to when using HTTP transport. Defaults to the value
+#'   of the `MCPTOOLS_PORT` environment variable, or 8080 if not set. Ignored
+#'   for stdio transport.
 #' @param session_tools Logical value whether to include the built-in session
 #'   tools (`list_r_sessions`, `select_r_session`) that work with
 #'   `mcp_session()`. Defaults to `TRUE`.
@@ -108,13 +131,29 @@
 #'
 #' @name server
 #' @export
-mcp_server <- function(tools = NULL, ..., session_tools = TRUE) {
-
+mcp_server <- function(
+  tools = NULL,
+  ...,
+  type = c("stdio", "http"),
+  host = "127.0.0.1",
+  port = as.integer(Sys.getenv("MCPTOOLS_PORT", "8080")),
+  session_tools = TRUE
+) {
   check_not_interactive()
+  type <- rlang::arg_match(type)
+
   nanonext::reap(the$session_socket) # in case session was started in .Rprofile
   the$sessions_enabled <- isTRUE(session_tools)
   set_server_tools(tools, session_tools = the$sessions_enabled)
 
+  switch(
+    type,
+    stdio = mcp_server_stdio(),
+    http = mcp_server_http(host = host, port = port)
+  )
+}
+
+mcp_server_stdio <- function() {
   cv <- nanonext::cv()
 
   reader_socket <- nanonext::read_stdin()
@@ -146,6 +185,146 @@ mcp_server <- function(tools = NULL, ..., session_tools = TRUE) {
       handle_message_from_client(client$data)
       client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
     }
+  }
+}
+
+mcp_server_http <- function(host = "127.0.0.1", port = 8080) {
+  if (the$sessions_enabled) {
+    the$server_socket <- nanonext::socket("poly")
+    on.exit(nanonext::reap(the$server_socket), add = TRUE)
+    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
+  }
+
+  app <- list(
+    call = function(req) {
+      handle_http_request(req)
+    }
+  )
+
+  server <- httpuv::startServer(host = host, port = port, app = app)
+  on.exit(httpuv::stopServer(server), add = TRUE)
+
+  cat(sprintf("MCP server listening on http://%s:%d\n", host, port))
+
+  httpuv::service(Inf)
+}
+
+handle_http_request <- function(req) {
+  if (!validate_origin(req)) {
+    return(list(
+      status = 403L,
+      headers = list("Content-Type" = "application/json"),
+      body = to_json(list(error = "Invalid Origin"))
+    ))
+  }
+
+  if (req$REQUEST_METHOD == "POST") {
+    return(handle_http_post(req))
+  } else if (req$REQUEST_METHOD == "GET") {
+    return(handle_http_get(req))
+  } else {
+    return(list(
+      status = 405L,
+      headers = list("Allow" = "GET, POST"),
+      body = "Method Not Allowed"
+    ))
+  }
+}
+
+validate_origin <- function(req) {
+  origin <- req$HTTP_ORIGIN
+  if (is.null(origin)) {
+    return(TRUE)
+  }
+
+  parsed <- httr2::url_parse(origin)
+  allowed_hosts <- c("localhost", "127.0.0.1", "[::1]")
+
+  return(parsed$hostname %in% allowed_hosts)
+}
+
+handle_http_post <- function(req) {
+  body_raw <- req$rook.input$read()
+  body_text <- rawToChar(body_raw)
+
+  data <- tryCatch(
+    jsonlite::parse_json(body_text),
+    error = function(e) NULL
+  )
+
+  if (is.null(data)) {
+    return(list(
+      status = 400L,
+      headers = list("Content-Type" = "application/json"),
+      body = to_json(list(error = "Invalid JSON"))
+    ))
+  }
+
+  if (is.null(data$id)) {
+    result <- handle_http_notification_or_response(data)
+    return(list(
+      status = 202L,
+      headers = list("Content-Type" = "application/json"),
+      body = ""
+    ))
+  }
+
+  result <- handle_http_request_message(data)
+
+  list(
+    status = 200L,
+    headers = list("Content-Type" = "application/json"),
+    body = to_json(result)
+  )
+}
+
+handle_http_get <- function(req) {
+  list(
+    status = 405L,
+    headers = list("Content-Type" = "text/plain"),
+    body = "SSE streaming not yet implemented"
+  )
+}
+
+handle_http_notification_or_response <- function(data) {
+  NULL
+}
+
+handle_http_request_message <- function(data) {
+  if (data$method == "initialize") {
+    return(jsonrpc_response(data$id, capabilities()))
+  } else if (data$method == "tools/list") {
+    return(jsonrpc_response(
+      data$id,
+      list(tools = get_mcptools_tools_as_json())
+    ))
+  } else if (data$method == "tools/call") {
+    tool_name <- data$params$name
+    if (
+      !the$sessions_enabled ||
+        tool_name %in% c("list_r_sessions", "select_r_session") ||
+        !nanonext::stat(the$server_socket, "pipes")
+    ) {
+      prepared <- append_tool_fn(data)
+      if (inherits(prepared, "jsonrpc_error")) {
+        return(prepared)
+      }
+      return(execute_tool_call(prepared))
+    } else {
+      prepared <- append_tool_fn(data)
+      if (inherits(prepared, "jsonrpc_error")) {
+        return(prepared)
+      }
+
+      nanonext::send(the$server_socket, prepared, mode = "serial")
+      response_raw <- nanonext::recv(the$server_socket, mode = "character")
+      return(jsonlite::parse_json(response_raw))
+    }
+  } else {
+    return(jsonrpc_response(
+      data$id,
+      error = list(code = -32601, message = "Method not found")
+    ))
   }
 }
 
