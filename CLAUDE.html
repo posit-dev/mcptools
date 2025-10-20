@@ -88,6 +88,35 @@
 <code>inproc://</code> transport is fast for same-machine communication</li>
 <li>Connections are cleaned up with <code><a href="https://nanonext.r-lib.org/reference/reap.html" class="external-link">nanonext::reap()</a></code> on exit</li>
 </ul></div>
+<div class="section level2">
+<h2 id="http-transport-implementation">HTTP Transport Implementation<a class="anchor" aria-label="anchor" href="#http-transport-implementation"></a></h2>
+<div class="section level3">
+<h3 id="current-status">Current Status<a class="anchor" aria-label="anchor" href="#current-status"></a></h3>
+<p>The HTTP transport implementation follows the “MUSTs only” principle from the MCP specification:</p>
+<p><strong>Implemented (MUSTs):</strong> - HTTP POST endpoint for JSON-RPC messages - <code>MCP-Protocol-Version</code> header validation - Origin validation for DNS rebinding protection - Client-side session ID tracking (if server provides <code>Mcp-Session-Id</code> header) - GET endpoint (returns 405 - SSE streaming not implemented)</p>
+<p><strong>Not Implemented (MAYs/SHOULDs):</strong> - Server-side session management (MAY in spec) - SSE streaming for GET requests (optional) - OAuth 2.1 authentication (OPTIONAL in spec) - HTTPS/TLS support</p>
+</div>
+<div class="section level3">
+<h3 id="http-vs-https">HTTP vs HTTPS<a class="anchor" aria-label="anchor" href="#http-vs-https"></a></h3>
+<p><strong>Protocol Requirements:</strong> - The MCP protocol does NOT require HTTPS for authless HTTP servers - HTTPS is only REQUIRED for OAuth/authorization endpoints (which we don’t implement)</p>
+<p><strong>Client Compatibility:</strong> - <strong>Claude Code</strong>: Works with <code>http://</code> servers ✓ - <strong>Claude Desktop</strong>: Requires <code>https://</code> servers (product policy, not protocol requirement) ✗</p>
+<p>Since HTTPS requires SSL certificates (self-signed for local dev, proper certs for production), we defer HTTPS support until OAuth 2.1 is implemented, when it becomes a MUST.</p>
+</div>
+<div class="section level3">
+<h3 id="testing-with-the-inspector">Testing with the Inspector<a class="anchor" aria-label="anchor" href="#testing-with-the-inspector"></a></h3>
+<p>The MCP inspector helps test MCP servers:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"mcptools::mcp_server(type = 'http', port = 9000)"</span></span></code></pre></div>
+<p>Then:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">npx</span> @modelcontextprotocol/inspector <span class="at">--transport</span> http <span class="at">--server-url</span> http://127.0.0.1:9000</span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="using-with-claude-code">Using with Claude Code<a class="anchor" aria-label="anchor" href="#using-with-claude-code"></a></h3>
+<p>Add the HTTP server to Claude Code:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">--transport</span> http r-mcptools-http http://127.0.0.1:9000</span></code></pre></div>
+<p>Remove it:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="ex">claude</span> mcp remove r-mcptools-http</span></code></pre></div>
+</div>
+</div>
 
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

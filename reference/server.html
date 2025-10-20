@@ -48,7 +48,14 @@ interactive R session allows those tools to execute inside of that session.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">mcp_server</span><span class="op">(</span>tools <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span>, session_tools <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">mcp_server</span><span class="op">(</span></span>
+<span>  tools <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"stdio"</span>, <span class="st">"http"</span><span class="op">)</span>,</span>
+<span>  host <span class="op">=</span> <span class="st">"127.0.0.1"</span>,</span>
+<span>  port <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"MCPTOOLS_PORT"</span>, <span class="st">"8080"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  session_tools <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">mcp_session</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -66,6 +73,22 @@ the built-in session tools when <code>session_tools</code> is <code>TRUE</code>.
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Reserved for future use; currently ignored.</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>Transport type: <code>"stdio"</code> for standard input/output (default),
+or <code>"http"</code> for HTTP-based transport.</p></dd>
+
+
+<dt id="arg-host">host<a class="anchor" aria-label="anchor" href="#arg-host"></a></dt>
+<dd><p>Host to bind to when using HTTP transport. Defaults to
+<code>"127.0.0.1"</code> (localhost) for security. Ignored for stdio transport.</p></dd>
+
+
+<dt id="arg-port">port<a class="anchor" aria-label="anchor" href="#arg-port"></a></dt>
+<dd><p>Port to bind to when using HTTP transport. Defaults to the value
+of the <code>MCPTOOLS_PORT</code> environment variable, or 8080 if not set. Ignored
+for stdio transport.</p></dd>
 
 
 <dt id="arg-session-tools">session_tools<a class="anchor" aria-label="anchor" href="#arg-session-tools"></a></dt>
@@ -88,8 +111,11 @@ session.</p></li>
     <h2 id="configuration">Configuration<a class="anchor" aria-label="anchor" href="#configuration"></a></h2>
 
 
+<div class="section">
+<h3 id="local-server-default-via-stdio-">Local server (default, via stdio)<a class="anchor" aria-label="anchor" href="#local-server-default-via-stdio-"></a></h3>
 
-<p><code>mcp_server()</code> should be configured with the MCP clients via the <code>Rscript</code>
+
+<p><code>mcp_server()</code> can be configured with MCP clients via the <code>Rscript</code>
 command. For example, to use with Claude Desktop, paste the following in your
 Claude Desktop configuration (on macOS, at
 <code>file.edit("~/Library/Application Support/Claude/claude_desktop_config.json")</code>):</p>
@@ -103,6 +129,19 @@ Claude Desktop configuration (on macOS, at
 <span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">}</span></span></code></pre><p></p></div>
 <p>Or, to use with Claude Code, you might type in a terminal:</p>
 <p></p><div class="sourceCode bash"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">-s</span> <span class="st">"user"</span> r-mcptools Rscript <span class="at">-e</span> <span class="st">"mcptools::mcp_server()"</span></span></code></pre><p></p></div>
+</div>
+
+<div class="section">
+<h3 id="remote-server-via-http-">Remote server (via http)<a class="anchor" aria-label="anchor" href="#remote-server-via-http-"></a></h3>
+
+
+<p>To run an HTTP server instead, use <code>type = "http"</code>:</p>
+<p></p><div class="sourceCode r"><pre><code><span><span class="co"># Start HTTP server on default port (8080)</span></span>
+<span><span class="fu"><a href="../reference/server.html">mcp_server</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"http"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Or specify custom host and port</span></span>
+<span><span class="fu"><a href="../reference/server.html">mcp_server</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"http"</span>, host <span class="op">=</span> <span class="st">"127.0.0.1"</span>, port <span class="op">=</span> <span class="fl">9000</span><span class="op">)</span></span></code></pre><p></p></div>
+<p>The server will listen for HTTP POST requests containing JSON-RPC messages.</p>
 <p><strong>mcp_server() is not intended for interactive use.</strong></p>
 <p>The server interfaces with the MCP client. If you'd like tools to have access
 to variables inside of an interactive R session, call
@@ -113,6 +152,8 @@ available to the server.</p>
 <p>On Windows, you may need to configure the full path to the Rscript executable.
 Examples for Claude Code on WSL and Claude Desktop on Windows are shown
 at <a href="https://github.com/posit-dev/mcptools/issues/41#issuecomment-3036617046" class="external-link">https://github.com/posit-dev/mcptools/issues/41#issuecomment-3036617046</a>.</p>
+</div>
+
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
