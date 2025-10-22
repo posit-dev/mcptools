@@ -37,7 +37,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="mcptools-development-version">mcptools (development version)<a class="anchor" aria-label="anchor" href="#mcptools-development-version"></a></h2>
-<ul><li><p><code><a href="../reference/server.html">mcp_server()</a></code> now supports HTTP transport in addition to stdio. Use <code>type = "http"</code> to start an HTTP server, with optional <code>host</code> and <code>port</code> arguments. For now, the implementation is authless.</p></li>
+<ul><li><p><code><a href="../reference/client.html">mcp_tools()</a></code> now errors more informatively when an MCP server process exits unexpectedly (<a href="https://github.com/posit-dev/mcptools/issues/82" class="external-link">#82</a>).</p></li>
+<li><p><code><a href="../reference/server.html">mcp_server()</a></code> now supports HTTP transport in addition to stdio. Use <code>type = "http"</code> to start an HTTP server, with optional <code>host</code> and <code>port</code> arguments. For now, the implementation is authless.</p></li>
 <li><p><code><a href="../reference/client.html">mcp_tools()</a></code> now supports connecting to HTTP-based MCP servers. Configure servers with a <code>url</code> field in the config file instead of <code>command</code>/<code>args</code>.</p></li>
 <li><p>JSON-RPC responses now retain an explicit <code>id = NULL</code> value, ensuring parse-error replies conform to the MCP specification.</p></li>
 <li><p><code><a href="../reference/server.html">mcp_server()</a></code> now formats tool results in the same way as ellmer (<a href="https://github.com/posit-dev/mcptools/issues/78" class="external-link">#78</a> by <a href="https://github.com/gadenbuie" class="external-link">@gadenbuie</a>).</p></li>
