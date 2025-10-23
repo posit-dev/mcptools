@@ -89,12 +89,11 @@ Claude Desktop in their README files. By default, mcptools will look to
 <code>file.path("~", ".config", "mcptools", "config.json")</code>; you can edit that
 file with <code>file.edit(file.path("~", ".config", "mcptools", "config.json"))</code>.</p>
 <p>The mcptools config file should be valid .json with an entry <code>mcpServers</code>.
-That entry should contain named elements, each configured for either
-<strong>stdio</strong> or <strong>HTTP</strong> transport.</p><div class="section">
-<h3 id="local-servers-via-stdio-">Local servers (via stdio)<a class="anchor" aria-label="anchor" href="#local-servers-via-stdio-"></a></h3>
-
-
-<p>For stdio-based servers, provide <code>command</code> and <code>args</code> entries:</p>
+That entry should contain named elements, each with at least a <code>command</code>
+and <code>args</code> entry.</p>
+<p>For example, to configure <code>mcp_tools()</code> with GitHub's official MCP Server
+<a href="https://github.com/github/github-mcp-server" class="external-link">https://github.com/github/github-mcp-server</a>, you could write the following
+in that file:</p>
 <p></p><div class="sourceCode json"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>    <span class="dt">"github"</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -113,25 +112,35 @@ That entry should contain named elements, each configured for either
 <span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>  <span class="fu">}</span></span>
 <span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a><span class="fu">}</span></span></code></pre><p></p></div>
-</div>
+    </div>
+    <div class="section level2">
+    <h2 id="connecting-to-remote-http-servers">Connecting to remote (http) servers<a class="anchor" aria-label="anchor" href="#connecting-to-remote-http-servers"></a></h2>
 
-<div class="section">
-<h3 id="remote-servers-via-http-">Remote servers (via http)<a class="anchor" aria-label="anchor" href="#remote-servers-via-http-"></a></h3>
 
-
-<p>For HTTP-based servers, provide a <code>url</code> entry instead of <code>command</code>/<code>args</code>:</p>
-<p></p><div class="sourceCode json"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>    <span class="dt">"local-http"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>      <span class="dt">"url"</span><span class="fu">:</span> <span class="st">"https://localhost:8080"</span></span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>    <span class="fu">},</span></span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>    <span class="dt">"remote-http"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>      <span class="dt">"url"</span><span class="fu">:</span> <span class="st">"https://mcp.example.com/mcp"</span></span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">}</span></span></code></pre><p></p></div>
-</div>
-
+<p><code>mcp_tools()</code>, which supports using R as an MCP <em>client</em> via ellmer, only
+implements the local (stdio) protocol. However, some MCP <em>servers</em> only
+implement the http protocol.</p>
+<p>In that case, we recommend using
+<a href="https://www.npmjs.com/package/mcp-remote" class="external-link">mcp-remote</a>, a local (stdio)
+MCP server that supports connecting to remote (http) servers using the
+stdio protocol, with fully-featured authentication. In other words,
+<code>mcp-remote</code> converts remote MCP servers to mcptools-compatible local ones.</p>
+<p>To connect to remote (http) MCP servers when using ellmer as a client, use
+the command <code>npx</code> with the args <code>mcp-remote</code> and the URL provided by the
+remote server. For example, you might write:</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>{</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="st">"mcpServers"</span><span class="sc">:</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>    <span class="st">"remote-example"</span><span class="sc">:</span> {</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>      <span class="st">"command"</span><span class="sc">:</span> <span class="st">"npx"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>      <span class="st">"args"</span><span class="sc">:</span> [</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>        <span class="st">"mcp-remote"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>        <span class="st">"https://remote.mcp.server/sse"</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>      ]</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>    }</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  }</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>}</span></code></pre><p></p></div>
+<p>mcp-remote's <a href="https://www.npmjs.com/package/mcp-remote" class="external-link">homepage</a> has many
+examples for various authentication schemes.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
