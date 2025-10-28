@@ -68,7 +68,10 @@ interactive R session allows those tools to execute inside of that session.</p>
 <dd><p>Optional collection of tools to expose. Supply either a list
 of objects created by <code><a href="https://ellmer.tidyverse.org/reference/tool.html" class="external-link">ellmer::tool()</a></code> or a path to an <code>.R</code> file that,
 when sourced, yields such a list. Defaults to <code>NULL</code>, which serves only
-the built-in session tools when <code>session_tools</code> is <code>TRUE</code>.</p></dd>
+the built-in session tools when <code>session_tools</code> is <code>TRUE</code>. Note that
+<strong>tools are associated with the <code>mcp_server()</code></strong> rather than with
+<code>mcp_session()</code>s; to determine what tools are available in a session,
+set the <code>tools</code> argument to <code>mcp_server()</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -94,7 +97,8 @@ for stdio transport.</p></dd>
 <dt id="arg-session-tools">session_tools<a class="anchor" aria-label="anchor" href="#arg-session-tools"></a></dt>
 <dd><p>Logical value whether to include the built-in session
 tools (<code>list_r_sessions</code>, <code>select_r_session</code>) that work with
-<code>mcp_session()</code>. Defaults to <code>TRUE</code>.</p></dd>
+<code>mcp_session()</code>. Defaults to <code>TRUE</code>. Note that the tools to interface with
+sessions are still first routed through the <code>mcp_server()</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -93,7 +93,11 @@ client. mcptools’s command and arguments are <code>Rscript</code> and
 <code>-e "mcptools::mcp_server()"</code>. Different clients register
 this command in different ways. For example, to use mcptools with the
 client Claude Code, you might write
-<code>claude mcp add -s "user" r-mcptools -- Rscript -e "mcptools::mcp_server()"</code>.</p></li>
+<code>claude mcp add -s "user" r-mcptools -- Rscript -e "mcptools::mcp_server()"</code>.
+Note, however, that <code><a href="../reference/server.html">mcp_server()</a></code> on its own won’t surface
+any tools that are useful for coding agents—instead, you need to provide
+<code>tools</code> to the MCP server. See <a href="https://posit-dev.github.io/btw/reference/mcp.html" class="external-link">btw::btw_mcp_server()</a>
+for a server that surfaces useful tools.</p></li>
 <li><p><strong>Sessions</strong> are the R sessions that the client
 ultimately talks to. So, if you have an RStudio or Positron window open,
 those applications automatically start up an R session that the client
@@ -103,7 +107,10 @@ might want to run this code every time you start up R; to do so, add
 <code><a href="../reference/server.html">mcptools::mcp_session()</a></code> to your <code>.Rprofile</code>,
 perhaps by first calling <code>usethis::edit_r_profile()</code>.
 <strong>Configuring sessions is not required</strong>; if you choose not
-to do so, tools will be executed in the server itself.</p></li>
+to do so, tools will be executed in the server itself. Note that
+<strong>tools are configured per-server rather than
+per-session</strong>; to configure tools with a session, set the
+<code>tools</code> argument in <code><a href="../reference/server.html">mcp_server()</a></code>.</p></li>
 </ul>
 <p>(In case this caught your eye: yes, the server is itself an R
 session. In mcptools’s documentation, we’ll always refer to the server R
