@@ -1,18 +1,25 @@
 # mcptools (development version)
 
-* `mcp_tools()` now errors more informatively when an MCP server process exits unexpectedly (#82).
+## Server
 
 * `mcp_server()` now supports HTTP transport in addition to stdio. Use `type = "http"` to start an HTTP server, with optional `host` and `port` arguments. For now, the implementation is authless.
 
-* JSON-RPC responses now retain an explicit `id = NULL` value, ensuring parse-error replies conform to the MCP specification.
-
 * `mcp_server()` now formats tool results in the same way as ellmer (#78 by @gadenbuie).
 
-* `mcp_tools()` now sends and receives a `"notifications/initialized"` (#77 by @galachad).
+* `mcp_server()` gains logical argument `session_tools`, allowing users to opt-out of presenting R session tools (that make it possible to communicate with `mcp_session()`s) to clients.
 
-* `mcp_session()` now returns invisibly the nanonext socket used for communicating with the server.
+* Several tightenings-up of the implementation:
+    -  JSON-RPC responses now retain an explicit `id = NULL` value, ensuring parse-error replies conform to the MCP specification.
+    - `mcp_tools()` now sends and receives a `"notifications/initialized"` (#77 by @galachad).
+    - The implementation now supports the 2025-06-18 protocol version, updated from 2024-11-05.
 
-* `mcp_server()` gains logical argument `session_tools`, allowing users to opt-out of presenting R sessions tools to clients.
+* `mcp_session()` now invisibly returns the nanonext socket used for communicating with the server.
+
+## Client
+
+- Notably, `mcp_tools()` did not gain an implementation of the HTTP transport. Instead, we now recommend the [mcp-remote](https://www.npmjs.com/package/mcp-remote) tool for serving local MCP servers via the HTTP transport in the documentation.
+
+* `mcp_tools()` now errors more informatively when an MCP server process exits unexpectedly (#82).
 
 # mcptools 0.1.1
 
