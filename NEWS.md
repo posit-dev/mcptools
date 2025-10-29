@@ -1,4 +1,4 @@
-# mcptools (development version)
+# mcptools 0.2.0
 
 ## Server
 
