@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mcptools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,15 +36,27 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="mcptools-development-version">mcptools (development version)<a class="anchor" aria-label="anchor" href="#mcptools-development-version"></a></h2>
-<ul><li><p><code><a href="../reference/client.html">mcp_tools()</a></code> now errors more informatively when an MCP server process exits unexpectedly (<a href="https://github.com/posit-dev/mcptools/issues/82" class="external-link">#82</a>).</p></li>
-<li><p><code><a href="../reference/server.html">mcp_server()</a></code> now supports HTTP transport in addition to stdio. Use <code>type = "http"</code> to start an HTTP server, with optional <code>host</code> and <code>port</code> arguments. For now, the implementation is authless.</p></li>
-<li><p>JSON-RPC responses now retain an explicit <code>id = NULL</code> value, ensuring parse-error replies conform to the MCP specification.</p></li>
+<h2 class="pkg-version" data-toc-text="0.2.0" id="mcptools-020">mcptools 0.2.0<a class="anchor" aria-label="anchor" href="#mcptools-020"></a></h2>
+<div class="section level3">
+<h3 id="server-0-2-0">Server<a class="anchor" aria-label="anchor" href="#server-0-2-0"></a></h3>
+<ul><li><p><code><a href="../reference/server.html">mcp_server()</a></code> now supports HTTP transport in addition to stdio. Use <code>type = "http"</code> to start an HTTP server, with optional <code>host</code> and <code>port</code> arguments. For now, the implementation is authless.</p></li>
 <li><p><code><a href="../reference/server.html">mcp_server()</a></code> now formats tool results in the same way as ellmer (<a href="https://github.com/posit-dev/mcptools/issues/78" class="external-link">#78</a> by <a href="https://github.com/gadenbuie" class="external-link">@gadenbuie</a>).</p></li>
-<li><p><code><a href="../reference/client.html">mcp_tools()</a></code> now sends and receives a <code>"notifications/initialized"</code> (<a href="https://github.com/posit-dev/mcptools/issues/77" class="external-link">#77</a> by <a href="https://github.com/galachad" class="external-link">@galachad</a>).</p></li>
-<li><p><code><a href="../reference/server.html">mcp_session()</a></code> now returns invisibly the nanonext socket used for communicating with the server.</p></li>
-<li><p><code><a href="../reference/server.html">mcp_server()</a></code> gains logical argument <code>session_tools</code>, allowing users to opt-out of presenting R sessions tools to clients.</p></li>
+<li><p><code><a href="../reference/server.html">mcp_server()</a></code> gains logical argument <code>session_tools</code>, allowing users to opt-out of presenting R session tools (that make it possible to communicate with <code><a href="../reference/server.html">mcp_session()</a></code>s) to clients.</p></li>
+<li>
+<p>Several tightenings-up of the implementation:</p>
+<ul><li>JSON-RPC responses now retain an explicit <code>id = NULL</code> value, ensuring parse-error replies conform to the MCP specification.</li>
+<li>
+<code><a href="../reference/client.html">mcp_tools()</a></code> now sends and receives a <code>"notifications/initialized"</code> (<a href="https://github.com/posit-dev/mcptools/issues/77" class="external-link">#77</a> by <a href="https://github.com/galachad" class="external-link">@galachad</a>).</li>
+<li>The implementation now supports the 2025-06-18 protocol version, updated from 2024-11-05.</li>
+</ul></li>
+<li><p><code><a href="../reference/server.html">mcp_session()</a></code> now invisibly returns the nanonext socket used for communicating with the server.</p></li>
 </ul></div>
+<div class="section level3">
+<h3 id="client-0-2-0">Client<a class="anchor" aria-label="anchor" href="#client-0-2-0"></a></h3>
+<ul><li><p>Notably, <code><a href="../reference/client.html">mcp_tools()</a></code> did not gain an implementation of the HTTP transport. Instead, we now recommend the <a href="https://www.npmjs.com/package/mcp-remote" class="external-link">mcp-remote</a> tool for serving local MCP servers via the HTTP transport in the documentation.</p></li>
+<li><p><code><a href="../reference/client.html">mcp_tools()</a></code> now errors more informatively when an MCP server process exits unexpectedly (<a href="https://github.com/posit-dev/mcptools/issues/82" class="external-link">#82</a>).</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.1" id="mcptools-011">mcptools 0.1.1<a class="anchor" aria-label="anchor" href="#mcptools-011"></a></h2><p class="text-muted">CRAN release: 2025-09-08</p>
 <ul><li>Addressed an issue in tests on <code>r-devel-linux-x86_64-fedora-clang</code>.</li>
