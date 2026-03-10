@@ -1,0 +1,162 @@
+# R as an MCP server
+
+The mcptools package enables apps like Claude Desktop, Claude Code, and
+VS Code GitHub Copilot to run R code using the Model Context Protocol
+(MCP). This vignette highlights the basics of using mcptools to launch
+R-based MCP servers before delving a bit further into advanced usage.
+
+``` r
+library(mcptools)
+```
+
+## The basics
+
+In the context of R as an MCP server, there are three main concepts to
+understand:
+
+![A system architecture diagram showing three main components: Client
+(left), Server (center), and Session (right). The Client box lists AI
+coding assistants including Claude Desktop, Claude Code, Copilot Chat in
+VS Code, and Positron Assistant. The Server is initiated with
+\`mcp_server()\` and contains tools for R functions like reading package
+documentation, running R code, and inspecting global environment
+objects. Sessions can be configured with \`mcp_session()\` and can
+optionally connect to interactive R sessions, with two example projects
+shown: 'Some R Project' and 'Other R
+Project'.](https://raw.githubusercontent.com/posit-dev/mcptools/main/man/figures/r_as_a_server.png)
+
+- **Clients** are the apps you’d like to connect an R session to, like
+  Claude Desktop of Claude Code. mcptools supports any client that
+  supports MCP.
+
+- Clients can run R functions as tools using an MCP **server**. Each
+  client that supports MCP will provide some entry point to configure a
+  command and any additional arguments with the client. mcptools’s
+  command and arguments are `Rscript` and `-e "mcptools::mcp_server()"`.
+  Different clients register this command in different ways. For
+  example, to use mcptools with the client Claude Code, you might write
+  `claude mcp add -s "user" r-mcptools -- Rscript -e "mcptools::mcp_server()"`.
+  Note, however, that
+  [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
+  on its own won’t surface any tools that are useful for coding
+  agents—instead, you need to provide `tools` to the MCP server. See
+  [btw::btw_mcp_server()](https://posit-dev.github.io/btw/reference/mcp.html)
+  for a server that surfaces useful tools.
+
+- **Sessions** are the R sessions that the client ultimately talks to.
+  So, if you have an RStudio or Positron window open, those applications
+  automatically start up an R session that the client could potentially
+  talk to. To “opt in” your R sessions to be discovered by clients, run
+  the R code
+  [`mcptools::mcp_session()`](https://posit-dev.github.io/mcptools/reference/server.md).
+  You might want to run this code every time you start up R; to do so,
+  add
+  [`mcptools::mcp_session()`](https://posit-dev.github.io/mcptools/reference/server.md)
+  to your `.Rprofile`, perhaps by first calling
+  `usethis::edit_r_profile()`. **Configuring sessions is not required**;
+  if you choose not to do so, tools will be executed in the server
+  itself. Note that **tools are configured per-server rather than
+  per-session**; to configure tools with a session, set the `tools`
+  argument in
+  [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md).
+
+(In case this caught your eye: yes, the server is itself an R session.
+In mcptools’s documentation, we’ll always refer to the server R session
+just as the server; the fact that it’s implemented in R is only a
+technical detail.)
+
+In the case you have some client that you want to connect to R, **all
+you need to do is configure the command**
+`Rscript -e "mcptools::mcp_server()"` according to your client’s
+instructions. Optionally, if you’d like the server to be able to access
+variables in interactive R sessions, add
+[`mcptools::mcp_session()`](https://posit-dev.github.io/mcptools/reference/server.md)
+to your `.Rprofile`, perhaps by first calling
+`usethis::edit_r_profile()`.
+
+Then, you’re good to go!
+
+## Multiple clients and R sessions
+
+While a single client (and potentially a single R session) probably
+covers many users’ use cases, mcptools supports multiple clients and
+multiple R sessions. For example, for the former, you may be both
+chatting in Claude Desktop and running Claude Code in a terminal
+somewhere. Or, in the multiple R sessions situation, you may have two or
+more Positron instances running at once, with different data science
+projects in each.
+
+**As for multiple clients,** this will “just work”; there’s nothing to
+keep in mind here.
+
+**As for multiple R sessions**, mcptools will choose a default R session
+for your model to talk to without the client knowing it even had
+multiple options. So, you might have a project “goats” open in one
+Positron window and another project, “sheep”, open in another Positron
+window. mcptools provides models with two tools to facilitate toggling
+between sessions. The first, `list_r_sessions()`, allows the client to
+“discover” R sessions available to it by their working directory and
+(inferred) IDE. Then, the tool `select_r_session()` allows the client to
+(persistently) choose an R session. So, you could write “In my goats R
+session, $$somequestion$$.” In that case, the model might call
+`list_r_sessions()` to find the full identifier for that goats session,
+then `select_r_session()`, then whatever other tools it will use to
+respond to your question. Notably, if you ask a follow-up question (and
+you haven’t closed the Positron window with goats pulled up in the
+meantime) in the same client chat, the client doesn’t need to use
+`list_r_sessions()` and `select_r_session()` again, and can just call
+whatever tools it needs to answer your follow-up.
+
+**As for both multiple clients and multiple R sessions**, this will
+generally “just work.” That said, do note that clients can only be
+connected to one R session at a time. For most clients, like Claude
+Code, this isn’t much of an issue. For chat apps like Claude Desktop,
+though, you may run into hiccups when you have multiple chats actively
+going at the same time. For example, imagine I ask Claude via Claude
+Desktop about some problem in my R session “goats” and then, a moment
+later, spin up a different chat and ask about my “sheep” project. In the
+second chat, Claude will likely use `select_r_session()` to choose the
+“sheep” project. If I then go back to the chat about “goats” and ask a
+follow-up, the R session that any tool calls dispatch to will actually
+also be the “sheep” project. If the tool call, say, reads documentation,
+this isn’t an issue. If the tool call describe some variable in the
+global environment, though, the value of that variable may not exist
+in—or be different in—the “sheep” project.
+
+## Custom tools
+
+By default, mcptools supplies clients with only the necessary
+infrastructural tools to implement interaction with active sessions. You
+may be interested in using mcptools via [btw’s
+wrappers](https://posit-dev.github.io/btw/), which provide a set of
+atomic tools for data science. These tools allow clients to:
+
+- Peruse package documentation
+
+- Describe R session information and variables from the global
+  environment
+
+- Run queries against data sources
+
+Users might be interested in extending these tools or supplying
+completely different ones. For example, you might register:
+
+- A set of tools specifically focused on R package development
+  (e.g. various wrappers of [devtools](https://devtools.r-lib.org/) and
+  [testthat](https://testthat.r-lib.org/)) that could be hooked up to
+  Claude Code to make a package development assistant.
+- For the brave, a tool `run_r_code()` that allows a client to run
+  whatever R code it wants.
+
+You can configure any set of tools that could be passed to the
+`$set_tools()` method of an ellmer Chat object as the tools that
+mcptools will supply to clients. To do so, supply a list of outputs from
+[`ellmer::tool()`](https://ellmer.tidyverse.org/reference/tool.html) to
+the `tools` argument of
+[`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md).
+Relatedly, you’ll need to make sure that your code that specifies the
+new tools can run in a fresh R session; be sure to either namespace
+functions from libraries (like
+[`ellmer::tool()`](https://ellmer.tidyverse.org/reference/tool.html)
+instead of [`tool()`](https://ellmer.tidyverse.org/reference/tool.html))
+or load the libraries entirely.
