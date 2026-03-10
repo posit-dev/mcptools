@@ -296,7 +296,11 @@ handle_http_notification_or_response <- function(data) {
 
 handle_http_request_message <- function(data) {
   if (data$method == "initialize") {
-    return(jsonrpc_response(data$id, capabilities()))
+    # while protocolVersion is required per spec,
+    # we fall back rather than erroring
+    client_version <- data$params$protocolVersion %||% latest_protocol_version
+    negotiated <- negotiate_protocol_version(client_version)
+    return(jsonrpc_response(data$id, capabilities(negotiated)))
   } else if (data$method == "tools/list") {
     return(jsonrpc_response(
       data$id,
@@ -365,7 +369,11 @@ handle_message_from_client <- function(line) {
   # If we made it here, it's valid JSON
 
   if (data$method == "initialize") {
-    res <- jsonrpc_response(data$id, capabilities())
+    # while protocolVersion is required per spec,
+    # we fall back rather than erroring
+    client_version <- data$params$protocolVersion %||% latest_protocol_version
+    negotiated <- negotiate_protocol_version(client_version)
+    res <- jsonrpc_response(data$id, capabilities(negotiated))
     cat_json(res)
   } else if (data$method == "tools/list") {
     res <- jsonrpc_response(
@@ -438,9 +446,9 @@ cat_json <- function(x) {
   nanonext::write_stdout(to_json(x))
 }
 
-capabilities <- function() {
-  list(
-    protocolVersion = "2025-06-18",
+capabilities <- function(protocol_version = latest_protocol_version) {
+  res <- list(
+    protocolVersion = protocol_version,
     capabilities = list(
       # logging = named_list(),
       prompts = named_list(
@@ -457,9 +465,15 @@ capabilities <- function() {
     serverInfo = list(
       name = "R mcptools server",
       version = "0.0.1"
-    ),
-    instructions = "This provides information about a running R session."
+    )
   )
+
+  # `instructions` was introduced in protocol version 2025-03-26
+  if (protocol_version_gte(protocol_version, "2025-03-26")) {
+    res$instructions <- "This provides information about a running R session."
+  }
+
+  res
 }
 
 tool_as_json <- function(tool) {
