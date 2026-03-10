@@ -3,6 +3,12 @@
 ## mcptools (development version)
 
 - [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
+  now ensures that `inputSchema` always includes a `properties` field,
+  even for tools with no arguments
+  ([\#91](https://github.com/posit-dev/mcptools/issues/91) by
+  [@itkonen](https://github.com/itkonen)).
+
+- [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
   now negotiates the protocol version with clients, supporting versions
   2024-11-05 through 2025-11-25
   ([\#92](https://github.com/posit-dev/mcptools/issues/92) by
