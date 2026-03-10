@@ -469,6 +469,9 @@ tool_as_json <- function(tool) {
   inputSchema <- compact(as_json(dummy_provider, tool@arguments))
   # This field is present but shouldn't be
   inputSchema$description <- NULL
+  # compact() drops zero-length elements, so properties gets stripped for
+
+  # no-argument tools. Rather than reworking compact(), patch it here.
   if (is.null(inputSchema$properties)) {
     inputSchema$properties <- structure(list(), names = character())
   }
