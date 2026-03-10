@@ -296,6 +296,8 @@ handle_http_notification_or_response <- function(data) {
 
 handle_http_request_message <- function(data) {
   if (data$method == "initialize") {
+    # while protocolVersion is required per spec,
+    # we fall back rather than erroring
     client_version <- data$params$protocolVersion %||% latest_protocol_version
     negotiated <- negotiate_protocol_version(client_version)
     return(jsonrpc_response(data$id, capabilities(negotiated)))
@@ -367,6 +369,8 @@ handle_message_from_client <- function(line) {
   # If we made it here, it's valid JSON
 
   if (data$method == "initialize") {
+    # while protocolVersion is required per spec,
+    # we fall back rather than erroring
     client_version <- data$params$protocolVersion %||% latest_protocol_version
     negotiated <- negotiate_protocol_version(client_version)
     res <- jsonrpc_response(data$id, capabilities(negotiated))
