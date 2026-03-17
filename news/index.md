@@ -1,6 +1,8 @@
 # Changelog
 
-## mcptools (development version)
+## mcptools 0.2.1
+
+CRAN release: 2026-03-17
 
 - [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
   now ensures that `inputSchema` always includes a `properties` field,
