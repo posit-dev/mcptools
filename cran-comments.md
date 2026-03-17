@@ -1,1 +1,1 @@
-There are no ERRORs, WARNINGs, or NOTEs in R CMD check.
+No notes for this release. Thanks for your time.
