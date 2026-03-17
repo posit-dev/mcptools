@@ -49,20 +49,30 @@ test_that("capabilities defaults to latest protocol version", {
   expect_equal(res$protocolVersion, latest_protocol_version)
 })
 
-test_that("capabilities includes instructions for versions >= 2025-03-26", {
+test_that("capabilities gates instructions on protocol version", {
+  # introduced in 2025-03-26: absent for older versions
+  res <- capabilities("2024-11-05", instructions = "custom")
+  expect_null(res$instructions)
+
+  # present (as NULL) when no instructions supplied for newer versions
   res <- capabilities("2025-03-26")
-  expect_true(!is.null(res$instructions))
+  expect_null(res$instructions)
 
-  res <- capabilities("2025-06-18")
-  expect_true(!is.null(res$instructions))
+  # user-supplied instructions are passed through for newer versions
+  res <- capabilities("2025-03-26", instructions = "custom")
+  expect_equal(res$instructions, "custom")
 
-  res <- capabilities("2025-11-25")
-  expect_true(!is.null(res$instructions))
+  res <- capabilities("2025-11-25", instructions = "custom")
+  expect_equal(res$instructions, "custom")
 })
 
-test_that("capabilities omits instructions for version 2024-11-05", {
-  res <- capabilities("2024-11-05")
-  expect_null(res$instructions)
+test_that("set_server_tools sets default instructions", {
+  set_server_tools(NULL, session_tools = TRUE)
+  expect_true(is.character(the$server_instructions))
+  expect_true(nchar(the$server_instructions) > 0L)
+
+  set_server_tools(NULL, session_tools = TRUE, instructions = "my instructions")
+  expect_equal(the$server_instructions, "my instructions")
 })
 
 test_that("capabilities always includes required fields", {

@@ -86,6 +86,10 @@
 #'   tools (`list_r_sessions`, `select_r_session`) that work with
 #'   `mcp_session()`. Defaults to `TRUE`. Note that the tools to interface with
 #'   sessions are still first routed through the `mcp_server()`.
+#' @param instructions An optional character string providing instructions to
+#'   the MCP client about how to use this server and its tools. This is
+#'   included in the `initialize` response and is supported from protocol
+#'   version `2025-03-26` onwards.
 #'
 #' @returns
 #' `mcp_server()` and `mcp_session()` are both called primarily for their
@@ -141,14 +145,18 @@ mcp_server <- function(
   type = c("stdio", "http"),
   host = "127.0.0.1",
   port = as.integer(Sys.getenv("MCPTOOLS_PORT", "8080")),
-  session_tools = TRUE
+  session_tools = TRUE,
+  instructions = NULL
 ) {
   check_not_interactive()
   type <- rlang::arg_match(type)
 
   nanonext::reap(the$session_socket) # in case session was started in .Rprofile
   the$sessions_enabled <- isTRUE(session_tools)
-  set_server_tools(tools, session_tools = the$sessions_enabled)
+  set_server_tools(tools,
+    session_tools = the$sessions_enabled,
+    instructions = instructions
+  )
 
   switch(
     type,
@@ -300,7 +308,7 @@ handle_http_request_message <- function(data) {
     # we fall back rather than erroring
     client_version <- data$params$protocolVersion %||% latest_protocol_version
     negotiated <- negotiate_protocol_version(client_version)
-    return(jsonrpc_response(data$id, capabilities(negotiated)))
+    return(jsonrpc_response(data$id, capabilities(negotiated, the$server_instructions)))
   } else if (data$method == "tools/list") {
     return(jsonrpc_response(
       data$id,
@@ -373,7 +381,7 @@ handle_message_from_client <- function(line) {
     # we fall back rather than erroring
     client_version <- data$params$protocolVersion %||% latest_protocol_version
     negotiated <- negotiate_protocol_version(client_version)
-    res <- jsonrpc_response(data$id, capabilities(negotiated))
+    res <- jsonrpc_response(data$id, capabilities(negotiated, the$server_instructions))
     cat_json(res)
   } else if (data$method == "tools/list") {
     res <- jsonrpc_response(
@@ -446,7 +454,8 @@ cat_json <- function(x) {
   nanonext::write_stdout(to_json(x))
 }
 
-capabilities <- function(protocol_version = latest_protocol_version) {
+capabilities <- function(protocol_version = latest_protocol_version,
+                         instructions = NULL) {
   res <- list(
     protocolVersion = protocol_version,
     capabilities = list(
@@ -470,7 +479,7 @@ capabilities <- function(protocol_version = latest_protocol_version) {
 
   # `instructions` was introduced in protocol version 2025-03-26
   if (protocol_version_gte(protocol_version, "2025-03-26")) {
-    res$instructions <- "This provides information about a running R session."
+    res$instructions <- instructions
   }
 
   res

@@ -2,11 +2,14 @@ set_server_tools <- function(
   x,
   session_tools = TRUE,
   x_arg = caller_arg(x),
-  call = caller_env()
+  call = caller_env(),
+  instructions = NULL
 ) {
   if (is.null(x)) {
     if (session_tools) {
       the$server_tools <- c(list(list_r_sessions_tool, select_r_session_tool))
+      the$server_instructions <- instructions %||%
+        "This provides information about running R sessions."
       return()
     } else {
       cli::cli_abort("No tools selected to serve.", call = call)
@@ -66,6 +69,11 @@ set_server_tools <- function(
         select_r_session_tool
       )
     )
+    the$server_instructions <- instructions %||%
+      "This provides information about running R sessions and executes tools in R."
+  } else {
+    the$server_instructions <- instructions %||%
+      "This provides tools executed in R."
   }
   the$server_tools <- x
 }
