@@ -86,6 +86,10 @@
 #'   tools (`list_r_sessions`, `select_r_session`) that work with
 #'   `mcp_session()`. Defaults to `TRUE`. Note that the tools to interface with
 #'   sessions are still first routed through the `mcp_server()`.
+#' @param instructions An optional character string providing instructions to
+#'   the MCP client about how to use this server and its tools. This is
+#'   included in the `initialize` response and is supported from protocol
+#'   version `2025-03-26` onwards.
 #'
 #' @returns
 #' `mcp_server()` and `mcp_session()` are both called primarily for their
