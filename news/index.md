@@ -1,5 +1,7 @@
 # Changelog
 
+## mcptools (development version)
+
 ## mcptools 0.2.1
 
 CRAN release: 2026-03-17
