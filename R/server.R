@@ -490,11 +490,18 @@ tool_as_json <- function(tool) {
     inputSchema$properties <- structure(list(), names = character())
   }
 
-  list(
+  result <- list(
     name = tool@name,
     description = tool@description,
     inputSchema = inputSchema
   )
+
+  # Include annotations if declared via ellmer::tool_annotations()
+  if (length(tool@annotations) > 0) {
+    result$annotations <- tool@annotations
+  }
+
+  result
 }
 
 compact <- function(.x) {
