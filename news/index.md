@@ -10,9 +10,10 @@
 
 - [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
   now includes ellmer tool annotations in `tools/list` responses,
-  preserving MCP safety hints such as `readOnlyHint`, `destructiveHint`,
-  `idempotentHint`, and `openWorldHint`
-  ([\#100](https://github.com/posit-dev/mcptools/issues/100)).
+  preserving MCP safety hints such as `title`, `readOnlyHint`,
+  `destructiveHint`, `idempotentHint`, and `openWorldHint`
+  ([\#100](https://github.com/posit-dev/mcptools/issues/100),
+  [\#105](https://github.com/posit-dev/mcptools/issues/105)).
 
 - [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
   can now return inline image content from tools that produce
