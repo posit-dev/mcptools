@@ -1,5 +1,13 @@
 # mcptools (development version)
 
+* `mcp_server()` can now return inline image content from tools that produce
+  `ellmer::ContentImageInline` results, including mixed text and image content
+  (#96, #102).
+
+* `mcp_tools()` now converts MCP tool-result content blocks into ellmer-native
+  text and image content, allowing ellmer chats to receive image results from
+  MCP tools.
+
 # mcptools 0.2.1
 
 * `mcp_server()` now ensures that `inputSchema` always includes a `properties`

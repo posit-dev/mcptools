@@ -408,7 +408,7 @@ tool_ref <- function(server, tool, arguments) {
 
 call_tool <- function(..., server, tool) {
   server_process <- the$mcp_servers[[server]]$process
-  send_and_receive(
+  response <- send_and_receive(
     server_process,
     mcp_request_tool_call(
       id = jsonrpc_id(server),
@@ -416,6 +416,62 @@ call_tool <- function(..., server, tool) {
       arguments = list(...)
     )
   )
+
+  mcp_tool_result_as_ellmer(response)
+}
+
+mcp_tool_result_as_ellmer <- function(response) {
+  if (is.null(response)) {
+    return(NULL)
+  }
+
+  if (!is.null(response$error)) {
+    cli::cli_abort(response$error$message %||% "MCP tool call failed.")
+  }
+
+  result <- response$result
+  if (is.null(result$content)) {
+    return(result)
+  }
+
+  if (isTRUE(result$isError)) {
+    return(ellmer::ContentToolResult(error = mcp_content_as_text(result$content)))
+  }
+
+  content <- lapply(result$content, mcp_content_as_ellmer)
+  if (all(vapply(content, inherits, logical(1), "ellmer::ContentText"))) {
+    return(mcp_content_as_text(result$content))
+  }
+
+  if (length(content) == 1) {
+    return(content[[1]])
+  }
+
+  content
+}
+
+mcp_content_as_ellmer <- function(content) {
+  switch(
+    content$type,
+    text = ellmer::ContentText(text = content$text %||% ""),
+    image = ellmer::ContentImageInline(
+      type = content$mimeType %||% "image/png",
+      data = content$data
+    ),
+    ellmer::ContentText(text = to_json(content))
+  )
+}
+
+mcp_content_as_text <- function(content) {
+  text <- vapply(content, function(block) {
+    if (identical(block$type, "text")) {
+      return(block$text %||% "")
+    }
+
+    to_json(block)
+  }, character(1))
+
+  paste(text, collapse = "\n")
 }
 
 # retrieve and increment the current rsonrpc id from a server

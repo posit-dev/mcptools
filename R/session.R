@@ -56,69 +56,85 @@ handle_message_from_server <- function(data) {
 as_tool_call_result <- function(data, result) {
   is_error <- FALSE
 
-  # ── Handle image content ──────────────────────────────────────
-  # When a tool returns ContentImageInline (e.g. via content_image_file()
-  # or content_image_plot()), produce an MCP image content block.
-  # Also handles ContentToolResult wrapping an image.
-  image <- NULL
-  if (inherits(result, "ellmer::ContentImageInline")) {
-    image <- result
-  } else if (inherits(result, "ellmer::ContentToolResult")) {
-    is_error <- !is.null(result@error)
-    if (inherits(result@value, "ellmer::ContentImageInline")) {
-      image <- result@value
-    }
-  }
-
-  if (!is.null(image)) {
-    return(jsonrpc_response(
-      data$id,
-      list(
-        content = list(list(
-          type = "image",
-          data = image@data,
-          mimeType = image@type
-        )),
-        isError = is_error
-      )
-    ))
-  }
-
-  # ── Handle mixed content (list of Content objects) ────────────
-  # If a tool returns a list mixing ContentImageInline with text,
-  # produce multiple content blocks.
-  if (inherits(result, "ellmer::ContentToolResult") &&
-      is.list(result@value) &&
-      any(vapply(result@value, inherits, logical(1), "ellmer::ContentImageInline"))) {
-    content_blocks <- lapply(result@value, function(item) {
-      if (inherits(item, "ellmer::ContentImageInline")) {
-        list(type = "image", data = item@data, mimeType = item@type)
-      } else {
-        list(type = "text", text = paste(item, collapse = "\n"))
-      }
-    })
-    return(jsonrpc_response(data$id, list(content = content_blocks, isError = is_error)))
-  }
-
-  # ── Default: text content (existing behaviour) ────────────────
-  format_result <- function(x) paste(x, collapse = "\n")
-
   if (inherits(result, "ellmer::ContentToolResult")) {
-    format_result <- asNamespace("ellmer")[["tool_string"]] %||% format_result
+    is_error <- !is.null(result@error)
   }
 
   jsonrpc_response(
     data$id,
     list(
-      content = list(
-        list(
-          type = "text",
-          text = format_result(result)
-        )
-      ),
+      content = as_mcp_content(result),
       isError = is_error
     )
   )
+}
+
+as_mcp_content <- function(result) {
+  if (inherits(result, "ellmer::ContentToolResult")) {
+    value <- result@value
+    if (has_mcp_content(value)) {
+      return(as_mcp_content(value))
+    }
+
+    return(list(as_mcp_text_content(result)))
+  }
+
+  if (is_mcp_content(result)) {
+    return(list(as_mcp_content_block(result)))
+  }
+
+  if (is.list(result) && has_mcp_content(result)) {
+    return(unname(unlist(lapply(result, as_mcp_content), recursive = FALSE)))
+  }
+
+  list(as_mcp_text_content(result))
+}
+
+as_mcp_content_block <- function(result) {
+  if (inherits(result, "ellmer::ContentImageInline")) {
+    return(list(type = "image", data = result@data, mimeType = result@type))
+  }
+
+  if (inherits(result, "ellmer::ContentText")) {
+    return(list(type = "text", text = result@text))
+  }
+
+  as_mcp_text_content(result)
+}
+
+as_mcp_text_content <- function(result) {
+  list(type = "text", text = format_mcp_text(result))
+}
+
+format_mcp_text <- function(result) {
+  if (inherits(result, "ellmer::ContentToolResult")) {
+    format_result <- asNamespace("ellmer")[["tool_string"]] %||%
+      format_default_result
+    return(format_result(result))
+  }
+
+  format_default_result(result)
+}
+
+format_default_result <- function(result) {
+  paste(result, collapse = "\n")
+}
+
+has_mcp_content <- function(result) {
+  if (is_mcp_content(result)) {
+    return(TRUE)
+  }
+
+  if (is.list(result)) {
+    return(any(vapply(result, has_mcp_content, logical(1))))
+  }
+
+  FALSE
+}
+
+is_mcp_content <- function(result) {
+  inherits(result, "ellmer::ContentImageInline") ||
+    inherits(result, "ellmer::ContentText")
 }
 
 schedule_handle_message_from_server <- function() {

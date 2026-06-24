@@ -47,6 +47,64 @@ test_that("as_tool_call_result handles ContentToolResult with error", {
   expect_true(output$result$isError)
 })
 
+test_that("as_tool_call_result handles direct image content", {
+  data <- list(id = 1)
+  result <- ellmer::ContentImageInline(type = "image/png", data = "abc123")
+
+  output <- as_tool_call_result(data, result)
+
+  expect_equal(output$result$content[[1]]$type, "image")
+  expect_equal(output$result$content[[1]]$data, "abc123")
+  expect_equal(output$result$content[[1]]$mimeType, "image/png")
+  expect_false(output$result$isError)
+})
+
+test_that("as_tool_call_result handles ContentToolResult with image content", {
+  data <- list(id = 1)
+  image <- ellmer::ContentImageInline(type = "image/png", data = "abc123")
+  result <- ellmer::ContentToolResult(value = image)
+
+  output <- as_tool_call_result(data, result)
+
+  expect_equal(output$result$content[[1]]$type, "image")
+  expect_equal(output$result$content[[1]]$data, "abc123")
+  expect_equal(output$result$content[[1]]$mimeType, "image/png")
+  expect_false(output$result$isError)
+})
+
+test_that("as_tool_call_result handles bare mixed content", {
+  data <- list(id = 1)
+  image <- ellmer::ContentImageInline(type = "image/png", data = "abc123")
+  result <- list("caption", image)
+
+  output <- as_tool_call_result(data, result)
+
+  expect_equal(output$result$content[[1]], list(type = "text", text = "caption"))
+  expect_equal(output$result$content[[2]], list(
+    type = "image",
+    data = "abc123",
+    mimeType = "image/png"
+  ))
+  expect_false(output$result$isError)
+})
+
+test_that("as_tool_call_result handles mixed ellmer content", {
+  data <- list(id = 1)
+  text <- ellmer::ContentText(text = "caption")
+  image <- ellmer::ContentImageInline(type = "image/png", data = "abc123")
+  result <- ellmer::ContentToolResult(value = list(text, image))
+
+  output <- as_tool_call_result(data, result)
+
+  expect_equal(output$result$content[[1]], list(type = "text", text = "caption"))
+  expect_equal(output$result$content[[2]], list(
+    type = "image",
+    data = "abc123",
+    mimeType = "image/png"
+  ))
+  expect_false(output$result$isError)
+})
+
 test_that("as_tool_call_result handles vector results", {
   data <- list(id = 1)
   result <- c("line1", "line2", "line3")
