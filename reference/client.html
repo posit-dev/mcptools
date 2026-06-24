@@ -90,7 +90,11 @@ Claude Desktop in their README files. By default, mcptools will look to
 file with <code>file.edit(file.path("~", ".config", "mcptools", "config.json"))</code>.</p>
 <p>The mcptools config file should be valid .json with an entry <code>mcpServers</code>.
 That entry should contain named elements, each with at least a <code>command</code>
-and <code>args</code> entry.</p>
+and <code>args</code> entry. MCP server processes receive an allowlisted environment
+inherited from the current R process, plus any variables configured in
+<code>env</code>. Configured <code>env</code> variables override inherited variables with the same
+name. Servers that need additional environment variables should list them in
+<code>env</code>.</p>
 <p>For example, to configure <code>mcp_tools()</code> with GitHub's official MCP Server
 <a href="https://github.com/github/github-mcp-server" class="external-link">https://github.com/github/github-mcp-server</a>, you could write the following
 in that file:</p>

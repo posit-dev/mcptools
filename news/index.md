@@ -26,6 +26,17 @@
   and image content, allowing ellmer chats to receive image results from
   MCP tools.
 
+- [`mcp_tools()`](https://posit-dev.github.io/mcptools/reference/client.md)
+  now launches MCP server processes with an allowlisted environment plus
+  configured `env` variables. Previously, servers without configured
+  `env` inherited the full R process environment, while servers with
+  configured `env` received only those variables. The new behavior more
+  closely matches reference MCP SDKs, reduces accidental credential
+  exposure, and fixes Windows startup failures when `env` is configured.
+  Servers that need additional non-allowlisted variables should list
+  them in `env`
+  ([\#62](https://github.com/posit-dev/mcptools/issues/62)).
+
 ## mcptools 0.2.1
 
 CRAN release: 2026-03-17

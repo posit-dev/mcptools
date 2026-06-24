@@ -44,7 +44,11 @@ can edit that file with
 
 The mcptools config file should be valid .json with an entry
 `mcpServers`. That entry should contain named elements, each with at
-least a `command` and `args` entry.
+least a `command` and `args` entry. MCP server processes receive an
+allowlisted environment inherited from the current R process, plus any
+variables configured in `env`. Configured `env` variables override
+inherited variables with the same name. Servers that need additional
+environment variables should list them in `env`.
 
 For example, to configure `mcp_tools()` with GitHub's official MCP
 Server <https://github.com/github/github-mcp-server>, you could write
