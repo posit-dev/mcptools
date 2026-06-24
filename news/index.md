@@ -2,6 +2,18 @@
 
 ## mcptools (development version)
 
+- [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
+  can now return inline image content from tools that produce
+  [`ellmer::ContentImageInline`](https://ellmer.tidyverse.org/reference/Content.html)
+  results, including mixed text and image content
+  ([\#96](https://github.com/posit-dev/mcptools/issues/96),
+  [\#102](https://github.com/posit-dev/mcptools/issues/102)).
+
+- [`mcp_tools()`](https://posit-dev.github.io/mcptools/reference/client.md)
+  now converts MCP tool-result content blocks into ellmer-native text
+  and image content, allowing ellmer chats to receive image results from
+  MCP tools.
+
 ## mcptools 0.2.1
 
 CRAN release: 2026-03-17

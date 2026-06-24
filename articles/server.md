@@ -6,6 +6,7 @@ VS Code GitHub Copilot to run R code using the Model Context Protocol
 R-based MCP servers before delving a bit further into advanced usage.
 
 ``` r
+
 library(mcptools)
 ```
 
@@ -98,14 +99,18 @@ between sessions. The first, `list_r_sessions()`, allows the client to
 “discover” R sessions available to it by their working directory and
 (inferred) IDE. Then, the tool `select_r_session()` allows the client to
 (persistently) choose an R session. So, you could write “In my goats R
-session, $$somequestion$$.” In that case, the model might call
-`list_r_sessions()` to find the full identifier for that goats session,
-then `select_r_session()`, then whatever other tools it will use to
-respond to your question. Notably, if you ask a follow-up question (and
-you haven’t closed the Positron window with goats pulled up in the
-meantime) in the same client chat, the client doesn’t need to use
-`list_r_sessions()` and `select_r_session()` again, and can just call
-whatever tools it needs to answer your follow-up.
+session,
+``` math
+some question
+```
+.” In that case, the model might call `list_r_sessions()` to find the
+full identifier for that goats session, then `select_r_session()`, then
+whatever other tools it will use to respond to your question. Notably,
+if you ask a follow-up question (and you haven’t closed the Positron
+window with goats pulled up in the meantime) in the same client chat,
+the client doesn’t need to use `list_r_sessions()` and
+`select_r_session()` again, and can just call whatever tools it needs to
+answer your follow-up.
 
 **As for both multiple clients and multiple R sessions**, this will
 generally “just work.” That said, do note that clients can only be

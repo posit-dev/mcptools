@@ -56,12 +56,14 @@ and [querychat](https://posit-dev.github.io/querychat/) apps.
 Install mcptools from CRAN with:
 
 ``` r
+
 install.packages("mcptools")
 ```
 
 You can install the development version of mcptools like so:
 
 ``` r
+
 pak::pak("posit-dev/mcptools")
 ```
 
