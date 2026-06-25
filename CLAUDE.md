@@ -54,10 +54,11 @@ operations.
 
 ## Socket URLs and Connection Management
 
-- Sessions listen on `inproc://mcptools-session-{i}` where `i` is
-  auto-incremented
-- Server dials to `inproc://mcptools-session-1` by default
-- `inproc://` transport is fast for same-machine communication
+- The base socket URL is OS-derived in `.onLoad()`:
+  `abstract://mcptools-socket` on Linux, `ipc://mcptools-socket` on
+  Windows, `ipc:///tmp/mcptools-socket` otherwise
+- Sessions listen on `{socket_url}{i}` where `i` is auto-incremented
+- Server dials to `{socket_url}1` by default
 - Connections are cleaned up with
   [`nanonext::reap()`](https://nanonext.r-lib.org/reference/reap.html)
   on exit

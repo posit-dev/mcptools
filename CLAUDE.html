@@ -82,10 +82,9 @@
 </div>
 <div class="section level2">
 <h2 id="socket-urls-and-connection-management">Socket URLs and Connection Management<a class="anchor" aria-label="anchor" href="#socket-urls-and-connection-management"></a></h2>
-<ul><li>Sessions listen on <code>inproc://mcptools-session-{i}</code> where <code>i</code> is auto-incremented</li>
-<li>Server dials to <code>inproc://mcptools-session-1</code> by default</li>
-<li>
-<code>inproc://</code> transport is fast for same-machine communication</li>
+<ul><li>The base socket URL is OS-derived in <code>.onLoad()</code>: <code>abstract://mcptools-socket</code> on Linux, <code>ipc://mcptools-socket</code> on Windows, <code>ipc:///tmp/mcptools-socket</code> otherwise</li>
+<li>Sessions listen on <code>{socket_url}{i}</code> where <code>i</code> is auto-incremented</li>
+<li>Server dials to <code>{socket_url}1</code> by default</li>
 <li>Connections are cleaned up with <code><a href="https://nanonext.r-lib.org/reference/reap.html" class="external-link">nanonext::reap()</a></code> on exit</li>
 </ul></div>
 
