@@ -63,6 +63,25 @@ test_that("to_json works", {
   expect_false(is.list(parsed$value))
 })
 
+test_that("url_origin handles full URLs and invalid input", {
+  expect_equal(
+    url_origin("https://connect.example.com/rsc/content/123"),
+    "https://connect.example.com"
+  )
+  expect_equal(
+    url_origin("https://connect.example.com:3939/rsc/content/123"),
+    "https://connect.example.com:3939"
+  )
+  expect_null(url_origin("not a url"))
+})
+
+test_that("constant_time_equal compares strings", {
+  expect_true(constant_time_equal("secret", "secret"))
+  expect_false(constant_time_equal("secret", "wrong"))
+  expect_false(constant_time_equal("secret", "secret2"))
+  expect_false(constant_time_equal("secret", NA_character_))
+})
+
 test_that("mcptools_server_log works", {
   # mcptools_server_log returns environment variable when set
   withr::local_envvar(MCPTOOLS_SERVER_LOG = "/custom/log/file.txt")

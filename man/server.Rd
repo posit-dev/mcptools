@@ -97,6 +97,33 @@ mcp_server(type = "http", host = "127.0.0.1", port = 9000)
 }\if{html}{\out{</div>}}
 
 The server will listen for HTTP POST requests containing JSON-RPC messages.
+}
+
+\subsection{Posit Connect}{
+
+To deploy an HTTP MCP server to Posit Connect, add a \verb{_server.yml} file to
+the project directory:
+
+\if{html}{\out{<div class="sourceCode yaml">}}\preformatted{engine: mcptools
+tools: tools.R
+}\if{html}{\out{</div>}}
+
+The \code{tools} file should return a list of \code{\link[ellmer:tool]{ellmer::tool()}} objects. Deploy
+the project as an R API and mark it as MCP content:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{rsconnect::deployAPI(".", contentCategory = "mcp")
+}\if{html}{\out{</div>}}
+
+Use the Connect content URL with \verb{/mcp} appended as the MCP endpoint. For
+example, if the content URL is \verb{https://connect.example.com/content/abc123/},
+use \verb{https://connect.example.com/content/abc123/mcp}. mcptools accepts
+requests at any path, so the content URL itself also works.
+If you cannot set \code{contentCategory = "mcp"} during deployment, set the MCP
+category in Connect after deploying and set minimum processes to at least 1.
+
+Connect deployments run tools inside the deployed R process by default.
+Session discovery with \code{\link[=mcp_session]{mcp_session()}} is intended for local desktop R
+sessions and is disabled by default on Connect.
 
 \strong{mcp_server() is not intended for interactive use.}
 

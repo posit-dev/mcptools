@@ -1,5 +1,10 @@
 # mcptools (development version)
 
+* mcptools can now run as a Posit Connect R API engine. Add `_server.yml`
+  with `engine: mcptools`, point `tools` to an `.R` file returning
+  `ellmer::tool()` objects, and deploy with
+  `rsconnect::deployAPI(".", contentCategory = "mcp")`.
+
 * Forwarded `mcp_session()` tool calls now return JSON-RPC errors when the
   selected R session does not respond within two minutes, rather than hanging
   indefinitely. Configure the timeout with the

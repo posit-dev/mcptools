@@ -99,6 +99,23 @@ claude mcp add -s "user" r-mcptools -- Rscript -e "mcptools::mcp_server()"
 
 Then, if you'd like models to access variables in specific R sessions, call `mcptools::mcp_session()` in those sessions. (You might include a call to this function in your .Rprofile, perhaps using `usethis::edit_r_profile()`, to automatically register every session you start up.)
 
+To deploy an HTTP MCP server to Posit Connect, add a `_server.yml` file with `engine: mcptools` and a `tools` file:
+
+```yaml
+engine: mcptools
+tools: tools.R
+```
+
+Deploy the directory as an R API and mark it as MCP content:
+
+```r
+rsconnect::deployAPI(".", contentCategory = "mcp")
+```
+
+If the content URL is `https://connect.example.com/content/abc123/`, use `https://connect.example.com/content/abc123/mcp` as the MCP endpoint.
+
+If you cannot set `contentCategory = "mcp"` during deployment, set the MCP category in Connect after deploying and set minimum processes to at least 1.
+
 ### R as an MCP client
 
 mcptools uses the Claude Desktop configuration file format to register third-party MCP servers, as most MCP servers provide setup instructions for Claude Desktop in their documentation. For example, here's what the [official GitHub MCP server](https://github.com/github/github-mcp-server) configuration would look like:

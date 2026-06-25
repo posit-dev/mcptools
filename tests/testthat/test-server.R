@@ -80,6 +80,119 @@ test_that("check_not_interactive errors informatively", {
   expect_snapshot(error = TRUE, mcp_server())
 })
 
+test_that("HTTP requests validate Connect shared secret when configured", {
+  withr::local_options(plumber2.sharedSecret = "secret")
+
+  expect_equal(
+    handle_http_request(list(REQUEST_METHOD = "GET"))$status,
+    403L
+  )
+  expect_equal(
+    handle_http_request(list(
+      REQUEST_METHOD = "GET",
+      HTTP_PLUMBER_SHARED_SECRET = "wrong"
+    ))$status,
+    403L
+  )
+  expect_equal(
+    handle_http_request(list(
+      REQUEST_METHOD = "GET",
+      HTTP_PLUMBER_SHARED_SECRET = "secret"
+    ))$status,
+    405L
+  )
+})
+
+test_that("HTTP shared secret ignores empty override", {
+  withr::local_options(
+    mcptools.http_shared_secret = "",
+    plumber2.sharedSecret = "secret"
+  )
+
+  expect_equal(
+    handle_http_request(list(REQUEST_METHOD = "GET"))$status,
+    403L
+  )
+  expect_equal(
+    handle_http_request(list(
+      REQUEST_METHOD = "GET",
+      HTTP_PLUMBER_SHARED_SECRET = "secret"
+    ))$status,
+    405L
+  )
+})
+
+test_that("HTTP shared secret uses non-empty mcptools override", {
+  withr::local_options(
+    mcptools.http_shared_secret = "mcptools-secret",
+    plumber2.sharedSecret = "connect-secret"
+  )
+
+  expect_equal(
+    handle_http_request(list(
+      REQUEST_METHOD = "GET",
+      HTTP_PLUMBER_SHARED_SECRET = "connect-secret"
+    ))$status,
+    403L
+  )
+  expect_equal(
+    handle_http_request(list(
+      REQUEST_METHOD = "GET",
+      HTTP_PLUMBER_SHARED_SECRET = "mcptools-secret"
+    ))$status,
+    405L
+  )
+})
+
+test_that("HTTP requests validate configured trusted hosts", {
+  local_http_security(trusted_hosts = "127.0.0.1:1234")
+
+  expect_equal(
+    handle_http_request(list(REQUEST_METHOD = "GET"))$status,
+    403L
+  )
+  expect_equal(
+    handle_http_request(list(
+      REQUEST_METHOD = "GET",
+      HTTP_HOST = "connect.example.com"
+    ))$status,
+    403L
+  )
+  expect_equal(
+    handle_http_request(list(
+      REQUEST_METHOD = "GET",
+      HTTP_HOST = "127.0.0.1:1234"
+    ))$status,
+    405L
+  )
+})
+
+test_that("HTTP requests validate configured origins", {
+  local_http_security(allowed_origins = "https://connect.example.com")
+
+  expect_equal(
+    handle_http_request(list(
+      REQUEST_METHOD = "GET",
+      HTTP_ORIGIN = "http://localhost:3000"
+    ))$status,
+    405L
+  )
+  expect_equal(
+    handle_http_request(list(
+      REQUEST_METHOD = "GET",
+      HTTP_ORIGIN = "https://connect.example.com"
+    ))$status,
+    405L
+  )
+  expect_equal(
+    handle_http_request(list(
+      REQUEST_METHOD = "GET",
+      HTTP_ORIGIN = "https://evil.example.com"
+    ))$status,
+    403L
+  )
+})
+
 test_that("forward_request returns append_tool_fn errors", {
   old_server_tools <- the$server_tools
   withr::defer(the$server_tools <- old_server_tools)

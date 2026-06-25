@@ -54,6 +54,34 @@
 #'
 #' The server will listen for HTTP POST requests containing JSON-RPC messages.
 #'
+#' ## Posit Connect
+#'
+#' To deploy an HTTP MCP server to Posit Connect, add a `_server.yml` file to
+#' the project directory:
+#'
+#' ```yaml
+#' engine: mcptools
+#' tools: tools.R
+#' ```
+#'
+#' The `tools` file should return a list of [ellmer::tool()] objects. Deploy
+#' the project as an R API and mark it as MCP content:
+#'
+#' ```r
+#' rsconnect::deployAPI(".", contentCategory = "mcp")
+#' ```
+#'
+#' Use the Connect content URL with `/mcp` appended as the MCP endpoint. For
+#' example, if the content URL is `https://connect.example.com/content/abc123/`,
+#' use `https://connect.example.com/content/abc123/mcp`. mcptools accepts
+#' requests at any path, so the content URL itself also works.
+#' If you cannot set `contentCategory = "mcp"` during deployment, set the MCP
+#' category in Connect after deploying and set minimum processes to at least 1.
+#'
+#' Connect deployments run tools inside the deployed R process by default.
+#' Session discovery with [mcp_session()] is intended for local desktop R
+#' sessions and is disabled by default on Connect.
+#'
 #' **mcp_server() is not intended for interactive use.**
 #'
 #' The server interfaces with the MCP client. If you'd like tools to have access
@@ -201,12 +229,16 @@ mcp_server_http <- function(host = "127.0.0.1", port = 8080) {
 }
 
 handle_http_request <- function(req) {
+  if (!validate_shared_secret(req)) {
+    return(http_forbidden("Invalid shared secret"))
+  }
+
+  if (!validate_host(req)) {
+    return(http_forbidden("Invalid Host"))
+  }
+
   if (!validate_origin(req)) {
-    return(list(
-      status = 403L,
-      headers = list("Content-Type" = "application/json"),
-      body = to_json(list(error = "Invalid Origin"))
-    ))
+    return(http_forbidden("Invalid Origin"))
   }
 
   if (req$REQUEST_METHOD == "POST") {
@@ -222,16 +254,80 @@ handle_http_request <- function(req) {
   }
 }
 
+http_forbidden <- function(error) {
+  list(
+    status = 403L,
+    headers = list("Content-Type" = "application/json"),
+    body = to_json(list(error = error))
+  )
+}
+
+validate_shared_secret <- function(req) {
+  shared_secret <- http_shared_secret()
+  if (!nzchar(shared_secret)) {
+    return(TRUE)
+  }
+
+  header <- req$HTTP_PLUMBER_SHARED_SECRET
+  if (is.null(header)) {
+    return(FALSE)
+  }
+
+  constant_time_equal(header, shared_secret)
+}
+
+http_shared_secret <- function() {
+  first_nonempty_string(
+    the$http_shared_secret,
+    getOption("mcptools.http_shared_secret", NULL),
+    getOption("plumber2.sharedSecret", "")
+  )
+}
+
+validate_host <- function(req) {
+  trusted_hosts <- http_trusted_hosts()
+  if (!length(trusted_hosts)) {
+    return(TRUE)
+  }
+
+  host <- req$HTTP_HOST
+  if (is.null(host)) {
+    return(FALSE)
+  }
+
+  host %in% trusted_hosts
+}
+
+http_trusted_hosts <- function() {
+  unique(c(
+    the$http_trusted_hosts,
+    getOption("mcptools.http_trusted_hosts", character()),
+    split_envvar(Sys.getenv("MCPTOOLS_HTTP_TRUSTED_HOSTS", ""))
+  ))
+}
+
 validate_origin <- function(req) {
   origin <- req$HTTP_ORIGIN
   if (is.null(origin)) {
     return(TRUE)
   }
 
-  parsed <- httr2::url_parse(origin)
+  parsed <- url_parse_or_null(origin)
+  if (is.null(parsed)) {
+    return(FALSE)
+  }
+
   allowed_hosts <- c("localhost", "127.0.0.1", "[::1]")
 
-  return(parsed$hostname %in% allowed_hosts)
+  origin %in% http_allowed_origins() || parsed$hostname %in% allowed_hosts
+}
+
+http_allowed_origins <- function() {
+  unique(c(
+    the$http_allowed_origins,
+    getOption("mcptools.http_allowed_origins", character()),
+    split_envvar(Sys.getenv("MCPTOOLS_HTTP_ALLOWED_ORIGINS", ""))
+  ))
 }
 
 handle_http_post <- function(req) {

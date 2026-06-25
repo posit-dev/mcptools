@@ -92,6 +92,27 @@ call to this function in your .Rprofile, perhaps using
 `usethis::edit_r_profile()`, to automatically register every session you
 start up.)
 
+To deploy an HTTP MCP server to Posit Connect, add a `_server.yml` file
+with `engine: mcptools` and a `tools` file:
+
+``` yaml
+engine: mcptools
+tools: tools.R
+```
+
+Deploy the directory as an R API and mark it as MCP content:
+
+``` r
+rsconnect::deployAPI(".", contentCategory = "mcp")
+```
+
+If the content URL is `https://connect.example.com/content/abc123/`, use
+`https://connect.example.com/content/abc123/mcp` as the MCP endpoint.
+
+If you cannot set `contentCategory = "mcp"` during deployment, set the
+MCP category in Connect after deploying and set minimum processes to at
+least 1.
+
 ### R as an MCP client
 
 mcptools uses the Claude Desktop configuration file format to register
