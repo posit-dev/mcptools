@@ -99,7 +99,7 @@ test_that("HTTP requests validate Connect shared secret when configured", {
       REQUEST_METHOD = "GET",
       HTTP_PLUMBER_SHARED_SECRET = "secret"
     ))$status,
-    405L
+    200L
   )
 })
 
@@ -118,7 +118,7 @@ test_that("HTTP shared secret ignores empty override", {
       REQUEST_METHOD = "GET",
       HTTP_PLUMBER_SHARED_SECRET = "secret"
     ))$status,
-    405L
+    200L
   )
 })
 
@@ -140,7 +140,7 @@ test_that("HTTP shared secret uses non-empty mcptools override", {
       REQUEST_METHOD = "GET",
       HTTP_PLUMBER_SHARED_SECRET = "mcptools-secret"
     ))$status,
-    405L
+    200L
   )
 })
 
@@ -163,7 +163,7 @@ test_that("HTTP requests validate configured trusted hosts", {
       REQUEST_METHOD = "GET",
       HTTP_HOST = "127.0.0.1:1234"
     ))$status,
-    405L
+    200L
   )
 })
 
@@ -175,14 +175,14 @@ test_that("HTTP requests validate configured origins", {
       REQUEST_METHOD = "GET",
       HTTP_ORIGIN = "http://localhost:3000"
     ))$status,
-    405L
+    200L
   )
   expect_equal(
     handle_http_request(list(
       REQUEST_METHOD = "GET",
       HTTP_ORIGIN = "https://connect.example.com"
     ))$status,
-    405L
+    200L
   )
   expect_equal(
     handle_http_request(list(

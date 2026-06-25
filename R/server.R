@@ -367,9 +367,14 @@ handle_http_post <- function(req) {
 
 handle_http_get <- function(req) {
   list(
-    status = 405L,
+    status = 200L,
     headers = list("Content-Type" = "text/plain"),
-    body = "SSE streaming not yet implemented"
+    body = paste(
+      "mcptools MCP server is running.",
+      "",
+      "Use this URL from an MCP client that supports Streamable HTTP.",
+      sep = "\n"
+    )
   )
 }
 
