@@ -144,10 +144,7 @@ mcp_oauth_discover <- function(transport, challenge = named_list(), call = calle
     return(NULL)
   }
 
-  metadata <- tryCatch(
-    httr2::oauth_server_metadata(issuer),
-    error = function(err) NULL
-  )
+  metadata <- mcp_oauth_server_metadata(issuer)
   if (is.null(metadata)) {
     cli::cli_abort(
       c(
@@ -160,6 +157,23 @@ mcp_oauth_discover <- function(transport, challenge = named_list(), call = calle
 
   mcp_validate_oauth_pkce(metadata, call = call)
   metadata
+}
+
+# The MCP authorization spec requires trying OAuth 2.0 authorization-server
+# metadata (RFC 8414) before OpenID Connect discovery; httr2 defaults to the
+# OpenID endpoint, so OAuth-only servers fail unless we attempt both.
+mcp_oauth_server_metadata <- function(issuer) {
+  for (type in c("oauth", "openid")) {
+    metadata <- tryCatch(
+      httr2::oauth_server_metadata(issuer, type = type),
+      error = function(err) NULL
+    )
+    if (!is.null(metadata)) {
+      return(metadata)
+    }
+  }
+
+  NULL
 }
 
 mcp_select_authorization_server <- function(metadata, override = NULL, call = caller_env()) {

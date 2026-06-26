@@ -42,6 +42,39 @@ test_that("authorization server selection errors on ambiguity without override",
   )
 })
 
+test_that("authorization server metadata tries OAuth before OpenID", {
+  types <- character()
+  local_mocked_bindings(
+    oauth_server_metadata = function(issuer, type) {
+      types <<- c(types, type)
+      if (identical(type, "oauth")) {
+        cli::cli_abort("no oauth-authorization-server document")
+      }
+      list(issuer = issuer)
+    },
+    .package = "httr2"
+  )
+
+  metadata <- mcp_oauth_server_metadata("https://auth.test")
+  expect_equal(metadata$issuer, "https://auth.test")
+  expect_equal(types, c("oauth", "openid"))
+})
+
+test_that("authorization server metadata prefers the OAuth document", {
+  types <- character()
+  local_mocked_bindings(
+    oauth_server_metadata = function(issuer, type) {
+      types <<- c(types, type)
+      list(issuer = issuer, type = type)
+    },
+    .package = "httr2"
+  )
+
+  metadata <- mcp_oauth_server_metadata("https://auth.test")
+  expect_equal(metadata$type, "oauth")
+  expect_equal(types, "oauth")
+})
+
 test_that("PKCE S256 support is required", {
   expect_silent(
     mcp_validate_oauth_pkce(list(code_challenge_methods_supported = list("S256")))
