@@ -127,6 +127,41 @@ test_that("OAuth client metadata uses defaults, custom metadata, and scope", {
   expect_equal(metadata$token_endpoint_auth_method, "client_secret_basic")
 })
 
+test_that("OAuth authorization server endpoints must use HTTPS", {
+  https <- list(
+    authorization_endpoint = "https://auth.test/authorize",
+    token_endpoint = "https://auth.test/token",
+    registration_endpoint = "https://auth.test/register"
+  )
+  expect_silent(mcp_validate_oauth_metadata_endpoints(https))
+
+  # a missing optional endpoint is not validated
+  expect_silent(mcp_validate_oauth_metadata_endpoints(https["token_endpoint"]))
+
+  expect_error(
+    mcp_validate_oauth_metadata_endpoints(list(
+      authorization_endpoint = "http://auth.test/authorize",
+      token_endpoint = "https://auth.test/token"
+    )),
+    "must use HTTPS"
+  )
+
+  expect_silent(mcp_validate_oauth_metadata_endpoints(list(
+    authorization_endpoint = "http://127.0.0.1:8080/authorize",
+    token_endpoint = "http://localhost:8080/token"
+  )))
+
+  expect_silent(mcp_validate_oauth_metadata_endpoints(
+    list(token_endpoint = "http://auth.test/token"),
+    allow_http = TRUE
+  ))
+
+  expect_error(
+    mcp_validate_oauth_metadata_endpoints(list(token_endpoint = "not-a-url")),
+    "not a valid URL"
+  )
+})
+
 test_that("OAuth redirect URIs must use HTTPS or local HTTP", {
   expect_silent(mcp_validate_oauth_redirect_uri("https://example.test/callback"))
   expect_silent(mcp_validate_oauth_redirect_uri("http://localhost:1410/oauth/callback"))

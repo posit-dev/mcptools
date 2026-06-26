@@ -156,7 +156,67 @@ mcp_oauth_discover <- function(transport, challenge = named_list(), call = calle
   }
 
   mcp_validate_oauth_pkce(metadata, call = call)
+  mcp_validate_oauth_metadata_endpoints(
+    metadata,
+    allow_http = isTRUE(transport$allow_http),
+    call = call
+  )
   metadata
+}
+
+# The authorization, token, and registration endpoints carry authorization
+# codes, tokens, and client credentials, so the spec requires them to use HTTPS.
+# Loopback and the explicit `allow_http` opt-out are permitted for development,
+# mirroring the MCP endpoint and redirect-URI checks.
+mcp_validate_oauth_metadata_endpoints <- function(metadata, allow_http = FALSE, call = caller_env()) {
+  endpoints <- c(
+    "authorization_endpoint" = metadata$authorization_endpoint,
+    "token_endpoint" = metadata$token_endpoint,
+    "registration_endpoint" = metadata$registration_endpoint
+  )
+
+  for (field in names(endpoints)) {
+    mcp_validate_oauth_endpoint(
+      endpoints[[field]],
+      field = field,
+      allow_http = allow_http,
+      call = call
+    )
+  }
+
+  invisible(TRUE)
+}
+
+mcp_validate_oauth_endpoint <- function(url, field, allow_http = FALSE, call = caller_env()) {
+  parsed <- url_parse_or_null(url)
+  if (is.null(parsed) || is.null(parsed$scheme) || is.null(parsed$hostname)) {
+    cli::cli_abort(
+      c(
+        "OAuth authorization server metadata is invalid.",
+        i = "{.field {field}} is not a valid URL: {.url {url}}."
+      ),
+      call = call
+    )
+  }
+
+  scheme <- tolower(parsed$scheme)
+  host <- tolower(parsed$hostname)
+
+  if (identical(scheme, "https")) {
+    return(invisible(TRUE))
+  }
+
+  if (identical(scheme, "http") && (mcp_oauth_is_loopback_host(host) || isTRUE(allow_http))) {
+    return(invisible(TRUE))
+  }
+
+  cli::cli_abort(
+    c(
+      "OAuth authorization server endpoints must use HTTPS.",
+      i = "{.field {field}}: {.url {url}}."
+    ),
+    call = call
+  )
 }
 
 # The MCP authorization spec requires trying OAuth 2.0 authorization-server
