@@ -126,6 +126,42 @@ perhaps by first calling <code>usethis::edit_r_profile()</code>.</p>
 <p>Then, you’re good to go!</p>
 </div>
 <div class="section level2">
+<h2 id="posit-connect">Posit Connect<a class="anchor" aria-label="anchor" href="#posit-connect"></a>
+</h2>
+<p>mcptools can also be deployed to Posit Connect as an HTTP MCP server.
+In the project directory, add a <code>_server.yml</code> file:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">engine</span><span class="kw">:</span><span class="at"> mcptools</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">tools</span><span class="kw">:</span><span class="at"> tools.R</span></span></code></pre></div>
+<p>Then add <code>tools.R</code> with the tools to expose. The file
+should return a list of <code><a href="https://ellmer.tidyverse.org/reference/tool.html" class="external-link">ellmer::tool()</a></code> objects:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  tool_rnorm <span class="op">=</span> <span class="fu">ellmer</span><span class="fu">::</span><span class="fu"><a href="https://ellmer.tidyverse.org/reference/tool.html" class="external-link">tool</a></span><span class="op">(</span></span>
+<span>    fun <span class="op">=</span> <span class="va">rnorm</span>,</span>
+<span>    description <span class="op">=</span> <span class="st">"Draw numbers from a random normal distribution."</span>,</span>
+<span>    arguments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      n <span class="op">=</span> <span class="fu">ellmer</span><span class="fu">::</span><span class="fu"><a href="https://ellmer.tidyverse.org/reference/type_boolean.html" class="external-link">type_integer</a></span><span class="op">(</span><span class="st">"The number of observations."</span><span class="op">)</span>,</span>
+<span>      mean <span class="op">=</span> <span class="fu">ellmer</span><span class="fu">::</span><span class="fu"><a href="https://ellmer.tidyverse.org/reference/type_boolean.html" class="external-link">type_number</a></span><span class="op">(</span><span class="st">"The mean of the distribution."</span><span class="op">)</span>,</span>
+<span>      sd <span class="op">=</span> <span class="fu">ellmer</span><span class="fu">::</span><span class="fu"><a href="https://ellmer.tidyverse.org/reference/type_boolean.html" class="external-link">type_number</a></span><span class="op">(</span><span class="st">"The standard deviation."</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Deploy the directory as an R API and mark it as MCP content:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">rsconnect</span><span class="fu">::</span><span class="fu">deployAPI</span><span class="op">(</span><span class="st">"."</span>, contentCategory <span class="op">=</span> <span class="st">"mcp"</span><span class="op">)</span></span></code></pre></div>
+<p>If the content URL is
+<code>https://connect.example.com/content/abc123/</code>, use
+<code>https://connect.example.com/content/abc123/mcp</code> as the MCP
+endpoint. mcptools accepts requests at any path, so the content URL
+itself also works.</p>
+<p>If you cannot set <code>contentCategory = "mcp"</code> during
+deployment, set the MCP category in Connect after deploying and set
+minimum processes to at least 1.</p>
+<p>Connect deployments run tools inside the deployed R process by
+default. Session discovery is intended for local desktop R sessions and
+is disabled by default on Connect.</p>
+</div>
+<div class="section level2">
 <h2 id="multiple-clients-and-r-sessions">Multiple clients and R sessions<a class="anchor" aria-label="anchor" href="#multiple-clients-and-r-sessions"></a>
 </h2>
 <p>While a single client (and potentially a single R session) probably

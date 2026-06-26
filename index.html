@@ -101,34 +101,42 @@
 <p>Or, to use with Claude Code, you might type in a terminal:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="ex">claude</span> mcp add <span class="at">-s</span> <span class="st">"user"</span> r-mcptools <span class="at">--</span> Rscript <span class="at">-e</span> <span class="st">"mcptools::mcp_server()"</span></span></code></pre></div>
 <p>Then, if you’d like models to access variables in specific R sessions, call <code><a href="reference/server.html">mcptools::mcp_session()</a></code> in those sessions. (You might include a call to this function in your .Rprofile, perhaps using <code>usethis::edit_r_profile()</code>, to automatically register every session you start up.)</p>
+<p>To deploy an HTTP MCP server to Posit Connect, add a <code>_server.yml</code> file with <code>engine: mcptools</code> and a <code>tools</code> file:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">engine</span><span class="kw">:</span><span class="at"> mcptools</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">tools</span><span class="kw">:</span><span class="at"> tools.R</span></span></code></pre></div>
+<p>Deploy the directory as an R API and mark it as MCP content:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">rsconnect</span><span class="fu">::</span><span class="fu">deployAPI</span><span class="op">(</span><span class="st">"."</span>, contentCategory <span class="op">=</span> <span class="st">"mcp"</span><span class="op">)</span></span></code></pre></div>
+<p>If the content URL is <code>https://connect.example.com/content/abc123/</code>, use <code>https://connect.example.com/content/abc123/mcp</code> as the MCP endpoint.</p>
+<p>If you cannot set <code>contentCategory = "mcp"</code> during deployment, set the MCP category in Connect after deploying and set minimum processes to at least 1.</p>
 </div>
 <div class="section level3">
 <h3 id="r-as-an-mcp-client">R as an MCP client<a class="anchor" aria-label="anchor" href="#r-as-an-mcp-client"></a>
 </h3>
 <p>mcptools uses the Claude Desktop configuration file format to register third-party MCP servers, as most MCP servers provide setup instructions for Claude Desktop in their documentation. For example, here’s what the <a href="https://github.com/github/github-mcp-server" class="external-link">official GitHub MCP server</a> configuration would look like:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>    <span class="dt">"github"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>      <span class="dt">"command"</span><span class="fu">:</span> <span class="st">"docker"</span><span class="fu">,</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>      <span class="dt">"args"</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>        <span class="st">"run"</span><span class="ot">,</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>        <span class="st">"-i"</span><span class="ot">,</span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>        <span class="st">"--rm"</span><span class="ot">,</span></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>        <span class="st">"-e"</span><span class="ot">,</span></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>        <span class="st">"GITHUB_PERSONAL_ACCESS_TOKEN"</span><span class="ot">,</span></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>        <span class="st">"ghcr.io/github/github-mcp-server"</span></span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>      <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>      <span class="dt">"env"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>        <span class="dt">"GITHUB_PERSONAL_ACCESS_TOKEN"</span><span class="fu">:</span> <span class="st">"&lt;YOUR_TOKEN&gt;"</span></span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>      <span class="fu">}</span></span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>    <span class="dt">"github"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>      <span class="dt">"command"</span><span class="fu">:</span> <span class="st">"docker"</span><span class="fu">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>      <span class="dt">"args"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>        <span class="st">"run"</span><span class="ot">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>        <span class="st">"-i"</span><span class="ot">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>        <span class="st">"--rm"</span><span class="ot">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>        <span class="st">"-e"</span><span class="ot">,</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>        <span class="st">"GITHUB_PERSONAL_ACCESS_TOKEN"</span><span class="ot">,</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>        <span class="st">"ghcr.io/github/github-mcp-server"</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>      <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>      <span class="dt">"env"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>        <span class="dt">"GITHUB_PERSONAL_ACCESS_TOKEN"</span><span class="fu">:</span> <span class="st">"&lt;YOUR_TOKEN&gt;"</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Once the configuration file has been created (by default, mcptools will look to <code>file.path("~", ".config", "mcptools", "config.json")</code>), <code><a href="reference/client.html">mcp_tools()</a></code> will return a list of ellmer tools which you can pass directly to the <code>$set_tools()</code> method from ellmer:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>ch <span class="ot">&lt;-</span> ellmer<span class="sc">::</span><span class="fu">chat_anthropic</span>()</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>ch<span class="sc">$</span><span class="fu">set_tools</span>(<span class="fu">mcp_tools</span>())</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>ch<span class="sc">$</span><span class="fu">chat</span>(<span class="st">"What issues are open on posit-dev/mcptools?"</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>ch <span class="ot">&lt;-</span> ellmer<span class="sc">::</span><span class="fu">chat_anthropic</span>()</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>ch<span class="sc">$</span><span class="fu">set_tools</span>(<span class="fu">mcp_tools</span>())</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>ch<span class="sc">$</span><span class="fu">chat</span>(<span class="st">"What issues are open on posit-dev/mcptools?"</span>)</span></code></pre></div>
 </div>
 </div>
 <div class="section level2">

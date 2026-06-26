@@ -77,6 +77,56 @@ to your `.Rprofile`, perhaps by first calling
 
 Then, you’re good to go!
 
+## Posit Connect
+
+mcptools can also be deployed to Posit Connect as an HTTP MCP server. In
+the project directory, add a `_server.yml` file:
+
+``` yaml
+engine: mcptools
+tools: tools.R
+```
+
+Then add `tools.R` with the tools to expose. The file should return a
+list of
+[`ellmer::tool()`](https://ellmer.tidyverse.org/reference/tool.html)
+objects:
+
+``` r
+
+list(
+  tool_rnorm = ellmer::tool(
+    fun = rnorm,
+    description = "Draw numbers from a random normal distribution.",
+    arguments = list(
+      n = ellmer::type_integer("The number of observations."),
+      mean = ellmer::type_number("The mean of the distribution."),
+      sd = ellmer::type_number("The standard deviation.")
+    )
+  )
+)
+```
+
+Deploy the directory as an R API and mark it as MCP content:
+
+``` r
+
+rsconnect::deployAPI(".", contentCategory = "mcp")
+```
+
+If the content URL is `https://connect.example.com/content/abc123/`, use
+`https://connect.example.com/content/abc123/mcp` as the MCP endpoint.
+mcptools accepts requests at any path, so the content URL itself also
+works.
+
+If you cannot set `contentCategory = "mcp"` during deployment, set the
+MCP category in Connect after deploying and set minimum processes to at
+least 1.
+
+Connect deployments run tools inside the deployed R process by default.
+Session discovery is intended for local desktop R sessions and is
+disabled by default on Connect.
+
 ## Multiple clients and R sessions
 
 While a single client (and potentially a single R session) probably

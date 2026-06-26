@@ -2,6 +2,13 @@
 
 ## mcptools (development version)
 
+- mcptools can now run as a Posit Connect R API engine. Add
+  `_server.yml` with `engine: mcptools`, point `tools` to an `.R` file
+  returning
+  [`ellmer::tool()`](https://ellmer.tidyverse.org/reference/tool.html)
+  objects, and deploy with
+  `rsconnect::deployAPI(".", contentCategory = "mcp")`.
+
 - Forwarded
   [`mcp_session()`](https://posit-dev.github.io/mcptools/reference/server.md)
   tool calls now return JSON-RPC errors when the selected R session does

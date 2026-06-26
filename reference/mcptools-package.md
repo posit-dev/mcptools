@@ -25,6 +25,9 @@ Useful links:
 
 Authors:
 
+- Simon Couch <simon.couch@posit.co>
+  ([ORCID](https://orcid.org/0000-0001-5676-5107))
+
 - Winston Chang <winston@posit.co>
   ([ORCID](https://orcid.org/0000-0002-1576-2126))
 
