@@ -7,6 +7,34 @@ local_inproc_url <- function() {
   )
 }
 
+read_process_json <- function(process, timeout = 5) {
+  deadline <- Sys.time() + timeout
+
+  repeat {
+    output <- process$read_output_lines()
+    output <- output[nzchar(output)]
+    if (length(output) > 0) {
+      return(jsonlite::parse_json(output[[1]]))
+    }
+
+    if (!process$is_alive()) {
+      cli::cli_abort(c(
+        "Process exited before writing a JSON response.",
+        x = "{paste(process$read_all_error_lines(), collapse = '\n')}"
+      ))
+    }
+
+    if (Sys.time() >= deadline) {
+      cli::cli_abort(c(
+        "Timed out waiting for a JSON response.",
+        x = "{paste(process$read_all_error_lines(), collapse = '\n')}"
+      ))
+    }
+
+    Sys.sleep(0.05)
+  }
+}
+
 test_that("roundtrip mcp_server and mcp_tools (stdio)", {
   previous_server_processes <- names(the$server_processes)
 
@@ -39,13 +67,13 @@ test_that("roundtrip mcp_server and mcp_tools (stdio)", {
 test_that("roundtrip mcp_server and mcp_tools (http)", {
   skip_on_cran()
   skip_on_ci()
-  skip_if_not(nzchar(Sys.which("npx")), "npx not available")
 
+  port <- httpuv::randomPort()
   http_server <- processx::process$new(
     command = rscript_binary(),
     args = c(
       "-e",
-      "mcptools::mcp_server(type = 'http', port = 8080)"
+      sprintf("mcptools::mcp_server(type = 'http', port = %d)", port)
     ),
     stdout = "|",
     stderr = "|"
@@ -58,10 +86,16 @@ test_that("roundtrip mcp_server and mcp_tools (http)", {
     stop("HTTP server failed to start")
   }
 
-  tools <- mcp_tools(system.file(
-    "example-config-remote.json",
-    package = "mcptools"
-  ))
+  config_file <- withr::local_tempfile(fileext = ".json")
+  jsonlite::write_json(
+    list(mcpServers = list(mcptools = list(
+      url = sprintf("http://127.0.0.1:%d", port)
+    ))),
+    config_file,
+    auto_unbox = TRUE
+  )
+
+  tools <- mcp_tools(config_file)
 
   tool_names <- c()
   for (tool in tools) {

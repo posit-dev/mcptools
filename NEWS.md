@@ -1,5 +1,11 @@
 # mcptools (development version)
 
+* `mcp_tools()` can now connect directly to remote Streamable HTTP MCP servers,
+  configured with `url` instead of `command`. Static `headers` are supported for
+  token auth, and full OAuth 2.1 (authorization-server discovery, Dynamic Client
+  Registration, PKCE, and automatic token refresh) is handled via httr2, which
+  also caches tokens across sessions (#88).
+
 * mcptools can now run as a Posit Connect R API engine. Add `_server.yml`
   with `engine: mcptools`, point `tools` to an `.R` file returning
   `ellmer::tool()` objects, and deploy with
