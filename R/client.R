@@ -1159,7 +1159,7 @@ log_cat_client <- function(x, append = TRUE) {
 }
 
 mcp_log_json_message <- function(prefix, message) {
-  log_cat_client(c(prefix, to_json(mcp_redact_secrets(message), null = "null")))
+  log_cat_client(c(prefix, to_json(mcp_redact_secrets(message))))
 }
 
 mcp_log_json_text <- function(prefix, text) {
@@ -2255,7 +2255,7 @@ mcp_oauth_cache_write <- function(oauth, key, kind, value) {
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
   Sys.chmod(oauth$cache_dir, mode = "0700")
   Sys.chmod(dirname(path), mode = "0700")
-  writeLines(to_json(value, null = "null"), path)
+  writeLines(to_json(value), path)
   Sys.chmod(path, mode = "0600")
   invisible(path)
 }

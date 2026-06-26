@@ -241,6 +241,10 @@ handle_http_request <- function(req) {
     return(http_forbidden("Invalid Origin"))
   }
 
+  if (!validate_http_protocol_version(req)) {
+    return(http_bad_request("Invalid or unsupported MCP-Protocol-Version"))
+  }
+
   if (req$REQUEST_METHOD == "POST") {
     return(handle_http_post(req))
   } else if (req$REQUEST_METHOD == "GET") {
@@ -257,6 +261,14 @@ handle_http_request <- function(req) {
 http_forbidden <- function(error) {
   list(
     status = 403L,
+    headers = list("Content-Type" = "application/json"),
+    body = to_json(list(error = error))
+  )
+}
+
+http_bad_request <- function(error) {
+  list(
+    status = 400L,
     headers = list("Content-Type" = "application/json"),
     body = to_json(list(error = error))
   )
@@ -330,6 +342,11 @@ http_allowed_origins <- function() {
   ))
 }
 
+validate_http_protocol_version <- function(req) {
+  version <- req$HTTP_MCP_PROTOCOL_VERSION
+  is.null(version) || is_supported_protocol_version(version)
+}
+
 handle_http_post <- function(req) {
   body_raw <- req$rook.input$read()
   body_text <- rawToChar(body_raw)
@@ -340,11 +357,7 @@ handle_http_post <- function(req) {
   )
 
   if (is.null(data)) {
-    return(list(
-      status = 400L,
-      headers = list("Content-Type" = "application/json"),
-      body = to_json(list(error = "Invalid JSON"))
-    ))
+    return(http_bad_request("Invalid JSON"))
   }
 
   if (is.null(data$id)) {
@@ -356,7 +369,10 @@ handle_http_post <- function(req) {
     ))
   }
 
-  result <- handle_http_request_message(data)
+  result <- handle_http_request_message(
+    data,
+    protocol_version = http_message_protocol_version(data, req)
+  )
 
   list(
     status = 200L,
@@ -385,7 +401,19 @@ handle_http_notification_or_response <- function(data) {
   NULL
 }
 
-handle_http_request_message <- function(data) {
+http_message_protocol_version <- function(data, req) {
+  if (identical(data$method, "initialize")) {
+    client_version <- data$params$protocolVersion %||% latest_protocol_version
+    return(negotiate_protocol_version(client_version))
+  }
+
+  req$HTTP_MCP_PROTOCOL_VERSION %||% default_http_protocol_version
+}
+
+handle_http_request_message <- function(
+  data,
+  protocol_version = the$protocol_version %||% latest_protocol_version
+) {
   if (data$method == "initialize") {
     # while protocolVersion is required per spec,
     # we fall back rather than erroring
@@ -396,9 +424,10 @@ handle_http_request_message <- function(data) {
   } else if (data$method == "tools/list") {
     return(jsonrpc_response(
       data$id,
-      list(tools = get_mcptools_tools_as_json())
+      list(tools = get_mcptools_tools_as_json(protocol_version))
     ))
   } else if (data$method == "tools/call") {
+    data$protocolVersion <- protocol_version
     tool_name <- data$params$name
     if (
       !the$sessions_enabled ||
@@ -454,6 +483,7 @@ handle_message_from_client <- function(line) {
       data$id,
       error = list(code = -32600, message = "Invalid Request")
     ))
+    return()
   }
 
   # If we made it here, it's valid JSON

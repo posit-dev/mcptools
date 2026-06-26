@@ -22,7 +22,7 @@ named_list <- function(...) {
 }
 
 to_json <- function(x, ...) {
-  jsonlite::toJSON(x, ..., auto_unbox = TRUE)
+  jsonlite::toJSON(x, ..., auto_unbox = TRUE, null = "null")
 }
 
 is_string <- function(x) {

@@ -9,12 +9,18 @@ latest_protocol_version <- supported_protocol_versions[
   length(supported_protocol_versions)
 ]
 
+default_http_protocol_version <- "2025-03-26"
+
 negotiate_protocol_version <- function(client_version) {
   if (client_version %in% supported_protocol_versions) {
     client_version
   } else {
     latest_protocol_version
   }
+}
+
+is_supported_protocol_version <- function(version) {
+  is_string(version) && version %in% supported_protocol_versions
 }
 
 protocol_version_gte <- function(version, reference) {
