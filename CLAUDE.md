@@ -6,8 +6,8 @@ The mcptools package uses nanonext for inter-process communication
 between the MCP server and R sessions. nanonext provides asynchronous
 messaging using the nanomsg/nng protocols.
 
-The full plain-text MCP specification lives in `.md` files in
-`inst/spec/`—tool call for it as needed.
+The full MCP specification lives at
+<https://modelcontextprotocol.io/specification/latest>.
 
 ## Key Concepts
 
