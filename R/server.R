@@ -483,6 +483,7 @@ handle_message_from_client <- function(line) {
       data$id,
       error = list(code = -32600, message = "Invalid Request")
     ))
+    return()
   }
 
   # If we made it here, it's valid JSON

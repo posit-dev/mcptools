@@ -98,6 +98,22 @@ test_that("HTTP GET reports unsupported SSE transport", {
   expect_match(res$body, "HTTP GET/SSE is not supported", fixed = TRUE)
 })
 
+test_that("stdio invalid requests return after reporting the error", {
+  responses <- list()
+  testthat::local_mocked_bindings(
+    cat_json = function(x) {
+      responses[[length(responses) + 1L]] <<- x
+    }
+  )
+
+  expect_no_error(handle_message_from_client('{"jsonrpc":"2.0","id":1}'))
+
+  expect_length(responses, 1)
+  expect_equal(responses[[1]]$id, 1)
+  expect_equal(responses[[1]]$error$code, -32600)
+  expect_equal(responses[[1]]$error$message, "Invalid Request")
+})
+
 test_that("HTTP requests reject unsupported MCP-Protocol-Version headers", {
   res <- handle_http_request(list(
     REQUEST_METHOD = "GET",
