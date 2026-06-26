@@ -299,13 +299,89 @@ test_that("Streamable HTTP JSON responses must match the request id", {
   )
 })
 
-test_that("HTTP tools/call clears session state after a session 404", {
+test_that("HTTP requests transparently reinitialize after a session 404", {
+  transport <- mcp_transport_http(list(url = "https://example.test/mcp"))
+  transport$session_id <- "old-session"
+  transport$protocol_version <- latest_protocol_version
+
+  methods <- character()
+  httr2::local_mocked_responses(function(req) {
+    message <- req$body$data
+    methods <<- c(methods, message$method %||% "<response>")
+
+    # the stale session is rejected; a fresh session starts without one
+    if (identical(req$headers$`MCP-Session-Id`, "old-session")) {
+      return(httr2::response(status_code = 404L, url = req$url, method = req$method))
+    }
+
+    if (identical(message$method, "initialize")) {
+      return(httr2::response(
+        status_code = 200L,
+        url = req$url,
+        method = req$method,
+        headers = list(
+          "Content-Type" = "application/json",
+          "MCP-Session-Id" = "new-session"
+        ),
+        body = charToRaw(to_json(jsonrpc_response(
+          message$id,
+          result = list(
+            protocolVersion = latest_protocol_version,
+            capabilities = named_list(),
+            serverInfo = list(name = "remote-server", version = "1.0.0")
+          )
+        )))
+      ))
+    }
+
+    httr2::response(
+      status_code = 200L,
+      url = req$url,
+      method = req$method,
+      headers = list("Content-Type" = "application/json"),
+      body = charToRaw(to_json(jsonrpc_response(message$id, result = named_list())))
+    )
+  })
+
+  response <- mcp_transport_request(transport, mcp_request_tools_list(id = 2L))
+
+  expect_false(is.null(response$result))
+  expect_equal(transport$session_id, "new-session")
+  expect_equal(
+    methods,
+    c("tools/list", "initialize", "notifications/initialized", "tools/list")
+  )
+})
+
+test_that("HTTP requests surface a session-expired error when reinit can't recover", {
   transport <- mcp_transport_http(list(url = "https://example.test/mcp"))
   transport$session_id <- "session-1"
   transport$protocol_version <- latest_protocol_version
 
+  # every session-bearing request 404s; only a sessionless initialize succeeds
   httr2::local_mocked_responses(function(req) {
-    httr2::response(status_code = 404L, url = req$url, method = req$method)
+    message <- req$body$data
+    if (!is.null(req$headers$`MCP-Session-Id`)) {
+      return(httr2::response(status_code = 404L, url = req$url, method = req$method))
+    }
+
+    httr2::response(
+      status_code = 200L,
+      url = req$url,
+      method = req$method,
+      headers = list(
+        "Content-Type" = "application/json",
+        "MCP-Session-Id" = "session-2"
+      ),
+      body = charToRaw(to_json(jsonrpc_response(
+        message$id,
+        result = list(
+          protocolVersion = latest_protocol_version,
+          capabilities = named_list(),
+          serverInfo = list(name = "remote-server", version = "1.0.0")
+        )
+      )))
+    )
   })
 
   expect_error(

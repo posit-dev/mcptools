@@ -8,7 +8,8 @@ mcp_transport_http_send <- function(
   call = caller_env(),
   auth_retry = TRUE,
   reauth = FALSE,
-  acquire = TRUE
+  acquire = TRUE,
+  session_retry = TRUE
 ) {
   mcp_log_json_message("FROM CLIENT: ", message)
 
@@ -34,6 +35,22 @@ mcp_transport_http_send <- function(
   if (status == 404L && !is.null(transport$session_id)) {
     transport$session_id <- NULL
     transport$protocol_version <- NULL
+
+    # Per the spec, a 404 for a request carrying a session id means the session
+    # expired; start a fresh session and retry the original request once. Tool
+    # definitions are already materialized, so only the session is re-established.
+    if (session_retry && !identical(message$method, "initialize")) {
+      mcp_transport_http_reinitialize(transport, call = call)
+      return(mcp_transport_http_send(
+        transport,
+        message,
+        expect_response,
+        call = call,
+        session_retry = FALSE,
+        acquire = FALSE
+      ))
+    }
+
     cli::cli_abort(
       c(
         "MCP HTTP session expired.",
@@ -86,6 +103,32 @@ mcp_transport_http_send <- function(
   }
 
   mcp_transport_http_read_json(resp, message$id, call = call)
+}
+
+# Re-run the initialize handshake on a transport whose session expired. The
+# sub-requests pass `session_retry = FALSE` so a reinitialization can never
+# trigger another nested reinitialization, and `acquire = FALSE` so they reuse
+# the active-request guard already held by the in-flight caller.
+mcp_transport_http_reinitialize <- function(transport, call = caller_env()) {
+  response <- mcp_transport_http_send(
+    transport,
+    mcp_request_initialize(id = 1L),
+    expect_response = TRUE,
+    call = call,
+    session_retry = FALSE,
+    acquire = FALSE
+  )
+  mcp_transport_store_initialize(transport, response, call = call)
+
+  mcp_transport_http_send(
+    transport,
+    mcp_request_initialized(),
+    expect_response = FALSE,
+    call = call,
+    session_retry = FALSE
+  )
+
+  invisible(transport)
 }
 
 # the transport supports a single in-flight response-bearing request; this guard
