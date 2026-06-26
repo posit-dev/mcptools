@@ -2,6 +2,20 @@
 
 ## mcptools (development version)
 
+- HTTP
+  [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
+  requests now honor the `MCP-Protocol-Version` header, return
+  `400 Bad Request` for unsupported protocol versions, and avoid using
+  protocol negotiation from one HTTP client to shape responses for
+  another.
+
+- JSON output now serializes R `NULL` values as JSON `null`, fixing
+  JSON-RPC responses with null request IDs.
+
+- [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
+  no longer falls through after reporting `Invalid Request` for invalid
+  stdio client messages.
+
 - mcptools can now run as a Posit Connect R API engine. Add
   `_server.yml` with `engine: mcptools`, point `tools` to an `.R` file
   returning
