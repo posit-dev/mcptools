@@ -7,34 +7,6 @@ local_inproc_url <- function() {
   )
 }
 
-read_process_json <- function(process, timeout = 5) {
-  deadline <- Sys.time() + timeout
-
-  repeat {
-    output <- process$read_output_lines()
-    output <- output[nzchar(output)]
-    if (length(output) > 0) {
-      return(jsonlite::parse_json(output[[1]]))
-    }
-
-    if (!process$is_alive()) {
-      cli::cli_abort(c(
-        "Process exited before writing a JSON response.",
-        x = "{paste(process$read_all_error_lines(), collapse = '\n')}"
-      ))
-    }
-
-    if (Sys.time() >= deadline) {
-      cli::cli_abort(c(
-        "Timed out waiting for a JSON response.",
-        x = "{paste(process$read_all_error_lines(), collapse = '\n')}"
-      ))
-    }
-
-    Sys.sleep(0.05)
-  }
-}
-
 local_http_post_request <- function(body, ...) {
   c(
     list(
