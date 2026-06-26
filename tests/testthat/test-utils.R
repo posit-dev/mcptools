@@ -63,6 +63,20 @@ test_that("to_json works", {
   expect_false(is.list(parsed$value))
 })
 
+test_that("to_json serializes null values as JSON null", {
+  response <- jsonrpc_response(
+    NULL,
+    error = list(code = -32600, message = "Invalid Request")
+  )
+
+  result <- to_json(response)
+
+  expect_match(result, '"id":null', fixed = TRUE)
+  expect_false(grepl('"id":{}', result, fixed = TRUE))
+
+  expect_equal(as.character(to_json(list(value = NULL))), '{"value":null}')
+})
+
 test_that("url_origin handles full URLs and invalid input", {
   expect_equal(
     url_origin("https://connect.example.com/rsc/content/123"),
