@@ -7,6 +7,16 @@ local_inproc_url <- function() {
   )
 }
 
+local_http_post_request <- function(body, ...) {
+  c(
+    list(
+      REQUEST_METHOD = "POST",
+      rook.input = list(read = function() charToRaw(to_json(body)))
+    ),
+    list(...)
+  )
+}
+
 test_that("roundtrip mcp_server and mcp_tools (stdio)", {
   previous_server_processes <- names(the$server_processes)
 
@@ -86,6 +96,112 @@ test_that("HTTP GET reports unsupported SSE transport", {
   expect_equal(res$status, 405L)
   expect_equal(res$headers$Allow, "POST")
   expect_match(res$body, "HTTP GET/SSE is not supported", fixed = TRUE)
+})
+
+test_that("HTTP requests reject unsupported MCP-Protocol-Version headers", {
+  res <- handle_http_request(list(
+    REQUEST_METHOD = "GET",
+    HTTP_MCP_PROTOCOL_VERSION = "2099-01-01"
+  ))
+
+  expect_equal(res$status, 400L)
+  expect_match(res$body, "Invalid or unsupported MCP-Protocol-Version")
+})
+
+test_that("HTTP tools/list honors MCP-Protocol-Version header", {
+  old_server_tools <- the$server_tools
+  withr::defer(the$server_tools <- old_server_tools)
+  local_protocol_version("2025-11-25")
+
+  tool <- ellmer::tool(
+    function() "ok",
+    "Read project state",
+    name = "read_project",
+    annotations = ellmer::tool_annotations(title = "Read Project")
+  )
+  set_server_tools(list(tool), session_tools = FALSE)
+
+  res <- handle_http_request(local_http_post_request(
+    list(
+      jsonrpc = "2.0",
+      id = 1,
+      method = "tools/list"
+    ),
+    HTTP_MCP_PROTOCOL_VERSION = "2025-03-26"
+  ))
+  body <- jsonlite::parse_json(res$body)
+  tool <- body$result$tools[[1]]
+
+  expect_equal(res$status, 200L)
+  expect_false("title" %in% names(tool))
+  expect_equal(tool$annotations$title, "Read Project")
+})
+
+test_that("HTTP tools/call honors MCP-Protocol-Version header", {
+  old_server_tools <- the$server_tools
+  old_sessions_enabled <- the$sessions_enabled
+  withr::defer({
+    the$server_tools <- old_server_tools
+    the$sessions_enabled <- old_sessions_enabled
+  })
+  local_protocol_version("2025-11-25")
+
+  tool <- ellmer::tool(
+    function() list(auc = 0.92),
+    "Return metrics",
+    name = "metrics"
+  )
+  set_server_tools(list(tool), session_tools = FALSE)
+  the$sessions_enabled <- FALSE
+
+  res <- handle_http_request(local_http_post_request(
+    list(
+      jsonrpc = "2.0",
+      id = 1,
+      method = "tools/call",
+      params = list(name = "metrics", arguments = list())
+    ),
+    HTTP_MCP_PROTOCOL_VERSION = "2025-03-26"
+  ))
+  body <- jsonlite::parse_json(res$body)
+
+  expect_equal(res$status, 200L)
+  expect_null(body$result$structuredContent)
+  expect_equal(body$result$content[[1]]$text, "0.92")
+})
+
+test_that("HTTP missing MCP-Protocol-Version does not inherit global state", {
+  old_server_tools <- the$server_tools
+  withr::defer(the$server_tools <- old_server_tools)
+  local_protocol_version()
+
+  tool <- ellmer::tool(
+    function() "ok",
+    "Read project state",
+    name = "read_project",
+    annotations = ellmer::tool_annotations(title = "Read Project")
+  )
+  set_server_tools(list(tool), session_tools = FALSE)
+
+  handle_http_request(local_http_post_request(list(
+    jsonrpc = "2.0",
+    id = 1,
+    method = "initialize",
+    params = list(protocolVersion = "2025-11-25")
+  )))
+
+  res <- handle_http_request(local_http_post_request(list(
+    jsonrpc = "2.0",
+    id = 2,
+    method = "tools/list"
+  )))
+  body <- jsonlite::parse_json(res$body)
+  tool <- body$result$tools[[1]]
+
+  expect_equal(the$protocol_version, "2025-11-25")
+  expect_equal(res$status, 200L)
+  expect_false("title" %in% names(tool))
+  expect_equal(tool$annotations$title, "Read Project")
 })
 
 test_that("HTTP requests validate Connect shared secret when configured", {
