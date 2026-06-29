@@ -319,3 +319,48 @@ test_that("mcp_tools() errors informatively when process exits", {
 
   expect_snapshot(error = TRUE, mcp_tools(tmpfile))
 })
+
+test_that("resolve_headers() substitutes ${ENV_VAR} references", {
+  withr::local_envvar(MCPTOOLS_TEST_KEY = "secret-token")
+
+  headers <- resolve_headers(list(
+    Authorization = "Key ${MCPTOOLS_TEST_KEY}",
+    Static = "no-substitution"
+  ))
+
+  expect_equal(headers$Authorization, "Key secret-token")
+  expect_equal(headers$Static, "no-substitution")
+})
+
+test_that("resolve_headers() handles NULL and errors on unset vars", {
+  expect_equal(resolve_headers(NULL), list())
+  expect_snapshot(
+    error = TRUE,
+    resolve_env_vars("Key ${MCPTOOLS_DEFINITELY_UNSET}")
+  )
+})
+
+test_that("parse_sse_body() extracts the first JSON-RPC message", {
+  body <- paste0(
+    "event: message\n",
+    "data: {\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"ok\":true}}\n\n"
+  )
+  parsed <- parse_sse_body(body)
+  expect_equal(parsed$id, 2)
+  expect_true(parsed$result$ok)
+})
+
+test_that("parse_http_response() handles notifications, JSON, and SSE", {
+  notification <- httr2::response(status_code = 202L)
+  expect_null(parse_http_response(notification))
+
+  json <- httr2::response_json(body = list(jsonrpc = "2.0", id = 1L))
+  expect_equal(parse_http_response(json)$id, 1)
+
+  sse <- httr2::response(
+    status_code = 200L,
+    headers = list("Content-Type" = "text/event-stream"),
+    body = charToRaw("data: {\"jsonrpc\":\"2.0\",\"id\":3}\n\n")
+  )
+  expect_equal(parse_http_response(sse)$id, 3)
+})

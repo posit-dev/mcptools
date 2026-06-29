@@ -40,8 +40,10 @@ Claude Desktop in their README files. By default, mcptools will look to
 file with \code{file.edit(file.path("~", ".config", "mcptools", "config.json"))}.
 
 The mcptools config file should be valid .json with an entry \code{mcpServers}.
-That entry should contain named elements, each with at least a \code{command}
-and \code{args} entry. MCP server processes receive an allowlisted environment
+That entry should contain named elements, each configuring either a local
+(stdio) server with a \code{command} and \code{args} entry, or a remote (http) server
+with a \code{url} entry (see the section below). MCP server processes receive an
+allowlisted environment
 inherited from the current R process, plus any variables configured in
 \code{env}. Configured \code{env} variables override inherited variables with the same
 name. Servers that need additional environment variables should list them in
@@ -74,35 +76,28 @@ in that file:
 
 \section{Connecting to remote (http) servers}{
 
-\code{mcp_tools()}, which supports using R as an MCP \emph{client} via ellmer, only
-implements the local (stdio) protocol. However, some MCP \emph{servers} only
-implement the http protocol.
+\code{mcp_tools()} also connects to remote MCP servers over the Streamable HTTP
+transport. Instead of a \code{command} and \code{args}, give the server entry a \code{url}.
+mcptools derives the transport from the config: entries with a \code{url} are
+remote, while entries with a \code{command} are local.
 
-In that case, we recommend using
-\href{https://www.npmjs.com/package/mcp-remote}{mcp-remote}, a local (stdio)
-MCP server that supports connecting to remote (http) servers using the
-stdio protocol, with fully-featured authentication. In other words,
-\code{mcp-remote} converts remote MCP servers to mcptools-compatible local ones.
-
-To connect to remote (http) MCP servers when using ellmer as a client, use
-the command \code{npx} with the args \code{mcp-remote} and the URL provided by the
-remote server. For example, you might write:
+Most remote servers require authentication. Supply request \code{headers} in the
+server entry; values may reference environment variables with \verb{$\{VAR\}}, which
+mcptools substitutes at connection time so that secrets need not be written
+to the config file. For example, to connect to an MCP server hosted on Posit
+Connect using a Connect API key:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{\{
   "mcpServers": \{
     "remote-example": \{
-      "command": "npx",
-      "args": [
-        "mcp-remote",
-        "https://remote.mcp.server/sse"
-      ]
+      "url": "https://connect.example.com/content/<guid>/mcp",
+      "headers": \{
+        "Authorization": "Key $\{CONNECT_API_KEY\}"
+      \}
     \}
   \}
 \}
 }\if{html}{\out{</div>}}
-
-mcp-remote's \href{https://www.npmjs.com/package/mcp-remote}{homepage} has many
-examples for various authentication schemes.
 }
 
 \examples{

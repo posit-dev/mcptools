@@ -49,7 +49,6 @@ test_that("roundtrip mcp_server and mcp_tools (stdio)", {
 test_that("roundtrip mcp_server and mcp_tools (http)", {
   skip_on_cran()
   skip_on_ci()
-  skip_if_not(nzchar(Sys.which("npx")), "npx not available")
 
   http_server <- processx::process$new(
     command = rscript_binary(),
@@ -68,10 +67,13 @@ test_that("roundtrip mcp_server and mcp_tools (http)", {
     stop("HTTP server failed to start")
   }
 
-  tools <- mcp_tools(system.file(
-    "example-config-remote.json",
-    package = "mcptools"
-  ))
+  config <- withr::local_tempfile(fileext = ".json")
+  jsonlite::write_json(
+    list(mcpServers = list(mcptools = list(url = "http://127.0.0.1:8080"))),
+    config,
+    auto_unbox = TRUE
+  )
+  tools <- mcp_tools(config)
 
   tool_names <- c()
   for (tool in tools) {

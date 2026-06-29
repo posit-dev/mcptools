@@ -1,5 +1,12 @@
 # mcptools (development version)
 
+* `mcp_tools()` can now connect to remote MCP servers over the Streamable HTTP
+  transport. Configure a server entry with a `url` (rather than a `command` and
+  `args`) and, optionally, request `headers`. Header values may reference
+  environment variables with `${VAR}`, which keeps secrets out of the config
+  file; for example, `"Authorization": "Key ${CONNECT_API_KEY}"` authenticates
+  against an MCP server hosted on Posit Connect.
+
 * HTTP `mcp_server()` requests now honor the `MCP-Protocol-Version` header,
   return `400 Bad Request` for unsupported protocol versions, and avoid using
   protocol negotiation from one HTTP client to shape responses for another.

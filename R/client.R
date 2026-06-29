@@ -38,8 +38,10 @@ the$mcp_servers <- list()
 #' file with `file.edit(file.path("~", ".config", "mcptools", "config.json"))`.
 #'
 #' The mcptools config file should be valid .json with an entry `mcpServers`.
-#' That entry should contain named elements, each with at least a `command`
-#' and `args` entry. MCP server processes receive an allowlisted environment
+#' That entry should contain named elements, each configuring either a local
+#' (stdio) server with a `command` and `args` entry, or a remote (http) server
+#' with a `url` entry (see the section below). MCP server processes receive an
+#' allowlisted environment
 #' inherited from the current R process, plus any variables configured in
 #' `env`. Configured `env` variables override inherited variables with the same
 #' name. Servers that need additional environment variables should list them in
@@ -71,36 +73,29 @@ the$mcp_servers <- list()
 #' ```
 #'
 #' @section Connecting to remote (http) servers:
-#' `mcp_tools()`, which supports using R as an MCP _client_ via ellmer, only
-#' implements the local (stdio) protocol. However, some MCP _servers_ only
-#' implement the http protocol.
+#' `mcp_tools()` also connects to remote MCP servers over the Streamable HTTP
+#' transport. Instead of a `command` and `args`, give the server entry a `url`.
+#' mcptools derives the transport from the config: entries with a `url` are
+#' remote, while entries with a `command` are local.
 #'
-#' In that case, we recommend using
-#' [mcp-remote](https://www.npmjs.com/package/mcp-remote), a local (stdio)
-#' MCP server that supports connecting to remote (http) servers using the
-#' stdio protocol, with fully-featured authentication. In other words,
-#' `mcp-remote` converts remote MCP servers to mcptools-compatible local ones.
-#'
-#' To connect to remote (http) MCP servers when using ellmer as a client, use
-#' the command `npx` with the args `mcp-remote` and the URL provided by the
-#' remote server. For example, you might write:
+#' Most remote servers require authentication. Supply request `headers` in the
+#' server entry; values may reference environment variables with `${VAR}`, which
+#' mcptools substitutes at connection time so that secrets need not be written
+#' to the config file. For example, to connect to an MCP server hosted on Posit
+#' Connect using a Connect API key:
 #'
 #' ```
 #' {
 #'   "mcpServers": {
 #'     "remote-example": {
-#'       "command": "npx",
-#'       "args": [
-#'         "mcp-remote",
-#'         "https://remote.mcp.server/sse"
-#'       ]
+#'       "url": "https://connect.example.com/content/<guid>/mcp",
+#'       "headers": {
+#'         "Authorization": "Key ${CONNECT_API_KEY}"
+#'       }
 #'     }
 #'   }
 #' }
 #' ```
-#'
-#' mcp-remote's [homepage](https://www.npmjs.com/package/mcp-remote) has many
-#' examples for various authentication schemes.
 #'
 #' @returns
 #' * `mcp_tools()` returns a list of ellmer tools that can be passed directly
@@ -207,6 +202,14 @@ error_no_mcp_config <- function(call) {
 }
 
 add_mcp_server <- function(config, name, call = caller_env()) {
+  if (!is.null(config$url)) {
+    add_mcp_server_http(config = config, name = name, call = call)
+  } else {
+    add_mcp_server_stdio(config = config, name = name, call = call)
+  }
+}
+
+add_mcp_server_stdio <- function(config, name, call = caller_env()) {
   process <- processx::process$new(
     command = Sys.which(config$command),
     args = config$args %||% character(),
@@ -264,6 +267,64 @@ add_mcp_server <- function(config, name, call = caller_env()) {
   )
 
   the$mcp_servers[[name]]
+}
+
+add_mcp_server_http <- function(config, name, call = caller_env()) {
+  the$mcp_servers[[name]] <- list(
+    name = name,
+    type = "http",
+    url = config$url,
+    headers = resolve_headers(config$headers, call = call),
+    session_id = NULL,
+    id = 1
+  )
+
+  tryCatch(
+    {
+      send_and_receive_http(name, mcp_request_initialize())
+      send_and_receive_http(name, mcp_request_initialized())
+      response_tools_list <- send_and_receive_http(name, mcp_request_tools_list())
+    },
+    error = function(e) {
+      the$mcp_servers[[name]] <- NULL
+      cli::cli_abort(
+        "Failed to connect to the MCP server at {.url {config$url}}.",
+        parent = e,
+        call = call
+      )
+    }
+  )
+
+  the$mcp_servers[[name]]$tools <- response_tools_list$result
+  the$mcp_servers[[name]]$id <- 3
+  the$mcp_servers[[name]]
+}
+
+resolve_headers <- function(headers, call = caller_env()) {
+  if (is.null(headers)) {
+    return(list())
+  }
+
+  lapply(headers, resolve_env_vars, call = call)
+}
+
+resolve_env_vars <- function(x, call = caller_env()) {
+  tokens <- regmatches(x, gregexpr("\\$\\{[^}]+\\}", x))[[1]]
+  for (token in unique(tokens)) {
+    var <- sub("^\\$\\{(.+)\\}$", "\\1", token)
+    val <- Sys.getenv(var, unset = NA_character_)
+    if (is.na(val)) {
+      cli::cli_abort(
+        c(
+          "The environment variable {.envvar {var}} is not set.",
+          i = "It's referenced in the {.field headers} of an MCP server config."
+        ),
+        call = call
+      )
+    }
+    x <- gsub(token, val, x, fixed = TRUE)
+  }
+  x
 }
 
 mcp_server_env <- function(config) {
@@ -448,9 +509,8 @@ tool_ref <- function(server, tool, arguments) {
 }
 
 call_tool <- function(..., server, tool) {
-  server_process <- the$mcp_servers[[server]]$process
-  response <- send_and_receive(
-    server_process,
+  response <- mcp_send_receive(
+    server,
     mcp_request_tool_call(
       id = jsonrpc_id(server),
       tool = tool,
@@ -459,6 +519,15 @@ call_tool <- function(..., server, tool) {
   )
 
   mcp_tool_result_as_ellmer(response)
+}
+
+mcp_send_receive <- function(server_name, message) {
+  server <- the$mcp_servers[[server_name]]
+  if (identical(server$type, "http")) {
+    send_and_receive_http(server_name, message)
+  } else {
+    send_and_receive(server$process, message)
+  }
 }
 
 mcp_tool_result_as_ellmer <- function(response) {
@@ -553,6 +622,66 @@ send_and_receive <- function(process, message) {
 
   log_cat_client(c("ALERT: No response received after ", attempts, " attempts"))
   return(NULL)
+}
+
+## http (streamable HTTP transport)
+send_and_receive_http <- function(server_name, message) {
+  server <- the$mcp_servers[[server_name]]
+
+  req <- httr2::request(server$url)
+  req <- httr2::req_headers(
+    req,
+    Accept = "application/json, text/event-stream",
+    `MCP-Protocol-Version` = "2025-06-18",
+    !!!server$headers
+  )
+  if (!is.null(server$session_id)) {
+    req <- httr2::req_headers(req, `Mcp-Session-Id` = server$session_id)
+  }
+  req <- httr2::req_body_json(req, message, auto_unbox = TRUE)
+
+  log_cat_client(c("FROM CLIENT (http): ", to_json(message)))
+  resp <- httr2::req_perform(req)
+
+  session_id <- httr2::resp_header(resp, "Mcp-Session-Id")
+  if (!is.null(session_id)) {
+    the$mcp_servers[[server_name]]$session_id <- session_id
+  }
+
+  parse_http_response(resp)
+}
+
+parse_http_response <- function(resp) {
+  if (
+    httr2::resp_status(resp) == 202L ||
+      length(httr2::resp_body_raw(resp)) == 0
+  ) {
+    return(NULL)
+  }
+
+  if (
+    grepl("text/event-stream", httr2::resp_content_type(resp), fixed = TRUE)
+  ) {
+    response <- parse_sse_body(httr2::resp_body_string(resp))
+  } else {
+    response <- httr2::resp_body_json(resp)
+  }
+
+  log_cat_client(c("FROM SERVER (http): ", to_json(response)))
+  response
+}
+
+# pull the first parseable JSON-RPC message out of an SSE response body
+parse_sse_body <- function(body) {
+  lines <- strsplit(body, "\r?\n")[[1]]
+  data_lines <- sub("^data:\\s?", "", lines[startsWith(lines, "data:")])
+  for (line in data_lines) {
+    parsed <- tryCatch(jsonlite::parse_json(line), error = function(e) NULL)
+    if (!is.null(parsed)) {
+      return(parsed)
+    }
+  }
+  NULL
 }
 
 # step 1: initialize the MCP connection

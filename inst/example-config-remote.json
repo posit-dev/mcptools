@@ -1,11 +1,10 @@
 {
   "mcpServers": {
-    "mcptools": {
-      "command": "npx",
-      "args": [
-        "mcp-remote",
-        "http://localhost:8080"
-      ]
+    "remote-example": {
+      "url": "https://connect.example.com/content/<guid>/mcp",
+      "headers": {
+        "Authorization": "Key ${CONNECT_API_KEY}"
+      }
     }
   }
 }
