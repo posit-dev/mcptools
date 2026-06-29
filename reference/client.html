@@ -73,11 +73,10 @@ the file path configured with the option <code>.mcptools_config</code>, falling 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-
-<ul><li><p><code>mcp_tools()</code> returns a list of ellmer tools that can be passed directly
+    <p><code>mcp_tools()</code> returns a list of ellmer tools that can be passed directly
 to the <code>$set_tools()</code> method of an <a href="https://ellmer.tidyverse.org/reference/Chat.html" class="external-link">ellmer::Chat</a> object. If the file at
-<code>config</code> doesn't exist, an error.</p></li>
-</ul></div>
+<code>config</code> doesn't exist, an error.</p>
+    </div>
     <div class="section level2">
     <h2 id="configuration">Configuration<a class="anchor" aria-label="anchor" href="#configuration"></a></h2>
 
@@ -89,8 +88,9 @@ Claude Desktop in their README files. By default, mcptools will look to
 <code>file.path("~", ".config", "mcptools", "config.json")</code>; you can edit that
 file with <code>file.edit(file.path("~", ".config", "mcptools", "config.json"))</code>.</p>
 <p>The mcptools config file should be valid .json with an entry <code>mcpServers</code>.
-That entry should contain named elements, each with at least a <code>command</code>
-and <code>args</code> entry. MCP server processes receive an allowlisted environment
+That entry should contain named elements, each configuring either a local
+stdio server with <code>command</code> and <code>args</code>, or a remote Streamable HTTP server
+with <code>url</code>. Stdio MCP server processes receive an allowlisted environment
 inherited from the current R process, plus any variables configured in
 <code>env</code>. Configured <code>env</code> variables override inherited variables with the same
 name. Servers that need additional environment variables should list them in
@@ -121,30 +121,41 @@ in that file:</p>
     <h2 id="connecting-to-remote-http-servers">Connecting to remote (http) servers<a class="anchor" aria-label="anchor" href="#connecting-to-remote-http-servers"></a></h2>
 
 
-<p><code>mcp_tools()</code>, which supports using R as an MCP <em>client</em> via ellmer, only
-implements the local (stdio) protocol. However, some MCP <em>servers</em> only
-implement the http protocol.</p>
-<p>In that case, we recommend using
-<a href="https://www.npmjs.com/package/mcp-remote" class="external-link">mcp-remote</a>, a local (stdio)
-MCP server that supports connecting to remote (http) servers using the
-stdio protocol, with fully-featured authentication. In other words,
-<code>mcp-remote</code> converts remote MCP servers to mcptools-compatible local ones.</p>
-<p>To connect to remote (http) MCP servers when using ellmer as a client, use
-the command <code>npx</code> with the args <code>mcp-remote</code> and the URL provided by the
-remote server. For example, you might write:</p>
-<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>{</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="st">"mcpServers"</span><span class="sc">:</span> {</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>    <span class="st">"remote-example"</span><span class="sc">:</span> {</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>      <span class="st">"command"</span><span class="sc">:</span> <span class="st">"npx"</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>      <span class="st">"args"</span><span class="sc">:</span> [</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>        <span class="st">"mcp-remote"</span>,</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>        <span class="st">"https://remote.mcp.server/sse"</span></span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>      ]</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>    }</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  }</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>}</span></code></pre><p></p></div>
-<p>mcp-remote's <a href="https://www.npmjs.com/package/mcp-remote" class="external-link">homepage</a> has many
-examples for various authentication schemes.</p>
+<p>For remote Streamable HTTP MCP servers, configure a server with <code>url</code>.
+Static headers can be supplied with <code>headers</code>; protocol-owned headers such
+as <code>Accept</code>, <code>Content-Type</code>, <code>MCP-Session-Id</code>, and <code>MCP-Protocol-Version</code>
+are managed by mcptools and cannot be configured manually. Credentialed
+public remote endpoints must use HTTPS. HTTP is allowed for loopback
+development servers, or for explicit unsafe opt-out with <code>allow_http</code>.</p>
+<p>Remote server entries support these fields:</p><ul><li><p><code>url</code>: the Streamable HTTP MCP endpoint.</p></li>
+<li><p><code>headers</code>: named static headers. Values may use <code>${ENVVAR}</code> interpolation.</p></li>
+<li><p><code>timeout</code>: a number of seconds for the overall HTTP request timeout.</p></li>
+<li><p><code>allow_http</code>: allow credentialed non-loopback HTTP endpoints.</p></li>
+<li><p><code>ignore_tools</code>: tool names or <code>*</code> wildcards to hide and block.</p></li>
+<li><p><code>oauth</code>: OAuth settings.</p></li>
+</ul><p>OAuth settings may include <code>authorization_server</code>, <code>resource</code>, <code>scope</code> with
+<code>scope_mode = "override"</code>, <code>client_info</code>, <code>manual_client_info</code>,
+<code>client_metadata</code>, <code>redirect_uri</code> or <code>callback_host</code>/<code>callback_port</code>/
+<code>callback_path</code>, <code>cache_dir</code>, and <code>allow_http</code>. mcptools supports OAuth 2.1
+with PKCE: it discovers the authorization server from the protected-resource
+metadata advertised in a <code>401</code> challenge, registers a client dynamically when
+the server supports it, and caches tokens (refreshing them automatically).</p>
+<p>Remote HTTP requests use httr2 and curl. Proxy and corporate CA settings
+should generally use the standard curl environment variables, such as
+<code>HTTPS_PROXY</code>, <code>NO_PROXY</code>, <code>SSL_CERT_FILE</code>, and <code>CURL_CA_BUNDLE</code>. Stdio
+server processes inherit these variables through mcptools' default
+environment allowlist.</p>
+<p></p><div class="sourceCode json"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="dt">"mcpServers"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>    <span class="dt">"remote-example"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>      <span class="dt">"url"</span><span class="fu">:</span> <span class="st">"https://remote.mcp.server/mcp"</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>      <span class="dt">"timeout"</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>      <span class="dt">"headers"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>        <span class="dt">"Authorization"</span><span class="fu">:</span> <span class="st">"Bearer ${REMOTE_MCP_TOKEN}"</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">}</span></span></code></pre><p></p></div>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

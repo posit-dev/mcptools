@@ -28,10 +28,10 @@ mcp_tools(config = NULL)
 
 ## Value
 
-- `mcp_tools()` returns a list of ellmer tools that can be passed
-  directly to the `$set_tools()` method of an
-  [ellmer::Chat](https://ellmer.tidyverse.org/reference/Chat.html)
-  object. If the file at `config` doesn't exist, an error.
+`mcp_tools()` returns a list of ellmer tools that can be passed directly
+to the `$set_tools()` method of an
+[ellmer::Chat](https://ellmer.tidyverse.org/reference/Chat.html) object.
+If the file at `config` doesn't exist, an error.
 
 ## Configuration
 
@@ -43,8 +43,9 @@ can edit that file with
 `file.edit(file.path("~", ".config", "mcptools", "config.json"))`.
 
 The mcptools config file should be valid .json with an entry
-`mcpServers`. That entry should contain named elements, each with at
-least a `command` and `args` entry. MCP server processes receive an
+`mcpServers`. That entry should contain named elements, each configuring
+either a local stdio server with `command` and `args`, or a remote
+Streamable HTTP server with `url`. Stdio MCP server processes receive an
 allowlisted environment inherited from the current R process, plus any
 variables configured in `env`. Configured `env` variables override
 inherited variables with the same name. Servers that need additional
@@ -75,35 +76,55 @@ the following in that file:
 
 ## Connecting to remote (http) servers
 
-`mcp_tools()`, which supports using R as an MCP *client* via ellmer,
-only implements the local (stdio) protocol. However, some MCP *servers*
-only implement the http protocol.
+For remote Streamable HTTP MCP servers, configure a server with `url`.
+Static headers can be supplied with `headers`; protocol-owned headers
+such as `Accept`, `Content-Type`, `MCP-Session-Id`, and
+`MCP-Protocol-Version` are managed by mcptools and cannot be configured
+manually. Credentialed public remote endpoints must use HTTPS. HTTP is
+allowed for loopback development servers, or for explicit unsafe opt-out
+with `allow_http`.
 
-In that case, we recommend using
-[mcp-remote](https://www.npmjs.com/package/mcp-remote), a local (stdio)
-MCP server that supports connecting to remote (http) servers using the
-stdio protocol, with fully-featured authentication. In other words,
-`mcp-remote` converts remote MCP servers to mcptools-compatible local
-ones.
+Remote server entries support these fields:
 
-To connect to remote (http) MCP servers when using ellmer as a client,
-use the command `npx` with the args `mcp-remote` and the URL provided by
-the remote server. For example, you might write:
+- `url`: the Streamable HTTP MCP endpoint.
+
+- `headers`: named static headers. Values may use `${ENVVAR}`
+  interpolation.
+
+- `timeout`: a number of seconds for the overall HTTP request timeout.
+
+- `allow_http`: allow credentialed non-loopback HTTP endpoints.
+
+- `ignore_tools`: tool names or `*` wildcards to hide and block.
+
+- `oauth`: OAuth settings.
+
+OAuth settings may include `authorization_server`, `resource`, `scope`
+with `scope_mode = "override"`, `client_info`, `manual_client_info`,
+`client_metadata`, `redirect_uri` or `callback_host`/`callback_port`/
+`callback_path`, `cache_dir`, and `allow_http`. mcptools supports OAuth
+2.1 with PKCE: it discovers the authorization server from the
+protected-resource metadata advertised in a `401` challenge, registers a
+client dynamically when the server supports it, and caches tokens
+(refreshing them automatically).
+
+Remote HTTP requests use httr2 and curl. Proxy and corporate CA settings
+should generally use the standard curl environment variables, such as
+`HTTPS_PROXY`, `NO_PROXY`, `SSL_CERT_FILE`, and `CURL_CA_BUNDLE`. Stdio
+server processes inherit these variables through mcptools' default
+environment allowlist.
 
     {
       "mcpServers": {
         "remote-example": {
-          "command": "npx",
-          "args": [
-            "mcp-remote",
-            "https://remote.mcp.server/sse"
-          ]
+          "url": "https://remote.mcp.server/mcp",
+          "timeout": 30,
+          "headers": {
+            "Authorization": "Bearer ${REMOTE_MCP_TOKEN}"
+          }
         }
       }
     }
-
-mcp-remote's [homepage](https://www.npmjs.com/package/mcp-remote) has
-many examples for various authentication schemes.
 
 ## See also
 

@@ -2,6 +2,14 @@
 
 ## mcptools (development version)
 
+- [`mcp_tools()`](https://posit-dev.github.io/mcptools/reference/client.md)
+  can now connect directly to remote Streamable HTTP MCP servers,
+  configured with `url` instead of `command`. Static `headers` are
+  supported for token auth, and full OAuth 2.1 (authorization-server
+  discovery, Dynamic Client Registration, PKCE, and automatic token
+  refresh) is handled via httr2, which also caches tokens across
+  sessions ([\#88](https://github.com/posit-dev/mcptools/issues/88)).
+
 - HTTP
   [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
   requests now honor the `MCP-Protocol-Version` header, return
