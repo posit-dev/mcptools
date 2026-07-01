@@ -73,10 +73,6 @@
 <p><strong>R as an MCP client</strong>:</p>
 <p><img src="reference/figures/r_as_a_client.png" alt="An architecture diagram showing the Client (left) with R code using the ellmer library to create a chat object and then setting tools from mcp with `mcp_tools()`, and the Server (right) containing third-party tools including GitHub (for reading PRs/Issues), Confluence (for searching), and Google Drive (for searching). Bidirectional arrows indicate communication between the client and server components." width="100%"></p>
 <p>Register third-party MCP servers with <a href="https://ellmer.tidyverse.org/" class="external-link">ellmer</a> chats to integrate additional context into e.g. <a href="https://github.com/posit-dev/shinychat" class="external-link">shinychat</a> and <a href="https://posit-dev.github.io/querychat/" class="external-link">querychat</a> apps.</p>
-<blockquote>
-<p>NOTE:</p>
-<p>This package used to be called acquaint and supplied a default set of tools from <a href="https://github.com/posit-dev/btw" class="external-link">btw</a> when R was used as an MCP server. The direction of the dependency has been reversed; to use the same functionality from before, transition <code>acquaint::mcp_server()</code> to <code>btw::btw_mcp_server()</code> and <code>acquaint::mcp_session()</code> to <code>btw::btw_mcp_session()</code>.</p>
-</blockquote>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>

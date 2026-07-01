@@ -42,15 +42,6 @@ Register third-party MCP servers with
 context into e.g. [shinychat](https://github.com/posit-dev/shinychat)
 and [querychat](https://posit-dev.github.io/querychat/) apps.
 
-> NOTE:
->
-> This package used to be called acquaint and supplied a default set of
-> tools from [btw](https://github.com/posit-dev/btw) when R was used as
-> an MCP server. The direction of the dependency has been reversed; to
-> use the same functionality from before, transition
-> `acquaint::mcp_server()` to `btw::btw_mcp_server()` and
-> `acquaint::mcp_session()` to `btw::btw_mcp_session()`.
-
 ## Installation
 
 Install mcptools from CRAN with:
