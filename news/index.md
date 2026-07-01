@@ -135,9 +135,8 @@ CRAN release: 2025-10-29
 - Notably,
   [`mcp_tools()`](https://posit-dev.github.io/mcptools/reference/client.md)
   did not gain an implementation of the HTTP transport. Instead, we now
-  recommend the [mcp-remote](https://www.npmjs.com/package/mcp-remote)
-  tool for serving local MCP servers via the HTTP transport in the
-  documentation.
+  recommend the `@npx mcp-remote` tool for serving local MCP servers via
+  the HTTP transport in the documentation.
 
 - [`mcp_tools()`](https://posit-dev.github.io/mcptools/reference/client.md)
   now errors more informatively when an MCP server process exits
