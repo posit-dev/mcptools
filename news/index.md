@@ -2,20 +2,44 @@
 
 ## mcptools (development version)
 
-- [`mcp_tools()`](https://posit-dev.github.io/mcptools/reference/client.md)
-  can now connect directly to remote Streamable HTTP MCP servers,
-  configured with `url` instead of `command`. Static `headers` are
-  supported for token auth, and full OAuth 2.1 (authorization-server
-  discovery, Dynamic Client Registration, PKCE, and automatic token
-  refresh) is handled via httr2, which also caches tokens across
-  sessions ([\#88](https://github.com/posit-dev/mcptools/issues/88)).
+### `mcp_server()`
+
+**New features**:
+
+- mcptools can now run as a Posit Connect R API engine. Add a
+  `_server.yml` with `engine: mcptools`, point `tools` to an `.R` file
+  returning
+  [`ellmer::tool()`](https://ellmer.tidyverse.org/reference/tool.html)
+  objects, and deploy with
+  `rsconnect::deployAPI(".", contentCategory = "mcp")`.
+
+- [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
+  can now return inline image content from tools that produce
+  [`ellmer::ContentImageInline`](https://ellmer.tidyverse.org/reference/Content.html)
+  results, including mixed text and image content
+  ([\#96](https://github.com/posit-dev/mcptools/issues/96),
+  [\#102](https://github.com/posit-dev/mcptools/issues/102)).
+
+- [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
+  now returns `structuredContent` alongside serialized JSON text for
+  successful tool results that are naturally represented as JSON
+  objects, when using MCP protocol version 2025-06-18 or later
+  ([\#104](https://github.com/posit-dev/mcptools/issues/104)).
+
+- [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
+  now includes ellmer tool annotations in `tools/list` responses,
+  preserving MCP safety hints such as `title`, `readOnlyHint`,
+  `destructiveHint`, `idempotentHint`, and `openWorldHint`
+  ([\#100](https://github.com/posit-dev/mcptools/issues/100),
+  [\#105](https://github.com/posit-dev/mcptools/issues/105)).
+
+**Bug fixes**:
 
 - HTTP
   [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
   requests now honor the `MCP-Protocol-Version` header, return
-  `400 Bad Request` for unsupported protocol versions, and avoid using
-  protocol negotiation from one HTTP client to shape responses for
-  another.
+  `400 Bad Request` for unsupported protocol versions, and no longer let
+  protocol negotiation from one HTTP client shape responses for another.
 
 - JSON output now serializes R `NULL` values as JSON `null`, fixing
   JSON-RPC responses with null request IDs.
@@ -23,13 +47,6 @@
 - [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
   no longer falls through after reporting `Invalid Request` for invalid
   stdio client messages.
-
-- mcptools can now run as a Posit Connect R API engine. Add
-  `_server.yml` with `engine: mcptools`, point `tools` to an `.R` file
-  returning
-  [`ellmer::tool()`](https://ellmer.tidyverse.org/reference/tool.html)
-  objects, and deploy with
-  `rsconnect::deployAPI(".", contentCategory = "mcp")`.
 
 - Forwarded
   [`mcp_session()`](https://posit-dev.github.io/mcptools/reference/server.md)
@@ -41,30 +58,24 @@
   Session receive errors are also logged instead of silently discarded
   ([\#98](https://github.com/posit-dev/mcptools/issues/98)).
 
-- [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
-  now returns `structuredContent` alongside serialized JSON text for
-  successful tool results that are naturally represented as JSON objects
-  when using MCP protocol version 2025-06-18 or later
-  ([\#104](https://github.com/posit-dev/mcptools/issues/104)).
+### `mcp_tools()`
 
-- [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
-  now includes ellmer tool annotations in `tools/list` responses,
-  preserving MCP safety hints such as `title`, `readOnlyHint`,
-  `destructiveHint`, `idempotentHint`, and `openWorldHint`
-  ([\#100](https://github.com/posit-dev/mcptools/issues/100),
-  [\#105](https://github.com/posit-dev/mcptools/issues/105)).
+**New features**:
 
-- [`mcp_server()`](https://posit-dev.github.io/mcptools/reference/server.md)
-  can now return inline image content from tools that produce
-  [`ellmer::ContentImageInline`](https://ellmer.tidyverse.org/reference/Content.html)
-  results, including mixed text and image content
-  ([\#96](https://github.com/posit-dev/mcptools/issues/96),
-  [\#102](https://github.com/posit-dev/mcptools/issues/102)).
+- [`mcp_tools()`](https://posit-dev.github.io/mcptools/reference/client.md)
+  can now connect directly to remote Streamable HTTP MCP servers,
+  configured with `url` instead of `command`. Static `headers` are
+  supported for token auth, and full OAuth 2.1 (authorization-server
+  discovery, Dynamic Client Registration, PKCE, and automatic token
+  refresh) is handled via httr2, which also caches tokens across
+  sessions ([\#88](https://github.com/posit-dev/mcptools/issues/88)).
 
 - [`mcp_tools()`](https://posit-dev.github.io/mcptools/reference/client.md)
   now converts MCP tool-result content blocks into ellmer-native text
   and image content, allowing ellmer chats to receive image results from
   MCP tools.
+
+**Bug fixes**:
 
 - [`mcp_tools()`](https://posit-dev.github.io/mcptools/reference/client.md)
   now launches MCP server processes with an allowlisted environment plus
