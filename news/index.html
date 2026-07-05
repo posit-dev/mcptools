@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mcptools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,9 +36,9 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="mcptools-development-version">mcptools (development version)<a class="anchor" aria-label="anchor" href="#mcptools-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.0.0" id="mcptools-100">mcptools 1.0.0<a class="anchor" aria-label="anchor" href="#mcptools-100"></a></h2><p class="text-muted">CRAN release: 2026-07-02</p>
 <div class="section level3">
-<h3 id="mcp_server-development-version"><code>mcp_server()</code><a class="anchor" aria-label="anchor" href="#mcp_server-development-version"></a></h3>
+<h3 id="mcp_server-1-0-0"><code>mcp_server()</code><a class="anchor" aria-label="anchor" href="#mcp_server-1-0-0"></a></h3>
 <p><strong>New features</strong>:</p>
 <ul><li><p>mcptools can now run as a Posit Connect R API engine. Add a <code>_server.yml</code> with <code>engine: mcptools</code>, point <code>tools</code> to an <code>.R</code> file returning <code><a href="https://ellmer.tidyverse.org/reference/tool.html" class="external-link">ellmer::tool()</a></code> objects, and deploy with <code>rsconnect::deployAPI(".", contentCategory = "mcp")</code>.</p></li>
 <li><p><code><a href="../reference/server.html">mcp_server()</a></code> can now return inline image content from tools that produce <code><a href="https://ellmer.tidyverse.org/reference/Content.html" class="external-link">ellmer::ContentImageInline</a></code> results, including mixed text and image content (<a href="https://github.com/posit-dev/mcptools/issues/96" class="external-link">#96</a>, <a href="https://github.com/posit-dev/mcptools/issues/102" class="external-link">#102</a>).</p></li>
@@ -51,7 +51,7 @@
 <li><p>Forwarded <code><a href="../reference/server.html">mcp_session()</a></code> tool calls now return JSON-RPC errors when the selected R session does not respond within two minutes, rather than hanging indefinitely. Configure the timeout with the <code>mcptools.session_response_timeout_seconds</code> option or the <code>MCPTOOLS_SESSION_RESPONSE_TIMEOUT_SECONDS</code> environment variable. Session receive errors are also logged instead of silently discarded (<a href="https://github.com/posit-dev/mcptools/issues/98" class="external-link">#98</a>).</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="mcp_tools-development-version"><code>mcp_tools()</code><a class="anchor" aria-label="anchor" href="#mcp_tools-development-version"></a></h3>
+<h3 id="mcp_tools-1-0-0"><code>mcp_tools()</code><a class="anchor" aria-label="anchor" href="#mcp_tools-1-0-0"></a></h3>
 <p><strong>New features</strong>:</p>
 <ul><li><p><code><a href="../reference/client.html">mcp_tools()</a></code> can now connect directly to remote Streamable HTTP MCP servers, configured with <code>url</code> instead of <code>command</code>. Static <code>headers</code> are supported for token auth, and full OAuth 2.1 (authorization-server discovery, Dynamic Client Registration, PKCE, and automatic token refresh) is handled via httr2, which also caches tokens across sessions (<a href="https://github.com/posit-dev/mcptools/issues/88" class="external-link">#88</a>).</p></li>
 <li><p><code><a href="../reference/client.html">mcp_tools()</a></code> now converts MCP tool-result content blocks into ellmer-native text and image content, allowing ellmer chats to receive image results from MCP tools.</p></li>

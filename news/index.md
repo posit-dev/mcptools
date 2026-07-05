@@ -1,6 +1,8 @@
 # Changelog
 
-## mcptools (development version)
+## mcptools 1.0.0
+
+CRAN release: 2026-07-02
 
 ### `mcp_server()`
 
