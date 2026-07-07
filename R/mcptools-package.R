@@ -9,11 +9,10 @@
 NULL
 
 .onLoad <- function(libname, pkgname) {
-  the$socket_url <- switch(
-    Sys.info()[["sysname"]],
-    Linux = "abstract://mcptools-socket",
-    Windows = "ipc://mcptools-socket",
-    "ipc:///tmp/mcptools-socket"
-  )
+  the$socket_url <- socket_url()
+}
+
+.onUnload <- function(libpath) {
+  cleanup_session_socket()
 }
 # nocov end

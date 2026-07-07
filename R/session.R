@@ -1,6 +1,12 @@
 #' @rdname server
 #' @export
 mcp_session <- function() {
+  # Clean stale socket files from previous crashed sessions
+  dir <- socket_dir()
+  if (!is.null(dir)) {
+    clean_stale_sockets(dir)
+  }
+
   the$session_socket <- nanonext::socket("poly")
   i <- 1L
   while (i < 1024L) {
@@ -14,6 +20,13 @@ mcp_session <- function() {
     i <- i + 1L
   }
   the$session <- i
+
+  # Register finalizer for crash cleanup -- filesystem sockets persist
+  # unlike abstract sockets which the kernel cleans automatically
+  reg.finalizer(the, function(e) {
+    cleanup_session_socket()
+  }, onexit = TRUE)
+
   schedule_handle_message_from_server()
 
   invisible(the$session_socket)
