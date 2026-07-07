@@ -110,7 +110,18 @@ list_r_sessions <- function() {
     pipes,
     function(x) nanonext::send_aio(sock, character(), mode = "serial", pipe = x)
   )
-  sort(as.character(nanonext::collect_aio_(res)))
+  results <- nanonext::collect_aio_(res)
+
+  # Clean up stale sockets that timed out (second line of defense for
+  # sessions that crash after startup cleanup already ran)
+  for (i in seq_along(results)) {
+    if (is.integer(results[[i]])) {
+      socket_file <- sub("^ipc://", "", sprintf("%s%d", the$socket_url, i))
+      if (file.exists(socket_file)) try(unlink(socket_file), silent = TRUE)
+    }
+  }
+
+  sort(as.character(Filter(is.character, results)))
 }
 
 list_r_sessions_description <- paste(
