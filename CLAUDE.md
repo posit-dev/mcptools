@@ -42,8 +42,15 @@ The server uses a condition variable (`cv`) to coordinate multiple async operati
 
 ## Socket URLs and Connection Management
 
-- The base socket URL is OS-derived in `.onLoad()`: `abstract://mcptools-socket`
-  on Linux, `ipc://mcptools-socket` on Windows, `ipc:///tmp/mcptools-socket` otherwise
-- Sessions listen on `{socket_url}{i}` where `i` is auto-incremented
-- Server dials to `{socket_url}1` by default
-- Connections are cleaned up with `nanonext::reap()` on exit
+- On Linux and macOS, sessions use filesystem-based IPC sockets in a per-user
+  directory (0700 permissions) for cross-user isolation
+- Directory selection: `MCPTOOLS_SOCKET_DIR` > `XDG_RUNTIME_DIR/mcptools/` >
+  `$TMPDIR/mcptools-<user>/` > `/tmp/mcptools-<user>/`
+- On Windows, named pipes are used (`ipc://mcptools-socket{N}`)
+- Socket directory permissions are enforced as 0700 (owner-only) on every access
+- Filesystem sockets require explicit cleanup via `.onUnload()` and `reg.finalizer()`
+- Stale socket files from crashed sessions are cleaned on `mcp_session()` and
+  `mcp_server()` startup using ping-based detection (100ms timeout)
+- `mcp_server()` auto-connects to the session matching its working directory;
+  falls back to slot 1 when zero or multiple sessions match
+- All socket address construction flows through `the$socket_url`

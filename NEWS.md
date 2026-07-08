@@ -1,5 +1,20 @@
 # mcptools (development version)
 
+* Sessions now use per-user filesystem IPC sockets (0700 directory permissions)
+  preventing cross-user session discovery on shared systems. Socket directory
+  follows: `MCPTOOLS_SOCKET_DIR` > `XDG_RUNTIME_DIR/mcptools/` >
+  `$TMPDIR/mcptools-<user>/` > `/tmp/mcptools-<user>/`.
+
+* `mcp_server()` now auto-connects to the R session whose working directory
+  matches its own, eliminating the need for explicit session selection in
+  single-session workflows.
+
+* Stale socket files from crashed sessions are automatically cleaned on
+  startup of both `mcp_session()` and `mcp_server()`.
+
+* `list_r_sessions()` no longer returns spurious `"5"` entries for timed-out
+  stale socket probes; it also opportunistically removes the stale socket files.
+
 # mcptools 1.0.0
 
 ## `mcp_server()`
