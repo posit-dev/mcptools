@@ -174,6 +174,14 @@ mcp_server <- function(
   check_not_interactive()
   type <- rlang::arg_match(type)
 
+  # Clean stale socket files before session discovery
+  if (isTRUE(session_tools)) {
+    dir <- socket_dir()
+    if (!is.null(dir)) {
+      clean_stale_sockets(dir)
+    }
+  }
+
   nanonext::reap(the$session_socket) # in case session was started in .Rprofile
   the$sessions_enabled <- isTRUE(session_tools)
   set_server_tools(tools, session_tools = the$sessions_enabled)
@@ -183,6 +191,43 @@ mcp_server <- function(
     stdio = mcp_server_stdio(),
     http = mcp_server_http(host = host, port = port)
   )
+}
+
+# Discover the best session to connect to. Matches on working directory;
+# falls back to slot 1 if no unique match is found.
+discover_session <- function() {
+  sessions <- list_r_sessions()
+  session_num <- find_matching_session(sessions, getwd())
+
+  if (!is.null(session_num)) {
+    return(session_num)
+  }
+
+  if (length(sessions) == 0L) {
+    logcat("No R sessions found. Dialing socket 1 and waiting.")
+  } else {
+    logcat(sprintf(
+      "No session matches working directory '%s'. Found: %s",
+      getwd(), paste(sessions, collapse = "; ")
+    ))
+  }
+
+  1L
+}
+
+# Parse session descriptions and find the one matching `dir`.
+# Returns the session number (integer) on a unique match, NULL otherwise.
+find_matching_session <- function(sessions, dir) {
+  matched <- Filter(function(s) {
+    path <- sub("^\\d+: (.+) \\([^)]+\\)$", "\\1", s)
+    identical(path, dir)
+  }, sessions)
+
+  if (length(matched) == 1L) {
+    as.integer(sub("^(\\d+):.*", "\\1", matched[[1L]]))
+  } else {
+    NULL
+  }
 }
 
 mcp_server_stdio <- function() {
@@ -196,7 +241,9 @@ mcp_server_stdio <- function() {
   if (the$sessions_enabled) {
     the$server_socket <- nanonext::socket("poly")
     on.exit(nanonext::reap(the$server_socket), add = TRUE)
-    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
+
+    session_num <- discover_session()
+    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, session_num))
   }
 
   while (nanonext::wait(cv)) {
@@ -211,7 +258,9 @@ mcp_server_http <- function(host = "127.0.0.1", port = 8080) {
   if (the$sessions_enabled) {
     the$server_socket <- nanonext::socket("poly")
     on.exit(nanonext::reap(the$server_socket), add = TRUE)
-    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
+
+    session_num <- discover_session()
+    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, session_num))
   }
 
   app <- list(

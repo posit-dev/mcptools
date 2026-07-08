@@ -262,12 +262,11 @@ test_that("drop_nulls works", {
 test_that("describe_session works", {
   the$session <- 42
   local_mocked_bindings(
-    basename = function(x) "test-dir",
     getwd = function() "/path/to/test-dir",
     infer_ide = function() "Test IDE"
   )
   result <- describe_session()
-  expect_equal(result, "42: test-dir (Test IDE)")
+  expect_equal(result, "42: /path/to/test-dir (Test IDE)")
 })
 
 test_that("infer_ide identifies different IDEs", {
