@@ -112,15 +112,7 @@ list_r_sessions <- function() {
   )
   results <- nanonext::collect_aio_(res)
 
-  # Clean up stale sockets that timed out (second line of defense for
-  # sessions that crash after startup cleanup already ran)
-  for (i in seq_along(results)) {
-    if (is.integer(results[[i]])) {
-      socket_file <- sub("^ipc://", "", sprintf("%s%d", the$socket_url, i))
-      if (file.exists(socket_file)) try(unlink(socket_file), silent = TRUE)
-    }
-  }
-
+  # a timed-out probe surfaces as an integer error code, not a session string
   sort(as.character(Filter(is.character, results)))
 }
 

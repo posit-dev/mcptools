@@ -1,22 +1,24 @@
 #' @rdname server
 #' @export
 mcp_session <- function() {
-  # Clean stale socket files from previous crashed sessions
-  dir <- socket_dir()
-  if (!is.null(dir)) {
-    clean_stale_sockets(dir)
-  }
-
   the$session_socket <- nanonext::socket("poly")
   i <- 1L
   while (i < 1024L) {
     # prevent indefinite loop
-    nanonext::listen(
-      the$session_socket,
-      url = sprintf("%s%d", the$socket_url, i),
-      fail = "none"
-    ) ||
+    url <- sprintf("%s%d", the$socket_url, i)
+    if (!nanonext::is_error_value(
+      nanonext::listen(the$session_socket, url = url, fail = "none")
+    )) {
       break
+    }
+    if (
+      reclaim_stale_socket(url) &&
+        !nanonext::is_error_value(
+          nanonext::listen(the$session_socket, url = url, fail = "none")
+        )
+    ) {
+      break
+    }
     i <- i + 1L
   }
   the$session <- i

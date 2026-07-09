@@ -76,63 +76,29 @@ ensure_socket_dir <- function(path) {
   invisible(path)
 }
 
-#' Clean up stale socket files from crashed sessions
+#' Reclaim a socket slot whose file is stale
 #'
-#' Uses ping-based detection: dial all socket files, monitor for pipes,
-#' send an empty ping, and wait 100ms. Live local IPC sessions respond in
-#' <10ms; anything that times out is stale and safe to remove.
-#'
-#' This approach works on both Linux and macOS (unlike dial-return-code
-#' checking, which always returns 0 on macOS due to async dialer queuing).
+#' A live listener accepts a pipe at the NNG layer even while its R process is
+#' busy, so a refused synchronous dial is a busy-proof test that no listener
+#' remains. On refusal we unlink the leftover file so the slot can be relisted;
+#' returns `TRUE` when a stale file was removed.
 #' @noRd
-clean_stale_sockets <- function(dir) {
-  if (is.null(dir) || !dir.exists(dir)) {
-    return(invisible())
-  }
-
-  files <- list.files(dir, pattern = "^mcptools-socket\\d+$", full.names = TRUE)
-  if (length(files) == 0L) {
-    return(invisible())
+reclaim_stale_socket <- function(url) {
+  file <- ipc_socket_file(url)
+  if (is.null(file) || !file.exists(file)) {
+    return(FALSE)
   }
 
   sock <- nanonext::socket("poly")
   on.exit(nanonext::reap(sock))
-  cv <- nanonext::cv()
-  monitor <- nanonext::monitor(sock, cv)
+  rc <- nanonext::dial(sock, url = url, autostart = NA, fail = "none")
 
-  for (f in files) {
-    nanonext::dial(sock, url = sprintf("ipc://%s", f), autostart = NA, fail = "none")
+  if (nanonext::is_error_value(rc)) {
+    try(unlink(file), silent = TRUE)
+    return(TRUE)
   }
 
-  pipes <- nanonext::read_monitor(monitor)
-
-  if (length(pipes) == 0L) {
-    # No connections at all — all files are stale
-    try(unlink(files), silent = TRUE)
-    return(invisible())
-  }
-
-  # Ping each pipe — live sessions respond in <10ms; 100ms is safe headroom
-  # All pings fire in parallel so N stale sockets cost only 100ms total
-  aios <- lapply(
-    pipes,
-    function(p) nanonext::recv_aio(sock, mode = "string", timeout = 100L)
-  )
-  lapply(
-    pipes,
-    function(p) nanonext::send_aio(sock, character(), mode = "serial", pipe = p)
-  )
-  results <- nanonext::collect_aio_(aios)
-
-  # pipes returned in dial order, matching files order
-  for (i in seq_along(results)) {
-    if (is.integer(results[[i]])) {
-      # Timeout (5L) or error — no live listener, safe to remove
-      try(unlink(files[[i]]), silent = TRUE)
-    }
-  }
-
-  invisible()
+  FALSE
 }
 
 #' Remove the socket file for the current session
@@ -142,17 +108,26 @@ cleanup_session_socket <- function() {
     return(invisible())
   }
 
-  # Only filesystem sockets need cleanup (not abstract:// or named pipes)
-  url <- sprintf("%s%d", the$socket_url, the$session)
-  if (!startsWith(url, "ipc://")) {
-    return(invisible())
-  }
-
-  socket_file <- sub("^ipc://", "", url)
-  if (file.exists(socket_file)) {
-    try(unlink(socket_file), silent = TRUE)
+  file <- ipc_socket_file(sprintf("%s%d", the$socket_url, the$session))
+  if (!is.null(file) && file.exists(file)) {
+    try(unlink(file), silent = TRUE)
   }
   invisible()
+}
+
+#' Filesystem path backing an `ipc://` URL, or `NULL` when there is no file to
+#' manage (named pipes on Windows, or non-`ipc://` URLs).
+#' @noRd
+ipc_socket_file <- function(url) {
+  if (!startsWith(url, "ipc://")) {
+    return(NULL)
+  }
+  path <- sub("^ipc://", "", url)
+  # Windows named pipes are also ipc:// but have no on-disk path
+  if (!startsWith(path, "/")) {
+    return(NULL)
+  }
+  path
 }
 
 #' Construct the socket URL prefix for this platform/user

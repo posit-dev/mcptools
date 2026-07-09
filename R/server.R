@@ -174,14 +174,6 @@ mcp_server <- function(
   check_not_interactive()
   type <- rlang::arg_match(type)
 
-  # Clean stale socket files before session discovery
-  if (isTRUE(session_tools)) {
-    dir <- socket_dir()
-    if (!is.null(dir)) {
-      clean_stale_sockets(dir)
-    }
-  }
-
   nanonext::reap(the$session_socket) # in case session was started in .Rprofile
   the$sessions_enabled <- isTRUE(session_tools)
   set_server_tools(tools, session_tools = the$sessions_enabled)

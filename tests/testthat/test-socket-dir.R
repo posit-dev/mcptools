@@ -149,84 +149,82 @@ test_that("cleanup_session_socket() is no-op for non-ipc sockets", {
   expect_no_error(cleanup_session_socket())
 })
 
-# clean_stale_sockets() -------------------------------------------------
+# reclaim_stale_socket() ------------------------------------------------
 
-test_that("clean_stale_sockets() removes stale socket files", {
+test_that("reclaim_stale_socket() removes a stale socket file", {
   skip_on_os("windows")
-
-  tmp <- file.path(tempdir(), "test-stale")
+  tmp <- file.path(tempdir(), "test-reclaim-stale")
   dir.create(tmp, showWarnings = FALSE, mode = "0700")
   withr::defer(unlink(tmp, recursive = TRUE))
 
-  # Create a real stale socket: listen then close (leaves file behind)
-  sock <- nanonext::socket("poly")
-  socket_path <- file.path(tmp, "mcptools-socket99")
-  nanonext::listen(sock, url = sprintf("ipc://%s", socket_path))
-  close(sock)
+  stale <- file.path(tmp, "mcptools-socket1")
+  file.create(stale)
 
-  if (file.exists(socket_path)) {
-    clean_stale_sockets(tmp)
-    expect_false(file.exists(socket_path))
-  } else {
-    # Socket was auto-cleaned (possible on some nanonext versions)
-    succeed("Socket auto-cleaned by nanonext")
-  }
+  expect_true(reclaim_stale_socket(sprintf("ipc://%s", stale)))
+  expect_false(file.exists(stale))
 })
 
-test_that("clean_stale_sockets() does NOT remove active sockets", {
+test_that("reclaim_stale_socket() spares a live (even busy) listener", {
   skip_on_os("windows")
   skip_if_not_installed("callr")
-  # Use a short path to stay within Unix socket 108-char limit
-  tmp <- file.path("/tmp", paste0("mcp-test-", Sys.getpid()))
+  # short path to stay within the Unix socket path length limit
+  tmp <- file.path("/tmp", paste0("mcp-reclaim-", Sys.getpid()))
   dir.create(tmp, showWarnings = FALSE, mode = "0700")
   withr::defer(unlink(tmp, recursive = TRUE))
 
-  # Spawn a background R process that listens and responds to pings
-  # (mimics what mcp_session() does)
-  bg <- callr::r_bg(function(tmp) {
-    sock <- nanonext::socket("poly")
-    socket_path <- file.path(tmp, "mcptools-socket1")
-    nanonext::listen(sock, url = sprintf("ipc://%s", socket_path))
+  socket_path <- file.path(tmp, "mcptools-socket1")
 
-    # Simple recv-respond loop (mirrors handle_message_from_server)
-    for (j in seq_len(100)) {
-      msg <- nanonext::recv(sock, mode = "serial", block = 200L)
-      if (!nanonext::is_error_value(msg)) {
-        nanonext::send(sock, "1: /test (Test)", mode = "raw")
-      }
-    }
-    nanonext::reap(sock)
-  }, args = list(tmp = tmp))
+  # only listens, never answers: the busy-session case a naive ping would
+  # misread as stale
+  bg <- callr::r_bg(
+    function(path) {
+      sock <- nanonext::socket("poly")
+      nanonext::listen(sock, url = sprintf("ipc://%s", path))
+      Sys.sleep(30)
+    },
+    args = list(path = socket_path)
+  )
   withr::defer(bg$kill())
 
-  # Give the subprocess time to start listening
-  Sys.sleep(1)
-  socket_path <- file.path(tmp, "mcptools-socket1")
-  skip_if(!file.exists(socket_path), "Background session did not start")
+  deadline <- Sys.time() + 5
+  while (!file.exists(socket_path) && Sys.time() < deadline) Sys.sleep(0.05)
+  skip_if(!file.exists(socket_path), "Background listener did not start")
 
-  # Should NOT remove it -- the background process responds to pings
-  clean_stale_sockets(tmp)
+  expect_false(reclaim_stale_socket(sprintf("ipc://%s", socket_path)))
   expect_true(file.exists(socket_path))
 })
 
-test_that("clean_stale_sockets() is no-op for NULL or missing dir", {
-  expect_no_error(clean_stale_sockets(NULL))
-  expect_no_error(clean_stale_sockets("/nonexistent/path"))
+test_that("reclaim_stale_socket() is FALSE when there is no file to reclaim", {
+  expect_false(reclaim_stale_socket("ipc:///nonexistent/mcptools-socket1"))
+  # named-pipe URL, no filesystem path
+  expect_false(reclaim_stale_socket("ipc://mcptools-socket1"))
 })
 
-test_that("clean_stale_sockets() ignores non-socket files", {
+test_that("mcp_session() advances past a live slot and reclaims a stale one", {
   skip_on_os("windows")
-  tmp <- file.path(tempdir(), "test-stale-ignore")
-  dir.create(tmp, showWarnings = FALSE)
+  tmp <- file.path("/tmp", paste0("mcp-mixed-", Sys.getpid()))
+  dir.create(tmp, showWarnings = FALSE, mode = "0700")
   withr::defer(unlink(tmp, recursive = TRUE))
 
-  # These should NOT be touched (don't match the pattern)
-  other_file <- file.path(tmp, "other-file.txt")
-  token_file <- file.path(tmp, ".mcptools-token")
-  file.create(other_file)
-  file.create(token_file)
+  old_url <- the$socket_url
+  old_socket <- the$session_socket
+  old_session <- the$session
+  withr::defer({
+    nanonext::reap(the$session_socket)
+    the$socket_url <- old_url
+    the$session_socket <- old_socket
+    the$session <- old_session
+  })
+  the$socket_url <- sprintf("ipc://%s/mcptools-socket", tmp)
 
-  clean_stale_sockets(tmp)
-  expect_true(file.exists(other_file))
-  expect_true(file.exists(token_file))
+  # live listener at slot 1, stale leftover at slot 2
+  live <- nanonext::socket("poly")
+  nanonext::listen(live, url = sprintf("%s%d", the$socket_url, 1L))
+  withr::defer(nanonext::reap(live))
+  file.create(file.path(tmp, "mcptools-socket2"))
+
+  mcp_session()
+
+  expect_equal(the$session, 2L)
+  expect_true(file.exists(file.path(tmp, "mcptools-socket1")))
 })
