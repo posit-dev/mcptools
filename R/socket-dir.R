@@ -61,9 +61,15 @@ ensure_socket_dir <- function(path, call = caller_env()) {
     return(invisible(path))
   }
 
+  # If creation loses a race (another process or user created the path between
+  # the existence check and dir.create()), dir.create() returns FALSE. Fall
+  # through to verify what is actually there rather than trusting it blindly --
+  # skipping the checks below is exactly the attack this function guards against.
   if (!dir.exists(path)) {
-    dir.create(path, recursive = TRUE, mode = "0700")
-    return(invisible(path))
+    created <- suppressWarnings(dir.create(path, recursive = TRUE, mode = "0700"))
+    if (created) {
+      return(invisible(path))
+    }
   }
 
   if (nzchar(Sys.readlink(path))) {
@@ -151,6 +157,26 @@ socket_url <- function() {
     return(sprintf("ipc://mcptools-%s-socket", user))
   }
   sprintf("ipc://%s/mcptools-socket", socket_dir())
+}
+
+# Directory that the$socket_url actually places sockets in. We validate this
+# rather than recomputing socket_dir(), so the checked directory is provably the
+# one used for listening/dialing even if the environment changed since load.
+# NULL on Windows (named pipes need no directory).
+socket_dir_in_use <- function(call = caller_env()) {
+  if (is_windows()) {
+    return(NULL)
+  }
+
+  file <- ipc_socket_file(the$socket_url)
+  if (is.null(file)) {
+    cli::cli_abort(
+      "The socket directory must be an absolute path; check
+       {.envvar MCPTOOLS_SOCKET_DIR}.",
+      call = call
+    )
+  }
+  dirname(file)
 }
 
 # Platform detection helpers ------------------------------------------------

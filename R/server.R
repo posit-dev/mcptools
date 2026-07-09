@@ -181,7 +181,7 @@ mcp_server <- function(
   type <- rlang::arg_match(type)
 
   if (isTRUE(session_tools)) {
-    ensure_socket_dir(socket_dir())
+    ensure_socket_dir(socket_dir_in_use())
   }
 
   nanonext::reap(the$session_socket) # in case session was started in .Rprofile

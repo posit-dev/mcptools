@@ -109,11 +109,56 @@ test_that("ensure_socket_dir() aborts when the directory is not owned by us", {
   expect_error(ensure_socket_dir(tmp), "not owned by the current user")
 })
 
+test_that("ensure_socket_dir() verifies a directory that lost the create race", {
+  skip_on_os("windows")
+  tmp <- file.path(tempdir(), "test-race")
+  dir.create(tmp, showWarnings = FALSE, mode = "0700")
+  withr::defer(unlink(tmp, recursive = TRUE))
+
+  # dir.exists FALSE forces the create branch; dir.create FALSE simulates
+  # another user winning the race, leaving a directory we do not own
+  testthat::local_mocked_bindings(
+    dir.exists = function(...) FALSE,
+    dir.create = function(...) FALSE,
+    file.info = function(path, ...) {
+      data.frame(uid = if (identical(path, tmp)) 999999L else 1L, mode = 448L)
+    },
+    .package = "base"
+  )
+
+  expect_error(ensure_socket_dir(tmp), "not owned by the current user")
+})
+
 test_that("ensure_socket_dir() is a no-op for NULL or on Windows", {
   expect_no_error(ensure_socket_dir(NULL))
 
   testthat::local_mocked_bindings(is_windows = function() TRUE)
   expect_no_error(ensure_socket_dir("/some/path"))
+})
+
+# socket_dir_in_use() ---------------------------------------------------
+
+test_that("socket_dir_in_use() derives the directory from the socket URL", {
+  skip_on_os("windows")
+  old <- the$socket_url
+  withr::defer(the$socket_url <- old)
+
+  the$socket_url <- "ipc:///abs/dir/mcptools-socket"
+  expect_equal(socket_dir_in_use(), "/abs/dir")
+})
+
+test_that("socket_dir_in_use() aborts on a non-absolute socket directory", {
+  skip_on_os("windows")
+  old <- the$socket_url
+  withr::defer(the$socket_url <- old)
+
+  the$socket_url <- "ipc://relative/mcptools-socket"
+  expect_error(socket_dir_in_use(), "absolute path")
+})
+
+test_that("socket_dir_in_use() is NULL on Windows", {
+  testthat::local_mocked_bindings(is_windows = function() TRUE)
+  expect_null(socket_dir_in_use())
 })
 
 # socket_url() ----------------------------------------------------------

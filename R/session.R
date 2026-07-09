@@ -1,7 +1,7 @@
 #' @rdname server
 #' @export
 mcp_session <- function() {
-  ensure_socket_dir(socket_dir())
+  ensure_socket_dir(socket_dir_in_use())
 
   the$session_socket <- nanonext::socket("poly")
   i <- 1L
@@ -25,11 +25,13 @@ mcp_session <- function() {
   }
   the$session <- i
 
-  # Register finalizer for crash cleanup -- filesystem sockets persist
-  # unlike abstract sockets which the kernel cleans automatically
-  reg.finalizer(the, function(e) {
-    cleanup_session_socket()
-  }, onexit = TRUE)
+  # Register once for exit cleanup -- filesystem sockets persist, unlike
+  # abstract sockets which the kernel cleans automatically. Guard against
+  # repeat mcp_session() calls stacking duplicate finalizers on `the`.
+  if (!isTRUE(the$finalizer_registered)) {
+    reg.finalizer(the, function(e) cleanup_session_socket(), onexit = TRUE)
+    the$finalizer_registered <- TRUE
+  }
 
   schedule_handle_message_from_server()
 
