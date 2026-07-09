@@ -26,7 +26,6 @@ Depends:
     R (>= 4.1.0)
 Imports:
     cli,
-    callr,
     ellmer (>= 0.3.0),
     httpuv,
     httr2 (>= 1.2.3),
@@ -37,6 +36,7 @@ Imports:
     rlang,
     yaml
 Suggests: 
+    callr,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),

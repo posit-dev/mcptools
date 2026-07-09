@@ -175,6 +175,7 @@ test_that("clean_stale_sockets() removes stale socket files", {
 
 test_that("clean_stale_sockets() does NOT remove active sockets", {
   skip_on_os("windows")
+  skip_if_not_installed("callr")
   # Use a short path to stay within Unix socket 108-char limit
   tmp <- file.path("/tmp", paste0("mcp-test-", Sys.getpid()))
   dir.create(tmp, showWarnings = FALSE, mode = "0700")
