@@ -1,6 +1,12 @@
 #' @rdname server
 #' @export
 mcp_session <- function() {
+  # Clean stale socket files from previous crashed sessions
+  dir <- socket_dir()
+  if (!is.null(dir)) {
+    clean_stale_sockets(dir)
+  }
+
   the$session_socket <- nanonext::socket("poly")
   i <- 1L
   while (i < 1024L) {
@@ -14,6 +20,13 @@ mcp_session <- function() {
     i <- i + 1L
   }
   the$session <- i
+
+  # Register finalizer for crash cleanup -- filesystem sockets persist
+  # unlike abstract sockets which the kernel cleans automatically
+  reg.finalizer(the, function(e) {
+    cleanup_session_socket()
+  }, onexit = TRUE)
+
   schedule_handle_message_from_server()
 
   invisible(the$session_socket)
@@ -271,8 +284,10 @@ drop_nulls <- function(x) {
 
 # Enough information for the user to be able to identify which
 # session is which when using `list_r_sessions()` (#18)
+# Uses full working directory path (not basename) to enable
+# auto-connection by matching server getwd() to session getwd().
 describe_session <- function() {
-  sprintf("%d: %s (%s)", the$session, basename(getwd()), infer_ide())
+  sprintf("%d: %s (%s)", the$session, getwd(), infer_ide())
 }
 
 infer_ide <- function() {
@@ -286,6 +301,5 @@ infer_ide <- function() {
 }
 
 # assign NULL for mocking in testing
-basename <- NULL
 getwd <- NULL
 commandArgs <- NULL

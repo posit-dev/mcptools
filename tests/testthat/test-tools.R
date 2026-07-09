@@ -213,3 +213,34 @@ test_that("tools/list gates top-level title on negotiated protocol version", {
   expect_false("title" %in% names(tool))
   expect_equal(tool$annotations$title, "Read Project")
 })
+
+test_that("list_r_sessions() filters out integer error codes", {
+  local_mocked_bindings(
+    collect_aio_ = function(x) list("1: /home/user/myproject (RStudio)", 5L),
+    socket = function(...) structure(list(), class = "nanoSocket"),
+    monitor = function(...) structure(list(), class = "nanoMonitor"),
+    dial = function(...) 0L,
+    read_monitor = function(...) list(1L, 2L),
+    recv_aio = function(...) structure(list(data = NULL), class = "recvAio"),
+    send_aio = function(...) invisible(NULL),
+    reap = function(...) invisible(NULL),
+    .package = "nanonext"
+  )
+  result <- list_r_sessions()
+  expect_equal(result, "1: /home/user/myproject (RStudio)")
+})
+
+test_that("find_matching_session() returns session number on exact match", {
+  sessions <- c("3: /home/user/myproject (RStudio)", "5: /home/user/other (Positron)")
+  expect_equal(find_matching_session(sessions, "/home/user/myproject"), 3L)
+})
+
+test_that("find_matching_session() returns NULL when no match", {
+  sessions <- c("3: /home/user/myproject (RStudio)")
+  expect_null(find_matching_session(sessions, "/home/user/different"))
+})
+
+test_that("find_matching_session() returns NULL when multiple match", {
+  sessions <- c("3: /home/user/myproject (RStudio)", "5: /home/user/myproject (Positron)")
+  expect_null(find_matching_session(sessions, "/home/user/myproject"))
+})
