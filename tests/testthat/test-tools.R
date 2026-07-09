@@ -229,18 +229,3 @@ test_that("list_r_sessions() filters out integer error codes", {
   result <- list_r_sessions()
   expect_equal(result, "1: /home/user/myproject (RStudio)")
 })
-
-test_that("find_matching_session() returns session number on exact match", {
-  sessions <- c("3: /home/user/myproject (RStudio)", "5: /home/user/other (Positron)")
-  expect_equal(find_matching_session(sessions, "/home/user/myproject"), 3L)
-})
-
-test_that("find_matching_session() returns NULL when no match", {
-  sessions <- c("3: /home/user/myproject (RStudio)")
-  expect_null(find_matching_session(sessions, "/home/user/different"))
-})
-
-test_that("find_matching_session() returns NULL when multiple match", {
-  sessions <- c("3: /home/user/myproject (RStudio)", "5: /home/user/myproject (Positron)")
-  expect_null(find_matching_session(sessions, "/home/user/myproject"))
-})

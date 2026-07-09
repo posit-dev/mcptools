@@ -185,43 +185,6 @@ mcp_server <- function(
   )
 }
 
-# Discover the best session to connect to. Matches on working directory;
-# falls back to slot 1 if no unique match is found.
-discover_session <- function() {
-  sessions <- list_r_sessions()
-  session_num <- find_matching_session(sessions, getwd())
-
-  if (!is.null(session_num)) {
-    return(session_num)
-  }
-
-  if (length(sessions) == 0L) {
-    logcat("No R sessions found. Dialing socket 1 and waiting.")
-  } else {
-    logcat(sprintf(
-      "No session matches working directory '%s'. Found: %s",
-      getwd(), paste(sessions, collapse = "; ")
-    ))
-  }
-
-  1L
-}
-
-# Parse session descriptions and find the one matching `dir`.
-# Returns the session number (integer) on a unique match, NULL otherwise.
-find_matching_session <- function(sessions, dir) {
-  matched <- Filter(function(s) {
-    path <- sub("^\\d+: (.+) \\([^)]+\\)$", "\\1", s)
-    identical(path, dir)
-  }, sessions)
-
-  if (length(matched) == 1L) {
-    as.integer(sub("^(\\d+):.*", "\\1", matched[[1L]]))
-  } else {
-    NULL
-  }
-}
-
 mcp_server_stdio <- function() {
   cv <- nanonext::cv()
 
@@ -234,8 +197,8 @@ mcp_server_stdio <- function() {
     the$server_socket <- nanonext::socket("poly")
     on.exit(nanonext::reap(the$server_socket), add = TRUE)
 
-    session_num <- discover_session()
-    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, session_num))
+    # async dial retries forever, so the server may start before any session
+    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
   }
 
   while (nanonext::wait(cv)) {
@@ -251,8 +214,7 @@ mcp_server_http <- function(host = "127.0.0.1", port = 8080) {
     the$server_socket <- nanonext::socket("poly")
     on.exit(nanonext::reap(the$server_socket), add = TRUE)
 
-    session_num <- discover_session()
-    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, session_num))
+    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
   }
 
   app <- list(
