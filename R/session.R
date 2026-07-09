@@ -1,6 +1,8 @@
 #' @rdname server
 #' @export
 mcp_session <- function() {
+  ensure_socket_dir(socket_dir())
+
   the$session_socket <- nanonext::socket("poly")
   i <- 1L
   while (i < 1024L) {

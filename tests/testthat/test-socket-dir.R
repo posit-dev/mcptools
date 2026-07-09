@@ -1,12 +1,13 @@
 # socket_dir() ----------------------------------------------------------
 
-test_that("socket_dir() respects MCPTOOLS_SOCKET_DIR override", {
+test_that("socket_dir() respects MCPTOOLS_SOCKET_DIR override and is pure", {
   tmp <- file.path(tempdir(), "test-override")
   withr::defer(unlink(tmp, recursive = TRUE))
   withr::local_envvar(MCPTOOLS_SOCKET_DIR = tmp)
 
   expect_equal(socket_dir(), tmp)
-  expect_true(dir.exists(tmp))
+  # computing the path must not touch the filesystem
+  expect_false(dir.exists(tmp))
 })
 
 test_that("socket_dir() returns NULL on Windows", {
@@ -80,6 +81,41 @@ test_that("ensure_socket_dir() tightens permissions if too open", {
   expect_equal(bitwAnd(as.integer(info$mode), 63L), 0L)
 })
 
+test_that("ensure_socket_dir() aborts on a symlinked directory", {
+  skip_on_os("windows")
+  target <- file.path(tempdir(), "test-symlink-target")
+  link <- file.path(tempdir(), "test-symlink-link")
+  dir.create(target, showWarnings = FALSE, mode = "0700")
+  file.symlink(target, link)
+  withr::defer(unlink(c(target, link), recursive = TRUE))
+
+  expect_error(ensure_socket_dir(link), "is a symlink")
+})
+
+test_that("ensure_socket_dir() aborts when the directory is not owned by us", {
+  skip_on_os("windows")
+  tmp <- file.path(tempdir(), "test-foreign-owner")
+  dir.create(tmp, showWarnings = FALSE, mode = "0700")
+  withr::defer(unlink(tmp, recursive = TRUE))
+
+  # simulate a directory owned by another uid
+  testthat::local_mocked_bindings(
+    file.info = function(path, ...) {
+      data.frame(uid = if (identical(path, tmp)) 999999L else 1L, mode = 448L)
+    },
+    .package = "base"
+  )
+
+  expect_error(ensure_socket_dir(tmp), "not owned by the current user")
+})
+
+test_that("ensure_socket_dir() is a no-op for NULL or on Windows", {
+  expect_no_error(ensure_socket_dir(NULL))
+
+  testthat::local_mocked_bindings(is_windows = function() TRUE)
+  expect_no_error(ensure_socket_dir("/some/path"))
+})
+
 # socket_url() ----------------------------------------------------------
 
 test_that("socket_url() returns ipc:// path on Unix", {
@@ -93,10 +129,10 @@ test_that("socket_url() returns ipc:// path on Unix", {
   expect_match(url, "mcptools-socket$")
 })
 
-test_that("socket_url() returns named pipe format on Windows", {
+test_that("socket_url() returns a user-scoped named pipe on Windows", {
   testthat::local_mocked_bindings(is_windows = function() TRUE)
 
-  expect_equal(socket_url(), "ipc://mcptools-socket")
+  expect_match(socket_url(), "^ipc://mcptools-.+-socket$")
 })
 
 # cleanup_session_socket() ----------------------------------------------
