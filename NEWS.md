@@ -6,8 +6,7 @@
   `$TMPDIR/mcptools-<user>/` > `/tmp/mcptools-<user>/`.
 
 * `mcp_server()` now auto-connects to the R session whose working directory
-  matches its own, eliminating the need for explicit session selection in
-  single-session workflows.
+  matches its own instead of the first socket. 
 
 * Stale socket files from crashed sessions are automatically cleaned on
   startup of both `mcp_session()` and `mcp_server()`.
