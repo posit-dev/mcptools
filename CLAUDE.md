@@ -42,15 +42,23 @@ The server uses a condition variable (`cv`) to coordinate multiple async operati
 
 ## Socket URLs and Connection Management
 
-- On Linux and macOS, sessions use filesystem-based IPC sockets in a per-user
-  directory (0700 permissions) for cross-user isolation
-- Directory selection: `MCPTOOLS_SOCKET_DIR` > `XDG_RUNTIME_DIR/mcptools/` >
-  `$TMPDIR/mcptools-<user>/` > `/tmp/mcptools-<user>/`
-- On Windows, named pipes are used (`ipc://mcptools-socket{N}`)
-- Socket directory permissions are enforced as 0700 (owner-only) on every access
-- Filesystem sockets require explicit cleanup via `.onUnload()` and `reg.finalizer()`
-- Stale socket files from crashed sessions are cleaned on `mcp_session()` and
-  `mcp_server()` startup using ping-based detection (100ms timeout)
-- `mcp_server()` auto-connects to the session matching its working directory;
-  falls back to slot 1 when zero or multiple sessions match
-- All socket address construction flows through `the$socket_url`
+- On Linux and macOS, sessions use filesystem IPC sockets in a per-user,
+  owner-only (0700) directory for cross-user isolation. Directory selection:
+  `MCPTOOLS_SOCKET_DIR` > `XDG_RUNTIME_DIR/mcptools/` > `$TMPDIR/mcptools-<user>/`
+  > `/tmp/mcptools-<user>/`.
+- On Windows, per-user named pipes are used (`ipc://mcptools-<user>-socket{N}`).
+  Named pipes share a global namespace, so Windows is not a security boundary.
+- `socket_dir()` is pure; the directory is created and its trust verified by
+  `ensure_socket_dir()` at first socket use (from `mcp_session()`/`mcp_server()`),
+  not at package load. `ensure_socket_dir()` aborts if an existing directory is a
+  symlink or is owned by another uid, and tightens perms to 0700 otherwise.
+- All socket address construction flows through `the$socket_url`, computed once
+  in `.onLoad()`, so `MCPTOOLS_SOCKET_DIR` must be set before the package loads.
+- Sessions claim the lowest free slot. When `listen()` fails on a slot,
+  `reclaim_stale_socket()` does one synchronous dial: a live listener accepts a
+  pipe even while its R process is busy, so a refused dial identifies a crashed
+  session's leftover file, which is unlinked and the slot relisted. This means
+  the server and `list_r_sessions()` need no cleanup pass of their own, and there
+  are no ping-based liveness probes.
+- Own-socket cleanup on clean exit runs via `.onUnload()` and
+  `reg.finalizer(onexit = TRUE)`.

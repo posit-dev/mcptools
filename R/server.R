@@ -91,6 +91,12 @@
 #' `usethis::edit_r_profile()`, to make every interactive R session you start
 #' available to the server.
 #'
+#' The server and its sessions find each other through per-user IPC sockets on
+#' the local machine, so only sessions running as the same user on the same host
+#' are discoverable. On Linux and macOS the sockets live in an owner-only
+#' directory; set the `MCPTOOLS_SOCKET_DIR` environment variable (before the
+#' package loads) to override its location.
+#'
 #' On Windows, you may need to configure the full path to the Rscript executable.
 #' Examples for Claude Code on WSL and Claude Desktop on Windows are shown
 #' at <https://github.com/posit-dev/mcptools/issues/41#issuecomment-3036617046>.
