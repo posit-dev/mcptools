@@ -124,9 +124,15 @@ in that file:</p>
 <p>For remote Streamable HTTP MCP servers, configure a server with <code>url</code>.
 Static headers can be supplied with <code>headers</code>; protocol-owned headers such
 as <code>Accept</code>, <code>Content-Type</code>, <code>MCP-Session-Id</code>, and <code>MCP-Protocol-Version</code>
-are managed by mcptools and cannot be configured manually. Credentialed
-public remote endpoints must use HTTPS. HTTP is allowed for loopback
-development servers, or for explicit unsafe opt-out with <code>allow_http</code>.</p>
+are managed by mcptools and cannot be configured manually. Remote endpoints
+must use HTTPS; HTTP is allowed only for loopback development servers or for
+explicit unsafe opt-out with <code>allow_http</code>.</p>
+<p>When no static <code>Authorization</code> header is configured and the server answers an
+unauthenticated request with a <code>401</code> OAuth challenge, mcptools automatically
+runs the OAuth authorization-code flow, opening a browser for sign-in. Tokens
+are cached and refreshed, so the browser step happens only until a cached
+token expires. An <code>oauth</code> block is optional and only needed to override the
+defaults described below.</p>
 <p>Remote server entries support these fields:</p><ul><li><p><code>url</code>: the Streamable HTTP MCP endpoint.</p></li>
 <li><p><code>headers</code>: named static headers. Values may use <code>${ENVVAR}</code> interpolation.</p></li>
 <li><p><code>timeout</code>: a number of seconds for the overall HTTP request timeout.</p></li>

@@ -80,9 +80,16 @@ For remote Streamable HTTP MCP servers, configure a server with `url`.
 Static headers can be supplied with `headers`; protocol-owned headers
 such as `Accept`, `Content-Type`, `MCP-Session-Id`, and
 `MCP-Protocol-Version` are managed by mcptools and cannot be configured
-manually. Credentialed public remote endpoints must use HTTPS. HTTP is
-allowed for loopback development servers, or for explicit unsafe opt-out
-with `allow_http`.
+manually. Remote endpoints must use HTTPS; HTTP is allowed only for
+loopback development servers or for explicit unsafe opt-out with
+`allow_http`.
+
+When no static `Authorization` header is configured and the server
+answers an unauthenticated request with a `401` OAuth challenge,
+mcptools automatically runs the OAuth authorization-code flow, opening a
+browser for sign-in. Tokens are cached and refreshed, so the browser
+step happens only until a cached token expires. An `oauth` block is
+optional and only needed to override the defaults described below.
 
 Remote server entries support these fields:
 

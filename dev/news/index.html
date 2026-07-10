@@ -37,7 +37,9 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="mcptools-development-version">mcptools (development version)<a class="anchor" aria-label="anchor" href="#mcptools-development-version"></a></h2>
-</div>
+<ul><li>
+<code><a href="../reference/client.html">mcp_tools()</a></code> now initiates the MCP OAuth authorization-code flow automatically when a remote server configured with only a <code>url</code> answers an unauthenticated request with a <code>401</code> challenge. Previously, connecting to such a server required either a static <code>Authorization</code> header or an explicit <code>oauth</code> block; the <code>oauth</code> block is now needed only to override defaults.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="mcptools-100">mcptools 1.0.0<a class="anchor" aria-label="anchor" href="#mcptools-100"></a></h2><p class="text-muted">CRAN release: 2026-07-02</p>
 <div class="section level3">

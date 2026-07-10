@@ -2,6 +2,14 @@
 
 ## mcptools (development version)
 
+- [`mcp_tools()`](https://posit-dev.github.io/mcptools/dev/reference/client.md)
+  now initiates the MCP OAuth authorization-code flow automatically when
+  a remote server configured with only a `url` answers an
+  unauthenticated request with a `401` challenge. Previously, connecting
+  to such a server required either a static `Authorization` header or an
+  explicit `oauth` block; the `oauth` block is now needed only to
+  override defaults.
+
 ## mcptools 1.0.0
 
 CRAN release: 2026-07-02
