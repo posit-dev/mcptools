@@ -25,6 +25,11 @@
   [@kwbyron-lilly](https://github.com/kwbyron-lilly)
   ([\#114](https://github.com/posit-dev/mcptools/issues/114)).
 
+- The session and server now authenticate every IPC message with a
+  per-user secret stored alongside the sockets, so a session acts only
+  on tool calls from the paired server and the server accepts only
+  responses from a genuine session.
+
 - Socket files left behind by a crashed session are now reclaimed
   automatically: the next session that needs the slot detects the dead
   file and reuses it.
