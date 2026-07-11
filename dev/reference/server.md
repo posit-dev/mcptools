@@ -146,6 +146,20 @@ call to `mcptools::mcp_session()` in your `.Rprofile`, perhaps with
 `usethis::edit_r_profile()`, to make every interactive R session you
 start available to the server.
 
+The server and its sessions find each other through per-user IPC sockets
+on the local machine, so only sessions running as the same user on the
+same host are discoverable. On Linux and macOS the sockets live in an
+owner-only directory; set the `MCPTOOLS_SOCKET_DIR` environment variable
+(before the package loads) to override its location.
+
+When several sessions are available, the server connects to the session
+whose working directory matches its own; clients launched inside a
+project, as with Claude Code or Posit Assistant, thus connect to that
+project's session. Failing that, the server connects to the only running
+session, if there is exactly one. When several sessions are running and
+none matches, tools execute in the server's own R process until the
+client selects a session with the `select_r_session` tool.
+
 On Windows, you may need to configure the full path to the Rscript
 executable. Examples for Claude Code on WSL and Claude Desktop on
 Windows are shown at

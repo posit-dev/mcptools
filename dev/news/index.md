@@ -2,6 +2,36 @@
 
 ## mcptools (development version)
 
+- The server now chooses its R session at tool-call time rather than
+  always connecting to the first session: it prefers the session whose
+  working directory matches its own (clients like Claude Code and Posit
+  Assistant launch the server in the project directory), falling back to
+  the only running session. When several sessions are running and none
+  matches, tools execute in the server’s own R process until the client
+  calls `select_r_session`. Previously, a second client + session pair
+  in another project window would silently execute tools in the first
+  project’s session
+  ([\#114](https://github.com/posit-dev/mcptools/issues/114)).
+
+- Sessions now use per-user filesystem IPC sockets in an
+  owner-only (0700) directory instead of a shared address. On multi-user
+  Linux hosts (e.g. Posit Workbench) the previous default let any local
+  user connect to another user’s
+  [`mcp_session()`](https://posit-dev.github.io/mcptools/dev/reference/server.md)
+  and execute tools in it; sessions are now isolated by Unix user. The
+  socket directory follows `MCPTOOLS_SOCKET_DIR` \>
+  `XDG_RUNTIME_DIR/mcptools/` \> `$TMPDIR/mcptools-<user>/` \>
+  `/tmp/mcptools-<user>/`. Reported and prototyped by
+  [@kwbyron-lilly](https://github.com/kwbyron-lilly)
+  ([\#114](https://github.com/posit-dev/mcptools/issues/114)).
+
+- Socket files left behind by a crashed session are now reclaimed
+  automatically: the next session that needs the slot detects the dead
+  file and reuses it.
+
+- `list_r_sessions()` no longer returns spurious `"5"` entries when a
+  session is slow to respond to discovery probes.
+
 - [`mcp_tools()`](https://posit-dev.github.io/mcptools/dev/reference/client.md)
   now initiates the MCP OAuth authorization-code flow automatically when
   a remote server configured with only a `url` answers an

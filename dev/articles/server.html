@@ -178,12 +178,18 @@ there’s nothing to keep in mind here.</p>
 default R session for your model to talk to without the client knowing
 it even had multiple options. So, you might have a project “goats” open
 in one Positron window and another project, “sheep”, open in another
-Positron window. mcptools provides models with two tools to facilitate
-toggling between sessions. The first, <code>list_r_sessions()</code>,
-allows the client to “discover” R sessions available to it by their
-working directory and (inferred) IDE. Then, the tool
-<code>select_r_session()</code> allows the client to (persistently)
-choose an R session. So, you could write “In my goats R session,
+Positron window. The server prefers the session whose working directory
+matches its own—clients launched inside a project, as with Claude Code
+or Posit Assistant, thus connect to that project’s session
+automatically—and otherwise connects to the only running session, if
+there’s exactly one. If neither is the case, tools execute in the
+server’s own R process until a session is selected. mcptools provides
+models with two tools to facilitate toggling between sessions. The
+first, <code>list_r_sessions()</code>, allows the client to “discover” R
+sessions available to it by their working directory and (inferred) IDE.
+Then, the tool <code>select_r_session()</code> allows the client to
+(persistently) choose an R session. So, you could write “In my goats R
+session,
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mi>o</mi><mi>m</mi><mi>e</mi><mi>q</mi><mi>u</mi><mi>e</mi><mi>s</mi><mi>t</mi><mi>i</mi><mi>o</mi><mi>n</mi></mrow><annotation encoding="application/x-tex">some question</annotation></semantics></math>.”
 In that case, the model might call <code>list_r_sessions()</code> to
 find the full identifier for that goats session, then
