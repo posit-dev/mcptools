@@ -188,6 +188,14 @@ test_that("OAuth config supports environment interpolation", {
   expect_equal(oauth$client_info$client_id, "client-from-env")
 })
 
+test_that("OAuth config populates defaults without an oauth block", {
+  oauth <- mcp_config_oauth(list(url = "https://example.test/mcp"))
+
+  expect_equal(oauth$resource, "https://example.test/mcp")
+  expect_equal(mcp_oauth_redirect_uri(oauth), "http://localhost:1410/oauth/callback")
+  expect_true(nzchar(oauth$cache_dir))
+})
+
 # OAuth: cache -----------------------------------------------------------------
 test_that("OAuth client-registration cache writes restricted JSON", {
   cache_dir <- withr::local_tempdir()
@@ -263,6 +271,32 @@ test_that("a 401 challenge discovers and establishes an OAuth client", {
   expect_equal(transport$oauth_client$id, "registered-client")
   expect_equal(transport$oauth_auth_url, "https://auth.test/authorize")
   expect_type(transport$oauth_cache_key, "character")
+  expect_equal(transport$oauth_token$access_token, "tok")
+})
+
+test_that("a url-only server auto-engages OAuth on a 401 challenge", {
+  transport <- mcp_transport_http(list(url = "https://example.test/mcp"))
+  expect_true(mcp_oauth_active(transport))
+
+  metadata <- list(
+    issuer = "https://example.test",
+    authorization_endpoint = "https://example.test/authorize",
+    token_endpoint = "https://example.test/token",
+    code_challenge_methods_supported = list("S256")
+  )
+
+  local_mocked_bindings(
+    mcp_oauth_discover = function(...) metadata,
+    mcp_oauth_client_info = function(...) list(client_id = "registered-client"),
+    mcp_oauth_prepare_token = function(transport, ...) {
+      transport$oauth_token <- list(access_token = "tok")
+    }
+  )
+
+  expect_true(mcp_oauth_authorize_from_challenge(
+    transport,
+    httr2::response(status_code = 401L)
+  ))
   expect_equal(transport$oauth_token$access_token, "tok")
 })
 

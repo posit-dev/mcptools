@@ -76,9 +76,16 @@ in that file:
 For remote Streamable HTTP MCP servers, configure a server with \code{url}.
 Static headers can be supplied with \code{headers}; protocol-owned headers such
 as \code{Accept}, \code{Content-Type}, \code{MCP-Session-Id}, and \code{MCP-Protocol-Version}
-are managed by mcptools and cannot be configured manually. Credentialed
-public remote endpoints must use HTTPS. HTTP is allowed for loopback
-development servers, or for explicit unsafe opt-out with \code{allow_http}.
+are managed by mcptools and cannot be configured manually. Remote endpoints
+must use HTTPS; HTTP is allowed only for loopback development servers or for
+explicit unsafe opt-out with \code{allow_http}.
+
+When no static \code{Authorization} header is configured and the server answers an
+unauthenticated request with a \code{401} OAuth challenge, mcptools automatically
+runs the OAuth authorization-code flow, opening a browser for sign-in. Tokens
+are cached and refreshed, so the browser step happens only until a cached
+token expires. An \code{oauth} block is optional and only needed to override the
+defaults described below.
 
 Remote server entries support these fields:
 \itemize{

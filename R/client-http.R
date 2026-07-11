@@ -159,6 +159,7 @@ mcp_transport_http_request <- function(transport, message) {
   req <- httr2::req_body_json(req, message, auto_unbox = TRUE)
   req <- httr2::req_headers(req, Accept = "application/json, text/event-stream")
   req <- mcp_transport_http_headers(req, transport)
+  req <- mcp_req_no_redirect_downgrade(req, transport$url)
   req <- mcp_req_no_error(req)
   mcp_req_timeout(req, transport$timeout)
 }
@@ -168,6 +169,7 @@ mcp_endpoint_delete_request <- function(transport) {
   req <- httr2::req_method(req, "DELETE")
   req <- httr2::req_headers(req, Accept = "application/json, text/event-stream")
   req <- mcp_transport_http_headers(req, transport)
+  req <- mcp_req_no_redirect_downgrade(req, transport$url)
   req <- mcp_req_no_error(req)
   mcp_req_timeout(req, transport$timeout)
 }
@@ -195,6 +197,15 @@ mcp_req_no_error <- function(req) {
 
 mcp_req_no_redirects <- function(req) {
   httr2::req_options(req, followlocation = FALSE)
+}
+
+mcp_req_no_redirect_downgrade <- function(req, url) {
+  parsed <- url_parse_or_null(url)
+  if (!identical(tolower(parsed$scheme %||% ""), "https")) {
+    return(req)
+  }
+
+  httr2::req_options(req, redir_protocols_str = "https")
 }
 
 mcp_req_timeout <- function(req, timeout = NULL) {

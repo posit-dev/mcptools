@@ -53,9 +53,22 @@ test_that("HTTP config rejects Authorization header alongside OAuth", {
   )
 })
 
+test_that("an Authorization header without an oauth block builds and disables OAuth", {
+  transport <- mcp_transport_http(list(
+    url = "https://example.test/mcp",
+    headers = list(Authorization = "Key secret")
+  ))
+
+  expect_equal(transport$headers[["Authorization"]], "Key secret")
+  expect_false(mcp_oauth_active(transport))
+})
+
 test_that("credentialed public HTTP endpoints require explicit opt-out", {
-  transport <- mcp_transport_http(list(url = "http://example.test/mcp"))
-  expect_false(transport$allow_http)
+  # a bare http url is credentialed now that OAuth auto-engages on a 401
+  expect_error(
+    mcp_transport_http(list(url = "http://example.test/mcp")),
+    "Credentialed remote MCP endpoints"
+  )
 
   transport <- mcp_transport_http(list(
     url = "http://127.0.0.1:8080/mcp",
@@ -125,6 +138,34 @@ test_that("HTTP request construction leaves proxy and CA settings to curl", {
   expect_equal(req$method, "POST")
   expect_null(req$options$proxy)
   expect_null(req$options$cainfo)
+})
+
+test_that("credentialed requests block redirect downgrade only over https", {
+  https <- mcp_transport_http(list(
+    url = "https://example.test/mcp",
+    headers = list("X-Api-Key" = "secret")
+  ))
+
+  post <- mcp_transport_http_request(
+    https,
+    list(jsonrpc = "2.0", id = 1L, method = "tools/list")
+  )
+  expect_equal(post$options$redir_protocols_str, "https")
+  expect_equal(
+    mcp_endpoint_delete_request(https)$options$redir_protocols_str,
+    "https"
+  )
+
+  http <- mcp_transport_http(list(
+    url = "http://127.0.0.1:8080/mcp",
+    headers = list("X-Api-Key" = "secret")
+  ))
+  expect_null(
+    mcp_transport_http_request(
+      http,
+      list(jsonrpc = "2.0", id = 1L, method = "tools/list")
+    )$options$redir_protocols_str
+  )
 })
 
 test_that("HTTP OAuth resource defaults to the server URL and normalizes", {

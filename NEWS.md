@@ -1,5 +1,6 @@
 # mcptools (development version)
 
+
 * The server now chooses its R session at tool-call time rather than always
   connecting to the first session: it prefers the session whose working
   directory matches its own (clients like Claude Code and Posit Assistant
@@ -23,6 +24,13 @@
 
 * `list_r_sessions()` no longer returns spurious `"5"` entries when a session is
   slow to respond to discovery probes.
+
+* `mcp_tools()` now initiates the MCP OAuth authorization-code flow automatically
+  when a remote server configured with only a `url` answers an unauthenticated
+  request with a `401` challenge. Previously, connecting to such a server required
+  either a static `Authorization` header or an explicit `oauth` block; the `oauth`
+  block is now needed only to override defaults.
+
 
 # mcptools 1.0.0
 
