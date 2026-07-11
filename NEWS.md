@@ -1,5 +1,15 @@
 # mcptools (development version)
 
+* The server now chooses its R session at tool-call time rather than always
+  connecting to the first session: it prefers the session whose working
+  directory matches its own (clients like Claude Code and Posit Assistant
+  launch the server in the project directory), falling back to the only
+  running session. When several sessions are running and none matches, tools
+  execute in the server's own R process until the client calls
+  `select_r_session`. Previously, a second client + session pair in another
+  project window would silently execute tools in the first project's
+  session (#114).
+
 * Sessions now use per-user filesystem IPC sockets in an owner-only (0700)
   directory instead of a shared address. On multi-user Linux hosts (e.g. Posit
   Workbench) the previous default let any local user connect to another user's

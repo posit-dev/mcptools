@@ -84,36 +84,8 @@ source_tools <- function(x) {
 # to discover R sessions which have called `mcptools::mcp_session()`. They
 # are "model-facing" rather than user-facing.
 list_r_sessions <- function() {
-  sock <- nanonext::socket("poly")
-  on.exit(nanonext::reap(sock))
-  cv <- nanonext::cv()
-  monitor <- nanonext::monitor(sock, cv)
-  for (i in seq_len(1024L)) {
-    if (
-      nanonext::dial(
-        sock,
-        url = sprintf("%s%d", the$socket_url, i),
-        autostart = NA,
-        fail = "none"
-      ) &&
-        i > 8L
-    ) {
-      break
-    }
-  }
-  pipes <- nanonext::read_monitor(monitor)
-  res <- lapply(
-    pipes,
-    function(x) nanonext::recv_aio(sock, mode = "string", timeout = 5000L)
-  )
-  lapply(
-    pipes,
-    function(x) nanonext::send_aio(sock, character(), mode = "serial", pipe = x)
-  )
-  results <- nanonext::collect_aio_(res)
-
-  # a timed-out probe surfaces as an integer error code, not a session string
-  sort(as.character(Filter(is.character, results)))
+  probe <- probe_sessions()
+  sort(vapply(probe$sessions, function(s) s$description, character(1)))
 }
 
 list_r_sessions_description <- paste(
@@ -132,12 +104,7 @@ list_r_sessions_tool <- ellmer::tool(
 )
 
 select_r_session <- function(session) {
-  nanonext::reap(the$server_socket[["dialer"]][[1L]])
-  attr(the$server_socket, "dialer") <- NULL
-  nanonext::dial(
-    the$server_socket,
-    url = sprintf("%s%d", the$socket_url, session)
-  )
+  dial_session(session)
   sprintf("Selected session %d successfully.", session)
 }
 
@@ -145,8 +112,10 @@ select_r_session_description <- paste(
   "Choose the R session of interest.",
   "Use the `list_r_sessions` tool to discover potential sessions.",
   "In general, **do not use this tool unless asked to select a specific R",
-  "session**; the tools available to you have a default R session",
-  "that is usually the one the user wants.",
+  "session**; the server automatically connects to the R session that shares",
+  "its working directory or, failing that, to the only running session.",
+  "When several sessions are running and none matches, tools execute in a",
+  "fresh R process rather than in one of the user's sessions.",
   "Do not call this tool immediately after calling list_r_sessions",
   "unless you've been asked to select an R session and haven't yet",
   "called list_r_sessions.",
@@ -161,6 +130,132 @@ select_r_session_tool <- ellmer::tool(
     session = ellmer::type_integer("The R session number to select.")
   )
 )
+
+# The server connects to a session lazily, at tool-call time, so that sessions
+# started after the server (e.g. via .Rprofile) are still discoverable. While
+# unconnected, every session-bound call re-runs discovery: prefer the session
+# whose working directory matches the server's (per-project clients like
+# Positron launch the server in the project directory), else a sole live
+# session. With several sessions and no match there is no safe guess, so stay
+# unconnected and let the call execute in the server process (#36) until the
+# client selects a session explicitly.
+ensure_session_connection <- function() {
+  if (nanonext::stat(the$server_socket, "pipes") > 0L) {
+    return(TRUE)
+  }
+
+  slot <- discover_session_slot()
+  if (is.null(slot)) {
+    return(FALSE)
+  }
+
+  dial_session(slot, autostart = NA)
+  nanonext::stat(the$server_socket, "pipes") > 0L
+}
+
+discover_session_slot <- function(wd = getwd()) {
+  probe <- probe_sessions()
+
+  slots <- vapply(probe$sessions, function(s) s$slot, integer(1))
+  wds <- vapply(
+    probe$sessions,
+    function(s) s$wd %||% NA_character_,
+    character(1)
+  )
+  matches <- which(!is.na(wds) & wds == wd)
+  if (length(matches) == 1L) {
+    return(slots[matches])
+  }
+
+  # `live` comes from dial success, which a busy session still provides even
+  # though it can't answer the probe, so a sole busy session is connectable
+  if (length(probe$live) == 1L) {
+    return(probe$live[1L])
+  }
+
+  NULL
+}
+
+# Dial every claimed slot and ask each live session to identify itself.
+# Returns `live`, the slots which accepted the dial, and `sessions`, a record
+# per probe reply: `slot`, `wd` (NULL for sessions predating structured
+# replies), and `description` (the display string for list_r_sessions()).
+# Busy sessions appear in `live` but not in `sessions`.
+probe_sessions <- function() {
+  sock <- nanonext::socket("poly")
+  on.exit(nanonext::reap(sock))
+  cv <- nanonext::cv()
+  monitor <- nanonext::monitor(sock, cv)
+
+  live <- integer()
+  for (i in seq_len(1024L)) {
+    rc <- nanonext::dial(
+      sock,
+      url = sprintf("%s%d", the$socket_url, i),
+      autostart = NA,
+      fail = "none"
+    )
+    if (nanonext::is_error_value(rc)) {
+      if (i > 8L) {
+        break
+      }
+    } else {
+      live <- c(live, i)
+    }
+  }
+
+  pipes <- nanonext::read_monitor(monitor)
+  res <- lapply(
+    pipes,
+    function(x) nanonext::recv_aio(sock, mode = "string", timeout = 5000L)
+  )
+  lapply(
+    pipes,
+    function(x) nanonext::send_aio(sock, character(), mode = "serial", pipe = x)
+  )
+  results <- nanonext::collect_aio_(res)
+
+  # a timed-out probe surfaces as an integer error code, not a session string
+  replies <- Filter(is.character, results)
+  list(live = live, sessions = lapply(replies, parse_session_reply))
+}
+
+parse_session_reply <- function(reply) {
+  parsed <- tryCatch(jsonlite::parse_json(reply), error = function(e) NULL)
+  if (is.list(parsed) && is_string(parsed$description)) {
+    return(list(
+      slot = as.integer(parsed$session %||% NA_integer_),
+      wd = parsed$wd,
+      description = parsed$description
+    ))
+  }
+
+  # a display-string reply from a session predating structured metadata still
+  # carries its slot as the numeric prefix
+  list(
+    slot = suppressWarnings(as.integer(sub("^(\\d+):.*$", "\\1", reply))),
+    wd = NULL,
+    description = reply
+  )
+}
+
+# Reap any existing dialer before dialing anew: a leftover dialer from a dead
+# session would redial its old slot if a new session claims it, leaving the
+# server connected to two sessions at once.
+dial_session <- function(slot, ...) {
+  dialer <- the$server_socket[["dialer"]]
+  if (!is.null(dialer)) {
+    nanonext::reap(dialer[[1L]])
+    attr(the$server_socket, "dialer") <- NULL
+  }
+
+  nanonext::dial(
+    the$server_socket,
+    url = sprintf("%s%d", the$socket_url, slot),
+    ...,
+    fail = "none"
+  )
+}
 
 get_mcptools_tools <- function() {
   # must be called inside of the server session

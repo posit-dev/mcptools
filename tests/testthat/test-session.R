@@ -270,6 +270,19 @@ test_that("describe_session works", {
   expect_equal(result, "42: test-dir (Test IDE)")
 })
 
+test_that("session_metadata includes the slot and working directory", {
+  the$session <- 7L
+  local_mocked_bindings(
+    basename = function(x) "test-dir",
+    getwd = function() "/path/to/test-dir",
+    infer_ide = function() "Test IDE"
+  )
+  result <- jsonlite::parse_json(session_metadata())
+  expect_equal(result$session, 7)
+  expect_equal(result$wd, "/path/to/test-dir")
+  expect_equal(result$description, "7: test-dir (Test IDE)")
+})
+
 test_that("infer_ide identifies different IDEs", {
   local_mocked_bindings(commandArgs = function() c("ark", "other", "args"))
   expect_equal(infer_ide(), "Positron")

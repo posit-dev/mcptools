@@ -229,3 +229,111 @@ test_that("list_r_sessions() filters out integer error codes", {
   result <- list_r_sessions()
   expect_equal(result, "1: /home/user/myproject (RStudio)")
 })
+
+test_that("parse_session_reply() parses structured replies", {
+  reply <- as.character(to_json(list(
+    session = 3L,
+    wd = "/path/to/proj",
+    description = "3: proj (Positron)"
+  )))
+
+  result <- parse_session_reply(reply)
+  expect_equal(result$slot, 3L)
+  expect_equal(result$wd, "/path/to/proj")
+  expect_equal(result$description, "3: proj (Positron)")
+})
+
+test_that("parse_session_reply() falls back for pre-metadata replies", {
+  result <- parse_session_reply("2: myproject (RStudio)")
+  expect_equal(result$slot, 2L)
+  expect_null(result$wd)
+  expect_equal(result$description, "2: myproject (RStudio)")
+
+  result <- parse_session_reply("mystery")
+  expect_true(is.na(result$slot))
+  expect_equal(result$description, "mystery")
+})
+
+test_that("discover_session_slot() prefers the working-directory match", {
+  local_mocked_bindings(
+    probe_sessions = function() {
+      list(
+        live = c(1L, 2L),
+        sessions = list(
+          list(slot = 1L, wd = "/proj/a", description = "1: a (Positron)"),
+          list(slot = 2L, wd = "/proj/b", description = "2: b (Positron)")
+        )
+      )
+    }
+  )
+
+  expect_equal(discover_session_slot("/proj/b"), 2L)
+})
+
+test_that("discover_session_slot() falls back to a sole live session", {
+  # a busy session accepts the dial but can't reply, so it appears in `live`
+  # without a corresponding session record
+  local_mocked_bindings(
+    probe_sessions = function() list(live = 4L, sessions = list())
+  )
+
+  expect_equal(discover_session_slot("/elsewhere"), 4L)
+})
+
+test_that("discover_session_slot() is NULL when there is no clear default", {
+  probe <- list(
+    live = c(1L, 2L),
+    sessions = list(
+      list(slot = 1L, wd = "/proj/a", description = "1: a (Positron)"),
+      list(slot = 2L, wd = "/proj/b", description = "2: b (Positron)")
+    )
+  )
+  local_mocked_bindings(probe_sessions = function() probe)
+
+  expect_null(discover_session_slot("/elsewhere"))
+
+  # two sessions in the same directory are also ambiguous
+  probe$sessions[[2]]$wd <- "/proj/a"
+  expect_null(discover_session_slot("/proj/a"))
+
+  probe <- list(live = integer(), sessions = list())
+  expect_null(discover_session_slot("/proj/a"))
+})
+
+test_that("ensure_session_connection() is TRUE when already connected", {
+  local_mocked_bindings(
+    stat = function(...) 1L,
+    .package = "nanonext"
+  )
+
+  expect_true(ensure_session_connection())
+})
+
+test_that("ensure_session_connection() stays unconnected with no default", {
+  local_mocked_bindings(
+    stat = function(...) 0L,
+    .package = "nanonext"
+  )
+  local_mocked_bindings(discover_session_slot = function(...) NULL)
+
+  expect_false(ensure_session_connection())
+})
+
+test_that("ensure_session_connection() dials the discovered session", {
+  pipes <- 0L
+  dialed <- NULL
+  local_mocked_bindings(
+    stat = function(...) pipes,
+    .package = "nanonext"
+  )
+  local_mocked_bindings(
+    discover_session_slot = function(...) 7L,
+    dial_session = function(slot, ...) {
+      dialed <<- slot
+      pipes <<- 1L
+    }
+  )
+
+  expect_true(ensure_session_connection())
+  expect_equal(dialed, 7L)
+})

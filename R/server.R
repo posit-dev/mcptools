@@ -97,6 +97,14 @@
 #' directory; set the `MCPTOOLS_SOCKET_DIR` environment variable (before the
 #' package loads) to override its location.
 #'
+#' When several sessions are available, the server connects to the session
+#' whose working directory matches its own; clients launched inside a project,
+#' as with Claude Code or Posit Assistant, thus connect to that project's
+#' session. Failing that, the server connects to the only running session, if
+#' there is exactly one. When several sessions are running and none matches,
+#' tools execute in the server's own R process until the client selects a
+#' session with the `select_r_session` tool.
+#'
 #' On Windows, you may need to configure the full path to the Rscript executable.
 #' Examples for Claude Code on WSL and Claude Desktop on Windows are shown
 #' at <https://github.com/posit-dev/mcptools/issues/41#issuecomment-3036617046>.
@@ -204,11 +212,10 @@ mcp_server_stdio <- function() {
   client <- nanonext::recv_aio(reader_socket, mode = "string", cv = cv)
 
   if (the$sessions_enabled) {
+    # no dial here: the server connects to a session lazily, at tool-call
+    # time (see ensure_session_connection())
     the$server_socket <- nanonext::socket("poly")
     on.exit(nanonext::reap(the$server_socket), add = TRUE)
-
-    # async dial retries forever, so the server may start before any session
-    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
   }
 
   while (nanonext::wait(cv)) {
@@ -223,8 +230,6 @@ mcp_server_http <- function(host = "127.0.0.1", port = 8080) {
   if (the$sessions_enabled) {
     the$server_socket <- nanonext::socket("poly")
     on.exit(nanonext::reap(the$server_socket), add = TRUE)
-
-    nanonext::dial(the$server_socket, url = sprintf("%s%d", the$socket_url, 1L))
   }
 
   app <- list(
@@ -445,7 +450,7 @@ handle_http_request_message <- function(
     if (
       !the$sessions_enabled ||
         tool_name %in% c("list_r_sessions", "select_r_session") ||
-        !nanonext::stat(the$server_socket, "pipes")
+        !ensure_session_connection()
     ) {
       prepared <- append_tool_fn(data)
       if (inherits(prepared, "jsonrpc_error")) {
@@ -525,9 +530,9 @@ handle_message_from_client <- function(line) {
         # two tools provided by mcptools itself which must be executed in
         # the server rather than a session (#18)
         tool_name %in% c("list_r_sessions", "select_r_session") ||
-        # when session handling is disabled, never forward to sessions
-        # with no sessions available, just execute tools in the server (#36)
-        !nanonext::stat(the$server_socket, "pipes")
+        # when no session is connected or discoverable, just execute tools
+        # in the server (#36)
+        !ensure_session_connection()
     ) {
       handle_request(data)
     } else {
