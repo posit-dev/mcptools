@@ -30,6 +30,17 @@
   on tool calls from the paired server and the server accepts only
   responses from a genuine session.
 
+- Tools returning
+  [`ellmer::content_image_url()`](https://ellmer.tidyverse.org/reference/content_image_url.html)
+  inline the image by fetching it server-side; that fetch is now
+  restricted to `http`/`https` URLs, and any redirects are followed by
+  mcptools itself so each hop is re-checked rather than trusted to curl.
+  When the server is reached over the network (an HTTP deployment), the
+  fetch additionally refuses private, loopback, and link-local
+  addresses, so a tool argument cannot steer it at cloud-metadata
+  endpoints, internal hosts, or local files. Local (stdio) servers keep
+  fetching addresses on their own machine.
+
 - Socket files left behind by a crashed session are now reclaimed
   automatically: the next session that needs the slot detects the dead
   file and reuses it.
