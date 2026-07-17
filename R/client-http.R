@@ -20,11 +20,7 @@ mcp_transport_http_send <- function(
 
   mcp_oauth_prepare_token(transport, call = call)
   req <- mcp_transport_http_request(transport, message)
-  resp <- if (expect_response) {
-    httr2::req_perform_connection(req)
-  } else {
-    httr2::req_perform(req)
-  }
+  resp <- mcp_http_perform(req, expect_response, call = call)
   if (expect_response) {
     on.exit(close(resp), add = TRUE)
   }
@@ -159,7 +155,6 @@ mcp_transport_http_request <- function(transport, message) {
   req <- httr2::req_body_json(req, message, auto_unbox = TRUE)
   req <- httr2::req_headers(req, Accept = "application/json, text/event-stream")
   req <- mcp_transport_http_headers(req, transport)
-  req <- mcp_req_no_redirect_downgrade(req, transport$url)
   req <- mcp_req_no_error(req)
   mcp_req_timeout(req, transport$timeout)
 }
@@ -169,7 +164,6 @@ mcp_endpoint_delete_request <- function(transport) {
   req <- httr2::req_method(req, "DELETE")
   req <- httr2::req_headers(req, Accept = "application/json, text/event-stream")
   req <- mcp_transport_http_headers(req, transport)
-  req <- mcp_req_no_redirect_downgrade(req, transport$url)
   req <- mcp_req_no_error(req)
   mcp_req_timeout(req, transport$timeout)
 }
@@ -199,13 +193,64 @@ mcp_req_no_redirects <- function(req) {
   httr2::req_options(req, followlocation = FALSE)
 }
 
-mcp_req_no_redirect_downgrade <- function(req, url) {
-  parsed <- url_parse_or_null(url)
-  if (!identical(tolower(parsed$scheme %||% ""), "https")) {
-    return(req)
+mcp_http_perform <- function(req, expect_response, call = caller_env()) {
+  origin <- url_origin(req$url)
+  req <- mcp_req_no_redirects(req)
+  max_redirects <- 5L
+
+  for (i in seq_len(max_redirects + 1L)) {
+    resp <- if (expect_response) {
+      httr2::req_perform_connection(req)
+    } else {
+      httr2::req_perform(req)
+    }
+
+    status <- httr2::resp_status(resp)
+    if (status < 300L || status >= 400L) {
+      return(resp)
+    }
+
+    location <- httr2::resp_header(resp, "location")
+    if (expect_response) {
+      close(resp)
+    }
+
+    req <- mcp_redirect_hop(req, location, origin, call = call)
   }
 
-  httr2::req_options(req, redir_protocols_str = "https")
+  cli::cli_abort(
+    c(
+      "MCP HTTP request failed.",
+      i = "Exceeded the {max_redirects}-redirect limit."
+    ),
+    call = call
+  )
+}
+
+mcp_redirect_hop <- function(req, location, origin, call = caller_env()) {
+  if (is.null(location) || !nzchar(location)) {
+    cli::cli_abort(
+      c(
+        "MCP HTTP request failed.",
+        i = "The server returned a redirect without a {.field Location}."
+      ),
+      call = call
+    )
+  }
+
+  req <- httr2::req_url_relative(req, location)
+  if (!identical(url_origin(req$url), origin)) {
+    cli::cli_abort(
+      c(
+        "MCP server requested a cross-origin redirect.",
+        i = "Refusing to resend credentials to {.url {req$url}}."
+      ),
+      class = "mcptools_http_cross_origin_redirect",
+      call = call
+    )
+  }
+
+  req
 }
 
 mcp_req_timeout <- function(req, timeout = NULL) {
@@ -222,7 +267,7 @@ mcp_transport_http_close <- function(transport, call = caller_env()) {
   }
 
   req <- mcp_endpoint_delete_request(transport)
-  resp <- httr2::req_perform(req)
+  resp <- mcp_http_perform(req, expect_response = FALSE, call = call)
   status <- httr2::resp_status(resp)
 
   if (!status %in% c(200L, 202L, 204L, 404L, 405L)) {

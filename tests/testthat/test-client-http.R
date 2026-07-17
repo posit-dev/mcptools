@@ -140,32 +140,110 @@ test_that("HTTP request construction leaves proxy and CA settings to curl", {
   expect_null(req$options$cainfo)
 })
 
-test_that("credentialed requests block redirect downgrade only over https", {
-  https <- mcp_transport_http(list(
+test_that("credentialed redirects are followed only within the same origin", {
+  req <- mcp_transport_http_request(
+    mcp_transport_http(list(
+      url = "https://example.test/mcp",
+      headers = list("X-Api-Key" = "secret")
+    )),
+    list(jsonrpc = "2.0", id = 1L, method = "tools/list")
+  )
+  origin <- url_origin(req$url)
+
+  expect_equal(
+    mcp_redirect_hop(req, "/mcp/v2", origin)$url,
+    "https://example.test/mcp/v2"
+  )
+
+  for (location in c(
+    "https://evil.test/mcp",
+    "http://example.test/mcp",
+    "https://example.test:8443/mcp"
+  )) {
+    expect_error(
+      mcp_redirect_hop(req, location, origin),
+      class = "mcptools_http_cross_origin_redirect"
+    )
+  }
+
+  expect_error(mcp_redirect_hop(req, NULL, origin), "without a")
+})
+
+test_that("a cross-origin redirect refuses to resend credentialed headers", {
+  transport <- mcp_transport_http(list(
     url = "https://example.test/mcp",
     headers = list("X-Api-Key" = "secret")
   ))
 
-  post <- mcp_transport_http_request(
-    https,
-    list(jsonrpc = "2.0", id = 1L, method = "tools/list")
-  )
-  expect_equal(post$options$redir_protocols_str, "https")
-  expect_equal(
-    mcp_endpoint_delete_request(https)$options$redir_protocols_str,
-    "https"
-  )
+  seen <- new.env(parent = emptyenv())
+  seen$urls <- character()
 
-  http <- mcp_transport_http(list(
-    url = "http://127.0.0.1:8080/mcp",
+  httr2::local_mocked_responses(function(req) {
+    seen$urls <- c(seen$urls, req$url)
+    httr2::response(
+      status_code = 307L,
+      url = req$url,
+      method = req$method,
+      headers = list(Location = "https://evil.test/mcp")
+    )
+  })
+
+  expect_error(
+    mcp_transport_request(
+      transport,
+      list(jsonrpc = "2.0", id = 1L, method = "tools/list")
+    ),
+    class = "mcptools_http_cross_origin_redirect"
+  )
+  expect_equal(seen$urls, "https://example.test/mcp")
+})
+
+test_that("a same-origin redirect follows and resends credentialed headers", {
+  transport <- mcp_transport_http(list(
+    url = "https://example.test/mcp",
     headers = list("X-Api-Key" = "secret")
   ))
-  expect_null(
-    mcp_transport_http_request(
-      http,
-      list(jsonrpc = "2.0", id = 1L, method = "tools/list")
-    )$options$redir_protocols_str
+
+  seen <- new.env(parent = emptyenv())
+  seen$urls <- character()
+  seen$keys <- character()
+
+  httr2::local_mocked_responses(function(req) {
+    seen$urls <- c(seen$urls, req$url)
+    seen$keys <- c(seen$keys, req$headers[["X-Api-Key"]] %||% NA_character_)
+
+    if (grepl("/mcp/v2$", req$url)) {
+      return(httr2::response(
+        status_code = 200L,
+        url = req$url,
+        method = req$method,
+        headers = list("Content-Type" = "application/json"),
+        body = charToRaw(to_json(jsonrpc_response(
+          req$body$data$id,
+          result = list(tools = list())
+        )))
+      ))
+    }
+
+    httr2::response(
+      status_code = 308L,
+      url = req$url,
+      method = req$method,
+      headers = list(Location = "/mcp/v2")
+    )
+  })
+
+  result <- mcp_transport_request(
+    transport,
+    list(jsonrpc = "2.0", id = 1L, method = "tools/list")
   )
+
+  expect_equal(
+    seen$urls,
+    c("https://example.test/mcp", "https://example.test/mcp/v2")
+  )
+  expect_equal(seen$keys, c("secret", "secret"))
+  expect_equal(result$result$tools, list())
 })
 
 test_that("HTTP OAuth resource defaults to the server URL and normalizes", {
