@@ -130,6 +130,16 @@ test_that("an advertised issuer must not point at a private address", {
   expect_silent(mcp_validate_oauth_issuer("http://10.0.0.5", allow_http = TRUE))
 })
 
+test_that("an advertised issuer must use HTTPS", {
+  expect_error(
+    mcp_validate_oauth_issuer("http://auth.vendor.example"),
+    "HTTPS"
+  )
+  expect_silent(
+    mcp_validate_oauth_issuer("http://auth.vendor.example", allow_http = TRUE)
+  )
+})
+
 test_that("PKCE S256 support is required", {
   expect_silent(
     mcp_validate_oauth_pkce(list(code_challenge_methods_supported = list("S256")))

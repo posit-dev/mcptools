@@ -307,17 +307,35 @@ mcp_select_authorization_server <- function(metadata, override = NULL, call = ca
 }
 
 mcp_validate_oauth_issuer <- function(issuer, allow_http = FALSE, call = caller_env()) {
-  host <- tolower(url_parse_or_null(issuer)$hostname %||% "")
-  allowed <- isTRUE(allow_http) ||
+  parsed <- url_parse_or_null(issuer)
+  scheme <- tolower(parsed$scheme %||% "")
+  host <- tolower(parsed$hostname %||% "")
+
+  host_allowed <- isTRUE(allow_http) ||
     is_loopback_host_literal(host) ||
     !is_private_host_literal(host)
-  if (allowed) {
+  if (!host_allowed) {
+    cli::cli_abort(
+      c(
+        "MCP protected resource advertises an OAuth authorization server at a private address.",
+        i = "Advertised issuer: {.url {issuer}}.",
+        i = "Set {.field oauth.authorization_server} to use this issuer anyway."
+      ),
+      call = call
+    )
+  }
+
+  if (identical(scheme, "https")) {
+    return(invisible(TRUE))
+  }
+
+  if (identical(scheme, "http") && (mcp_oauth_is_loopback_host(host) || isTRUE(allow_http))) {
     return(invisible(TRUE))
   }
 
   cli::cli_abort(
     c(
-      "MCP protected resource advertises an OAuth authorization server at a private address.",
+      "MCP protected resource must advertise an OAuth authorization server that uses HTTPS.",
       i = "Advertised issuer: {.url {issuer}}.",
       i = "Set {.field oauth.authorization_server} to use this issuer anyway."
     ),
