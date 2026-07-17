@@ -310,6 +310,20 @@ test_that("mcp_tool_result_as_ellmer handles tool errors", {
   expect_equal(result@error, "bad input")
 })
 
+test_that("initialize server error messages are surfaced literally, never evaluated", {
+  withr::local_envvar(MCPTOOLS_INJECTION_CANARY = NA)
+  payload <- "{Sys.setenv(MCPTOOLS_INJECTION_CANARY = 'pwned')}"
+  response <- jsonrpc_response(
+    1L,
+    error = list(code = -32000, message = payload)
+  )
+
+  err <- expect_error(mcp_transport_store_initialize(new.env(), response))
+
+  expect_identical(Sys.getenv("MCPTOOLS_INJECTION_CANARY"), "")
+  expect_match(conditionMessage(err), "{Sys.setenv", fixed = TRUE)
+})
+
 test_that("mcp_tools() errors informatively when process exits", {
   skip_on_cran()
   skip_on_ci()

@@ -681,8 +681,12 @@ mcp_transport_store_initialize <- function(
   call = caller_env()
 ) {
   if (!is.null(response$error)) {
+    msg <- response$error$message
     cli::cli_abort(
-      response$error$message %||% "MCP initialize failed.",
+      c(
+        "MCP initialize failed.",
+        if (!is.null(msg)) c(i = "Server message: {msg}.")
+      ),
       call = call
     )
   }
@@ -725,8 +729,12 @@ mcp_request_tools_list_all <- function(transport, id, call = caller_env()) {
     id <- id + 1L
 
     if (!is.null(response$error)) {
+      msg <- response$error$message
       cli::cli_abort(
-        response$error$message %||% "MCP tools/list failed.",
+        c(
+          "MCP tools/list failed.",
+          if (!is.null(msg)) c(i = "Server message: {msg}.")
+        ),
         call = call
       )
     }

@@ -373,6 +373,33 @@ test_that("tools/list pagination is capped and warns referencing the envvar", {
   expect_length(result$response$result$tools, 3L)
 })
 
+test_that("tools/list server error messages are surfaced literally, never evaluated", {
+  withr::local_envvar(MCPTOOLS_INJECTION_CANARY = NA)
+  payload <- "{Sys.setenv(MCPTOOLS_INJECTION_CANARY = 'pwned')}"
+
+  transport <- mcp_transport_http(list(url = "https://example.test/mcp"))
+  transport$protocol_version <- latest_protocol_version
+
+  httr2::local_mocked_responses(function(req) {
+    message <- req$body$data
+    httr2::response(
+      status_code = 200L,
+      url = req$url,
+      method = req$method,
+      headers = list("Content-Type" = "application/json"),
+      body = charToRaw(to_json(jsonrpc_response(
+        message$id,
+        error = list(code = -32000, message = payload)
+      )))
+    )
+  })
+
+  err <- expect_error(mcp_request_tools_list_all(transport, id = 2L))
+
+  expect_identical(Sys.getenv("MCPTOOLS_INJECTION_CANARY"), "")
+  expect_match(conditionMessage(err), "{Sys.setenv", fixed = TRUE)
+})
+
 test_that("HTTP requests transparently reinitialize after a session 404", {
   transport <- mcp_transport_http(list(url = "https://example.test/mcp"))
   transport$session_id <- "old-session"
