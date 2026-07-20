@@ -112,7 +112,14 @@ test_that("is_private_host_literal flags loopback, private, and link-local hosts
     "fe80::1",
     "fc00::1",
     "fd12:3456::1",
-    "::ffff:127.0.0.1"
+    "::ffff:127.0.0.1",
+    "::ffff:7f00:1", # IPv4-mapped loopback, hex hextet form
+    "::ffff:a9fe:a9fe", # IPv4-mapped 169.254.169.254, hex hextet form
+    "::ffff:169.254.169.254",
+    "::ffff:10.0.0.1",
+    "[::ffff:a9fe:a9fe]",
+    "fe80::1%eth0",
+    "::"
   )
   for (host in private) {
     expect_true(is_private_host_literal(host), info = host)
@@ -125,6 +132,9 @@ test_that("is_private_host_literal flags loopback, private, and link-local hosts
     "172.15.0.1",
     "192.169.0.1",
     "2001:db8::1",
+    "2606:4700:4700::1111",
+    "::ffff:8.8.8.8",
+    "::ffff:808:808", # IPv4-mapped 8.8.8.8, hex hextet form
     "127.evil.example.com"
   )
   for (host in public) {
@@ -133,12 +143,30 @@ test_that("is_private_host_literal flags loopback, private, and link-local hosts
 })
 
 test_that("is_loopback_host_literal flags only genuine loopback literals", {
-  loopback <- c("localhost", "app.localhost", "127.0.0.1", "127.1.2.3", "::1", "[::1]")
+  loopback <- c(
+    "localhost",
+    "app.localhost",
+    "127.0.0.1",
+    "127.1.2.3",
+    "::1",
+    "[::1]",
+    "0:0:0:0:0:0:0:1",
+    "::ffff:127.0.0.1",
+    "::ffff:7f00:1"
+  )
   for (host in loopback) {
     expect_true(is_loopback_host_literal(host), info = host)
   }
 
-  not_loopback <- c("127.evil.example.com", "10.0.0.5", "169.254.169.254", "example.com")
+  not_loopback <- c(
+    "127.evil.example.com",
+    "10.0.0.5",
+    "169.254.169.254",
+    "example.com",
+    "fe80::1",
+    "::ffff:a9fe:a9fe",
+    "2606:4700:4700::1111"
+  )
   for (host in not_loopback) {
     expect_false(is_loopback_host_literal(host), info = host)
   }
