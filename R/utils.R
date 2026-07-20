@@ -120,7 +120,7 @@ is_loopback_host_literal <- function(host) {
   }
 
   if (grepl(":", host, fixed = TRUE)) {
-    return(host %in% c("::1", "0:0:0:0:0:0:0:1"))
+    return(ipv6_is_loopback(host))
   }
 
   octets <- ipv4_literal_octets(host)
@@ -153,23 +153,117 @@ ipv4_is_private_or_loopback <- function(octets) {
 }
 
 ipv6_is_private_or_loopback <- function(host) {
-  if (host %in% c("::1", "0:0:0:0:0:0:0:1", "::")) {
-    return(TRUE)
+  hextets <- ipv6_hextets(host)
+  if (is.null(hextets)) {
+    return(FALSE)
   }
 
-  # IPv4-mapped/-embedded addresses, e.g. ::ffff:127.0.0.1.
-  embedded <- ipv4_literal_octets(sub("^.*:", "", host))
+  embedded <- ipv6_embedded_ipv4_octets(hextets)
   if (!is.null(embedded)) {
     return(ipv4_is_private_or_loopback(embedded))
   }
 
-  first <- strtoi(sub(":.*$", "", host), base = 16L)
-  if (is.na(first)) {
+  first <- hextets[[1]]
+  (first >= 0xfe80L && first <= 0xfebfL) || # fe80::/10 link-local
+    (first >= 0xfc00L && first <= 0xfdffL) # fc00::/7 unique local
+}
+
+ipv6_is_loopback <- function(host) {
+  hextets <- ipv6_hextets(host)
+  if (is.null(hextets)) {
     return(FALSE)
   }
 
-  (first >= 0xfe80L && first <= 0xfebfL) || # fe80::/10 link-local
-    (first >= 0xfc00L && first <= 0xfdffL) # fc00::/7 unique local
+  if (all(hextets[1:7] == 0L) && hextets[[8]] == 1L) {
+    return(TRUE)
+  }
+
+  embedded <- ipv6_embedded_ipv4_octets(hextets)
+  !is.null(embedded) && embedded[[1]] == 127L
+}
+
+# The IPv4-mapped (::ffff:0:0/96) and deprecated IPv4-compatible (::/96) forms
+# both carry a reachable IPv4 address in their final two hextets; surface it so
+# the IPv4 classifier can be reused, catching e.g. ::ffff:a9fe:a9fe.
+ipv6_embedded_ipv4_octets <- function(hextets) {
+  is_mapped <- all(hextets[1:5] == 0L) && hextets[[6]] == 0xffffL
+  is_compatible <- all(hextets[1:6] == 0L)
+  if (!is_mapped && !is_compatible) {
+    return(NULL)
+  }
+
+  c(
+    hextets[[7]] %/% 256L, hextets[[7]] %% 256L,
+    hextets[[8]] %/% 256L, hextets[[8]] %% 256L
+  )
+}
+
+# Expand an IPv6 literal to its eight 16-bit hextets, resolving "::"
+# zero-compression and any trailing embedded IPv4 dotted-quad. Returns NULL for
+# anything that is not a well-formed IPv6 literal, so callers treat unparseable
+# hosts as non-private (consistent with the literal-only contract above).
+ipv6_hextets <- function(host) {
+  # A zone id (e.g. fe80::1%eth0) scopes but does not change the address itself.
+  host <- sub("%.*$", "", host)
+  if (grepl("[^0-9a-f:.]", host) || grepl(":::", host, fixed = TRUE)) {
+    return(NULL)
+  }
+
+  compressions <- gregexpr("::", host, fixed = TRUE)[[1]]
+  n_compressions <- if (compressions[[1]] == -1L) 0L else length(compressions)
+  if (n_compressions > 1L) {
+    return(NULL)
+  }
+
+  if (n_compressions == 1L) {
+    left <- ipv6_expand_groups(sub("::.*$", "", host), allow_ipv4_tail = FALSE)
+    right <- ipv6_expand_groups(sub("^.*::", "", host), allow_ipv4_tail = TRUE)
+    if (is.null(left) || is.null(right)) {
+      return(NULL)
+    }
+    n_fill <- 8L - (length(left) + length(right))
+    if (n_fill < 0L) {
+      return(NULL)
+    }
+    return(c(left, rep(0L, n_fill), right))
+  }
+
+  hextets <- ipv6_expand_groups(host, allow_ipv4_tail = TRUE)
+  if (is.null(hextets) || length(hextets) != 8L) {
+    return(NULL)
+  }
+  hextets
+}
+
+ipv6_expand_groups <- function(x, allow_ipv4_tail) {
+  if (!nzchar(x)) {
+    return(integer(0))
+  }
+
+  groups <- strsplit(x, ":", fixed = TRUE)[[1]]
+  n <- length(groups)
+  hextets <- integer(0)
+  for (i in seq_len(n)) {
+    group <- groups[[i]]
+    if (grepl(".", group, fixed = TRUE)) {
+      octets <- if (allow_ipv4_tail && i == n) ipv4_literal_octets(group) else NULL
+      if (is.null(octets)) {
+        return(NULL)
+      }
+      hextets <- c(
+        hextets,
+        octets[[1]] * 256L + octets[[2]],
+        octets[[3]] * 256L + octets[[4]]
+      )
+    } else {
+      if (!grepl("^[0-9a-f]{1,4}$", group)) {
+        return(NULL)
+      }
+      hextets <- c(hextets, strtoi(group, base = 16L))
+    }
+  }
+
+  hextets
 }
 
 constant_time_equal <- function(x, y) {
