@@ -411,6 +411,11 @@ test_that("mcp_oauth_prepare_token delegates the token lifecycle to httr2", {
   expect_equal(args$cache_key, "cache-key")
 })
 
+test_that("dynamic client registration does not auto-follow redirects", {
+  req <- mcp_dcr_post_request("https://auth.test/register", list(client_name = "x"))
+  expect_false(req$options$followlocation)
+})
+
 test_that("dynamic client registration caches the registered client", {
   cache_dir <- withr::local_tempdir()
   transport <- mcp_transport_http(list(

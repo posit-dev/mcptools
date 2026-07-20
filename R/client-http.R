@@ -178,6 +178,7 @@ mcp_metadata_get_request <- function(url, timeout = NULL) {
 
 mcp_dcr_post_request <- function(url, client_metadata, timeout = NULL) {
   req <- httr2::request(url)
+  req <- mcp_req_no_redirects(req)
   req <- httr2::req_method(req, "POST")
   req <- httr2::req_body_json(req, client_metadata, auto_unbox = TRUE)
   req <- httr2::req_headers(req, Accept = "application/json")
