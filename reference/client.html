@@ -17,7 +17,7 @@ tools compatible with the $set_tools() method of ellmer::Chat objects."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">mcptools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,7 +42,7 @@ tools compatible with the $set_tools() method of ellmer::Chat objects."><meta pr
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>R as a client: Define ellmer tools from MCP servers</h1>
-      <small class="dont-index">Source: <a href="https://github.com/posit-dev/mcptools/blob/v1.0.0/R/client.R" class="external-link"><code>R/client.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/posit-dev/mcptools/blob/main/R/client.R" class="external-link"><code>R/client.R</code></a></small>
       <div class="d-none name"><code>client.Rd</code></div>
     </div>
 
@@ -124,9 +124,15 @@ in that file:</p>
 <p>For remote Streamable HTTP MCP servers, configure a server with <code>url</code>.
 Static headers can be supplied with <code>headers</code>; protocol-owned headers such
 as <code>Accept</code>, <code>Content-Type</code>, <code>MCP-Session-Id</code>, and <code>MCP-Protocol-Version</code>
-are managed by mcptools and cannot be configured manually. Credentialed
-public remote endpoints must use HTTPS. HTTP is allowed for loopback
-development servers, or for explicit unsafe opt-out with <code>allow_http</code>.</p>
+are managed by mcptools and cannot be configured manually. Remote endpoints
+must use HTTPS; HTTP is allowed only for loopback development servers or for
+explicit unsafe opt-out with <code>allow_http</code>.</p>
+<p>When no static <code>Authorization</code> header is configured and the server answers an
+unauthenticated request with a <code>401</code> OAuth challenge, mcptools automatically
+runs the OAuth authorization-code flow, opening a browser for sign-in. Tokens
+are cached and refreshed, so the browser step happens only until a cached
+token expires. An <code>oauth</code> block is optional and only needed to override the
+defaults described below.</p>
 <p>Remote server entries support these fields:</p><ul><li><p><code>url</code>: the Streamable HTTP MCP endpoint.</p></li>
 <li><p><code>headers</code>: named static headers. Values may use <code>${ENVVAR}</code> interpolation.</p></li>
 <li><p><code>timeout</code>: a number of seconds for the overall HTTP request timeout.</p></li>
@@ -192,7 +198,7 @@ R-based tools, see <code><a href="server.html">mcp_server()</a></code>.</p></div
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">mcptools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,65 +32,17 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="logo.png" class="logo" alt=""><h1>NA</h1>
-      <small class="dont-index">Source: <a href="https://github.com/posit-dev/mcptools/blob/v1.0.0/AGENTS.md" class="external-link"><code>AGENTS.md</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/posit-dev/mcptools/blob/main/AGENTS.md" class="external-link"><code>AGENTS.md</code></a></small>
     </div>
-
 
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a></h2>
+<p>mcptools is an R package implementing an SDK for the Model Context Protocol. It ends “both sides” of the protocol—<code><a href="reference/server.html">mcp_server()</a></code> launches an MCP server, and <code><a href="reference/client.html">mcp_tools()</a></code> implements the client side. <code><a href="reference/server.html">mcp_session()</a></code> is an optional extension to <code><a href="reference/server.html">mcp_server()</a></code> that allows users to connect MCP servers to their active R sessions.</p>
 <p>The mcptools package uses nanonext for inter-process communication between the MCP server and R sessions. nanonext provides asynchronous messaging using the nanomsg/nng protocols.</p>
 <p>The full MCP specification lives at <a href="https://modelcontextprotocol.io/specification/latest" class="external-link uri">https://modelcontextprotocol.io/specification/latest</a>. Read it liberally.</p>
 </div>
-<div class="section level2">
-<h2 id="key-concepts">Key Concepts<a class="anchor" aria-label="anchor" href="#key-concepts"></a></h2>
-<div class="section level3">
-<h3 id="asynchronous-io-aio">Asynchronous I/O (Aio)<a class="anchor" aria-label="anchor" href="#asynchronous-io-aio"></a></h3>
-<ul><li>
-<code>send_aio()</code> and <code>recv_aio()</code> return immediately without blocking</li>
-<li>Operations complete asynchronously in the background</li>
-<li>Use <code>unresolved(aio)</code> to check if an operation is still pending</li>
-<li>Access results via <code>aio$data</code> (recv) or <code>aio$result</code> (send)</li>
-</ul></div>
-<div class="section level3">
-<h3 id="sockets-and-communication-patterns">Sockets and Communication Patterns<a class="anchor" aria-label="anchor" href="#sockets-and-communication-patterns"></a></h3>
-<ul><li>
-<strong>poly protocol</strong>: Allows multiple connections to the same socket</li>
-<li>
-<strong>dial/listen</strong>: Client dials to connect, server listens for connections</li>
-<li>
-<strong>pipe IDs</strong>: poly sockets can multiplex multiple conversations</li>
-</ul></div>
-</div>
-<div class="section level2">
-<h2 id="mcptools-architecture">mcptools Architecture<a class="anchor" aria-label="anchor" href="#mcptools-architecture"></a></h2>
-<div class="section level3">
-<h3 id="server-process">Server Process<a class="anchor" aria-label="anchor" href="#server-process"></a></h3>
-<p>The MCP server (<code><a href="reference/server.html">mcp_server()</a></code>) runs in its own R process and: 1. Listens on stdin for MCP client requests 2. Maintains a socket connection to R sessions 3. Routes tool calls between client and sessions</p>
-</div>
-<div class="section level3">
-<h3 id="session-processes">Session Processes<a class="anchor" aria-label="anchor" href="#session-processes"></a></h3>
-<p>Interactive R sessions (<code><a href="reference/server.html">mcp_session()</a></code>) connect to the server and: 1. Listen for tool execution requests from the server 2. Execute tools and send results back 3. Each session gets a unique ID and socket connection</p>
-</div>
-<div class="section level3">
-<h3 id="message-flow">Message Flow<a class="anchor" aria-label="anchor" href="#message-flow"></a></h3>
-<pre><code>MCP Client → Server (stdin) → Session (socket) → Server → Client (stdout)</code></pre>
-</div>
-</div>
-<div class="section level2">
-<h2 id="server-loop-implementation">Server Loop Implementation<a class="anchor" aria-label="anchor" href="#server-loop-implementation"></a></h2>
-<p>The server uses a condition variable (<code>cv</code>) to coordinate multiple async operations.</p>
-</div>
-<div class="section level2">
-<h2 id="socket-urls-and-connection-management">Socket URLs and Connection Management<a class="anchor" aria-label="anchor" href="#socket-urls-and-connection-management"></a></h2>
-<ul><li>The base socket URL is OS-derived in <code>.onLoad()</code>: <code>abstract://mcptools-socket</code> on Linux, <code>ipc://mcptools-socket</code> on Windows, <code>ipc:///tmp/mcptools-socket</code> otherwise</li>
-<li>Sessions listen on <code>{socket_url}{i}</code> where <code>i</code> is auto-incremented</li>
-<li>Server dials to <code>{socket_url}1</code> by default</li>
-<li>Connections are cleaned up with <code><a href="https://nanonext.r-lib.org/reference/reap.html" class="external-link">nanonext::reap()</a></code> on exit</li>
-</ul></div>
 
-
-  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
-    </nav></aside></div>
+  </main></div>
 
 
     <footer><div class="pkgdown-footer-left">
@@ -98,7 +50,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

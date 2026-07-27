@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mcptools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,9 +32,20 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/posit-dev/mcptools/blob/v1.0.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/posit-dev/mcptools/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.1" id="mcptools-101">mcptools 1.0.1<a class="anchor" aria-label="anchor" href="#mcptools-101"></a></h2>
+<p>This release includes several security-oriented fixes, in addition to a couple quality of life improvements for multi-user and multi-session workspaces:</p>
+<ul><li><p>The server now chooses its R session at tool-call time rather than always connecting to the first session: it prefers the session whose working directory matches its own (clients like Claude Code and Posit Assistant launch the server in the project directory), falling back to the only running session. When several sessions are running and none matches, tools execute in the server’s own R process until the client calls <code>select_r_session</code>. Previously, a second client + session pair in another project window would silently execute tools in the first project’s session (<a href="https://github.com/posit-dev/mcptools/issues/114" class="external-link">#114</a>).</p></li>
+<li><p>Sessions now use per-user filesystem IPC sockets in an owner-only (0700) directory instead of a shared address. On multi-user Linux hosts (e.g. Posit Workbench) the previous default let any local user connect to another user’s <code><a href="../reference/server.html">mcp_session()</a></code> and execute tools in it; sessions are now isolated by Unix user. The socket directory follows <code>MCPTOOLS_SOCKET_DIR</code> &gt; <code>XDG_RUNTIME_DIR/mcptools/</code> &gt; <code>$TMPDIR/mcptools-&lt;user&gt;/</code> &gt; <code>/tmp/mcptools-&lt;user&gt;/</code> (<a href="https://github.com/kwbyron-lilly" class="external-link">@kwbyron-lilly</a>, <a href="https://github.com/posit-dev/mcptools/issues/114" class="external-link">#114</a>).</p></li>
+<li><p>The session and server now authenticate every IPC message with a per-user secret stored alongside the sockets, so a session acts only on tool calls from the paired server and the server accepts only responses from a genuine session.</p></li>
+<li><p>Tools returning <code><a href="https://ellmer.tidyverse.org/reference/content_image_url.html" class="external-link">ellmer::content_image_url()</a></code> inline the image by fetching it server-side; that fetch is now restricted to <code>http</code>/<code>https</code> URLs, and any redirects are followed by mcptools itself so each hop is re-checked rather than trusted to curl. When the server is reached over the network (an HTTP deployment), the fetch additionally refuses private, loopback, and link-local addresses, so a tool argument cannot steer it at cloud-metadata endpoints, internal hosts, or local files. Local (stdio) servers keep fetching addresses on their own machine.</p></li>
+<li><p>Socket files left behind by a crashed session are now reclaimed automatically: the next session that needs the slot detects the dead file and reuses it.</p></li>
+<li><p><code>list_r_sessions()</code> no longer returns spurious <code>"5"</code> entries when a session is slow to respond to discovery probes.</p></li>
+<li><p><code><a href="../reference/client.html">mcp_tools()</a></code> now initiates the MCP OAuth authorization-code flow automatically when a remote server configured with only a <code>url</code> answers an unauthenticated request with a <code>401</code> challenge. Previously, connecting to such a server required either a static <code>Authorization</code> header or an explicit <code>oauth</code> block; the <code>oauth</code> block is now needed only to override defaults.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="mcptools-100">mcptools 1.0.0<a class="anchor" aria-label="anchor" href="#mcptools-100"></a></h2><p class="text-muted">CRAN release: 2026-07-02</p>
 <div class="section level3">
@@ -105,7 +116,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

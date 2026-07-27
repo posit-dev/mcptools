@@ -1,5 +1,65 @@
 # Changelog
 
+## mcptools 1.0.1
+
+This release includes several security-oriented fixes, in addition to a
+couple quality of life improvements for multi-user and multi-session
+workspaces:
+
+- The server now chooses its R session at tool-call time rather than
+  always connecting to the first session: it prefers the session whose
+  working directory matches its own (clients like Claude Code and Posit
+  Assistant launch the server in the project directory), falling back to
+  the only running session. When several sessions are running and none
+  matches, tools execute in the server’s own R process until the client
+  calls `select_r_session`. Previously, a second client + session pair
+  in another project window would silently execute tools in the first
+  project’s session
+  ([\#114](https://github.com/posit-dev/mcptools/issues/114)).
+
+- Sessions now use per-user filesystem IPC sockets in an
+  owner-only (0700) directory instead of a shared address. On multi-user
+  Linux hosts (e.g. Posit Workbench) the previous default let any local
+  user connect to another user’s
+  [`mcp_session()`](https://posit-dev.github.io/mcptools/reference/server.md)
+  and execute tools in it; sessions are now isolated by Unix user. The
+  socket directory follows `MCPTOOLS_SOCKET_DIR` \>
+  `XDG_RUNTIME_DIR/mcptools/` \> `$TMPDIR/mcptools-<user>/` \>
+  `/tmp/mcptools-<user>/`
+  ([@kwbyron-lilly](https://github.com/kwbyron-lilly),
+  [\#114](https://github.com/posit-dev/mcptools/issues/114)).
+
+- The session and server now authenticate every IPC message with a
+  per-user secret stored alongside the sockets, so a session acts only
+  on tool calls from the paired server and the server accepts only
+  responses from a genuine session.
+
+- Tools returning
+  [`ellmer::content_image_url()`](https://ellmer.tidyverse.org/reference/content_image_url.html)
+  inline the image by fetching it server-side; that fetch is now
+  restricted to `http`/`https` URLs, and any redirects are followed by
+  mcptools itself so each hop is re-checked rather than trusted to curl.
+  When the server is reached over the network (an HTTP deployment), the
+  fetch additionally refuses private, loopback, and link-local
+  addresses, so a tool argument cannot steer it at cloud-metadata
+  endpoints, internal hosts, or local files. Local (stdio) servers keep
+  fetching addresses on their own machine.
+
+- Socket files left behind by a crashed session are now reclaimed
+  automatically: the next session that needs the slot detects the dead
+  file and reuses it.
+
+- `list_r_sessions()` no longer returns spurious `"5"` entries when a
+  session is slow to respond to discovery probes.
+
+- [`mcp_tools()`](https://posit-dev.github.io/mcptools/reference/client.md)
+  now initiates the MCP OAuth authorization-code flow automatically when
+  a remote server configured with only a `url` answers an
+  unauthenticated request with a `401` challenge. Previously, connecting
+  to such a server required either a static `Authorization` header or an
+  explicit `oauth` block; the `oauth` block is now needed only to
+  override defaults.
+
 ## mcptools 1.0.0
 
 CRAN release: 2026-07-02

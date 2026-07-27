@@ -144,12 +144,17 @@ keep in mind here.
 for your model to talk to without the client knowing it even had
 multiple options. So, you might have a project “goats” open in one
 Positron window and another project, “sheep”, open in another Positron
-window. mcptools provides models with two tools to facilitate toggling
-between sessions. The first, `list_r_sessions()`, allows the client to
-“discover” R sessions available to it by their working directory and
-(inferred) IDE. Then, the tool `select_r_session()` allows the client to
-(persistently) choose an R session. So, you could write “In my goats R
-session,
+window. The server prefers the session whose working directory matches
+its own—clients launched inside a project, as with Claude Code or Posit
+Assistant, thus connect to that project’s session automatically—and
+otherwise connects to the only running session, if there’s exactly one.
+If neither is the case, tools execute in the server’s own R process
+until a session is selected. mcptools provides models with two tools to
+facilitate toggling between sessions. The first, `list_r_sessions()`,
+allows the client to “discover” R sessions available to it by their
+working directory and (inferred) IDE. Then, the tool
+`select_r_session()` allows the client to (persistently) choose an R
+session. So, you could write “In my goats R session,
 ``` math
 some question
 ```

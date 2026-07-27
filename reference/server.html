@@ -11,7 +11,7 @@ interactive R session allows those tools to execute inside of that session."><me
 
     <a class="navbar-brand me-2" href="../index.html">mcptools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +36,7 @@ interactive R session allows those tools to execute inside of that session."><me
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>R as a server: Configure R-based tools with LLM-enabled apps</h1>
-      <small class="dont-index">Source: <a href="https://github.com/posit-dev/mcptools/blob/v1.0.0/R/server.R" class="external-link"><code>R/server.R</code></a>, <a href="https://github.com/posit-dev/mcptools/blob/v1.0.0/R/session.R" class="external-link"><code>R/session.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/posit-dev/mcptools/blob/main/R/server.R" class="external-link"><code>R/server.R</code></a>, <a href="https://github.com/posit-dev/mcptools/blob/main/R/session.R" class="external-link"><code>R/session.R</code></a></small>
       <div class="d-none name"><code>server.Rd</code></div>
     </div>
 
@@ -175,6 +175,18 @@ to variables inside of an interactive R session, call
 Place a call to <code>mcptools::mcp_session()</code> in your <code>.Rprofile</code>, perhaps with
 <code>usethis::edit_r_profile()</code>, to make every interactive R session you start
 available to the server.</p>
+<p>The server and its sessions find each other through per-user IPC sockets on
+the local machine, so only sessions running as the same user on the same host
+are discoverable. On Linux and macOS the sockets live in an owner-only
+directory; set the <code>MCPTOOLS_SOCKET_DIR</code> environment variable (before the
+package loads) to override its location.</p>
+<p>When several sessions are available, the server connects to the session
+whose working directory matches its own; clients launched inside a project,
+as with Claude Code or Posit Assistant, thus connect to that project's
+session. Failing that, the server connects to the only running session, if
+there is exactly one. When several sessions are running and none matches,
+tools execute in the server's own R process until the client selects a
+session with the <code>select_r_session</code> tool.</p>
 <p>On Windows, you may need to configure the full path to the Rscript executable.
 Examples for Claude Code on WSL and Claude Desktop on Windows are shown
 at <a href="https://github.com/posit-dev/mcptools/issues/41#issuecomment-3036617046" class="external-link">https://github.com/posit-dev/mcptools/issues/41#issuecomment-3036617046</a>.</p>
@@ -232,7 +244,7 @@ i.e. to configure tools from third-party MCP servers with ellmer chats, see
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
