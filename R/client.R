@@ -273,7 +273,8 @@ add_mcp_server <- function(config, name, call = caller_env()) {
     error = function(e) {
       if (
         identical(transport$type, "stdio") &&
-          process$get_exit_status() %in% c(1L, 2L)
+          # NULL when the process is still alive, e.g. slow to respond
+          isTRUE(process$get_exit_status() %in% c(1L, 2L))
       ) {
         cli::cli_abort(
           c(
