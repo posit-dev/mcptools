@@ -2,6 +2,12 @@
 
 ## mcptools (development version)
 
+## mcptools 1.0.1
+
+This release includes several security-oriented fixes, in addition to a
+couple quality of life improvements for multi-user and multi-session
+workspaces:
+
 - The server now chooses its R session at tool-call time rather than
   always connecting to the first session: it prefers the session whose
   working directory matches its own (clients like Claude Code and Posit
@@ -21,9 +27,9 @@
   and execute tools in it; sessions are now isolated by Unix user. The
   socket directory follows `MCPTOOLS_SOCKET_DIR` \>
   `XDG_RUNTIME_DIR/mcptools/` \> `$TMPDIR/mcptools-<user>/` \>
-  `/tmp/mcptools-<user>/`. Reported and prototyped by
-  [@kwbyron-lilly](https://github.com/kwbyron-lilly)
-  ([\#114](https://github.com/posit-dev/mcptools/issues/114)).
+  `/tmp/mcptools-<user>/`
+  ([@kwbyron-lilly](https://github.com/kwbyron-lilly),
+  [\#114](https://github.com/posit-dev/mcptools/issues/114)).
 
 - The session and server now authenticate every IPC message with a
   per-user secret stored alongside the sockets, so a session acts only
