@@ -21,13 +21,18 @@ test_that("roundtrip mcp_server and mcp_tools (stdio)", {
   previous_server_processes <- names(the$server_processes)
 
   # example-config configures `Rscript -e "mcptools::mcp_server()"`
-  example_config <- readLines(system.file(
+  example_config <- jsonlite::read_json(system.file(
     "example-config.json",
     package = "mcptools"
   ))
-  example_config <- gsub("Rscript", rscript_binary(), example_config)
+  example_config$mcpServers$mcptools$command <- rscript_binary()
+  # spawned servers receive an allowlisted environment, so the socket directory
+  # override from setup.R must be forwarded through the config's env block
+  example_config$mcpServers$mcptools$env <- list(
+    MCPTOOLS_SOCKET_DIR = Sys.getenv("MCPTOOLS_SOCKET_DIR")
+  )
   tmp_file <- withr::local_tempfile(fileext = ".json")
-  writeLines(example_config, tmp_file)
+  jsonlite::write_json(example_config, tmp_file, auto_unbox = TRUE)
 
   tools <- mcp_tools(tmp_file)
   withr::defer(
