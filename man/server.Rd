@@ -96,7 +96,9 @@ mcp_server(type = "http")
 mcp_server(type = "http", host = "127.0.0.1", port = 9000)
 }\if{html}{\out{</div>}}
 
-The server will listen for HTTP POST requests containing JSON-RPC messages.
+The server implements MCP Streamable HTTP, including stateful sessions,
+streaming POST responses, and resumable GET event streams on local IPv4
+listeners.
 }
 
 \subsection{Posit Connect}{

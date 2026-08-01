@@ -1,6 +1,21 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+> ## r-mcp — a conformance-first fork of `mcptools`
+>
+> This repository is a **fork of [`posit-dev/mcptools`](https://github.com/posit-dev/mcptools)**
+> whose goal is to make R a **conformance-measured** MCP SDK, verified against the
+> official [`modelcontextprotocol/conformance`](https://github.com/modelcontextprotocol/conformance)
+> suite. Upstream `mcptools` is an excellent tools server, but as a full MCP SDK it
+> is not yet complete: the current baseline is **4 passed / 27 failed** at spec
+> `2025-11-25` (it lacks resources, prompts, completion, logging, elicitation,
+> sampling, roots and progress, and advertises capabilities it does not implement).
+>
+> - Run the suite: `make conformance` (see [`conformance/BASELINE.md`](conformance/BASELINE.md)).
+> - Baseline ratchet: [`conformance/expected-failures.yml`](conformance/expected-failures.yml).
+>
+> The upstream package documentation follows.
+
 # mcptools <a href="https://posit-dev.github.io/mcptools/"><img src="man/figures/logo.png" align="right" height="240" alt="A hexagonal logo showing a bridge connecting two portions of a forested meadow." /></a>
 
 <!-- badges: start -->

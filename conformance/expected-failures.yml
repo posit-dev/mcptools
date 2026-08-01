@@ -1,0 +1,8 @@
+# MCP conformance baseline for the forked mcptools everything-server.
+# Server-mode scenarios currently allowed to fail. As feature workspaces
+# implement each area, REMOVE the now-passing scenarios from this list
+# (the harness fails CI on stale entries, enforcing the ratchet).
+# Regenerate context with: make conformance
+#
+# All active 2025-11-25 server scenarios pass.
+server: []
