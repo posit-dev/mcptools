@@ -1,0 +1,5 @@
+# MCP 2026-07-28 stateless server conformance ratchet.
+# alpha.10 reports this scenario as an expected failure to the ratchet even
+# though both of its assertions pass and the aggregate summary is green.
+server:
+  - sep-2164-resource-not-found
