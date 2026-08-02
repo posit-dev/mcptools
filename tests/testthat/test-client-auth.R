@@ -445,6 +445,90 @@ test_that("dynamic client registration caches the registered client", {
   expect_equal(register_calls, 1L)
 })
 
+# OAuth: registration priority (pre-registration > CIMD > DCR) -----------------
+test_that("static client_id/client_secret pre-registration wins over DCR", {
+  transport <- mcp_transport_http(list(
+    url = "https://example.test/mcp",
+    oauth = list(client_id = "static-client", client_secret = "shhh")
+  ))
+  # a registration_endpoint is advertised, but static credentials take priority
+  metadata <- list(
+    registration_endpoint = "https://auth.test/register",
+    client_id_metadata_document_supported = TRUE
+  )
+
+  local_mocked_bindings(
+    mcp_oauth_register_client = function(...) stop("DCR must not run")
+  )
+
+  info <- mcp_oauth_client_info(transport, metadata, scope = NULL)
+  expect_equal(info$client_id, "static-client")
+  expect_equal(info$client_secret, "shhh")
+})
+
+test_that("CIMD is used when advertised, ahead of deprecated DCR", {
+  transport <- mcp_transport_http(list(
+    url = "https://example.test/mcp",
+    oauth = list(client_id_metadata_document = "https://app.example.com/client.json")
+  ))
+  metadata <- list(
+    registration_endpoint = "https://auth.test/register",
+    client_id_metadata_document_supported = TRUE
+  )
+
+  local_mocked_bindings(
+    mcp_oauth_register_client = function(...) stop("DCR must not run when CIMD is available")
+  )
+
+  info <- mcp_oauth_client_info(transport, metadata, scope = NULL)
+  expect_equal(info$client_id, "https://app.example.com/client.json")
+  expect_null(info$client_secret)
+})
+
+test_that("CIMD falls back to DCR when the server does not advertise support", {
+  transport <- mcp_transport_http(list(
+    url = "https://example.test/mcp",
+    oauth = list(client_id_metadata_document = "https://app.example.com/client.json")
+  ))
+  metadata <- list(registration_endpoint = "https://auth.test/register")
+
+  local_mocked_bindings(
+    mcp_oauth_register_client = function(...) list(client_id = "dcr-client")
+  )
+
+  info <- mcp_oauth_client_info(transport, metadata, scope = NULL)
+  expect_equal(info$client_id, "dcr-client")
+})
+
+test_that("client_id_metadata_document must be an https URL with a path", {
+  expect_error(
+    mcp_config_oauth(list(oauth = list(
+      client_id_metadata_document = "https://app.example.com"
+    ))),
+    "client_id_metadata_document"
+  )
+  expect_error(
+    mcp_config_oauth(list(oauth = list(
+      client_id_metadata_document = "http://app.example.com/client.json"
+    ))),
+    "client_id_metadata_document"
+  )
+  oauth <- mcp_config_oauth(list(oauth = list(
+    client_id_metadata_document = "https://app.example.com/client.json"
+  )))
+  expect_equal(
+    oauth$client_id_metadata_document,
+    "https://app.example.com/client.json"
+  )
+})
+
+test_that("client_secret requires client_id", {
+  expect_error(
+    mcp_config_oauth(list(oauth = list(client_secret = "shhh"))),
+    "client_secret"
+  )
+})
+
 test_that("mcp_transport_http_send retries once after a 401 and succeeds", {
   transport <- mcp_transport_http(list(
     url = "https://example.test/mcp",

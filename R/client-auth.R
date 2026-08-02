@@ -390,13 +390,52 @@ mcp_protected_resource_metadata_urls <- function(resource_url, challenge = named
   unique(urls)
 }
 
+# Resolve the OAuth client identity following the MCP authorization spec's
+# registration priority
+# (https://modelcontextprotocol.io/specification/draft/basic/authorization/client-registration):
+#
+#   1. Pre-registration  - use static client credentials when available.
+#   2. CIMD              - use a Client ID Metadata Document URL when the
+#                          authorization server advertises support for it. This
+#                          is the spec's preferred mechanism for clients and
+#                          servers with no prior relationship.
+#   3. DCR               - Dynamic Client Registration, which the spec marks as
+#                          *deprecated* and retains only for authorization
+#                          servers that support neither of the above.
+#   4. Manual            - a client info object supplied out of band.
 mcp_oauth_client_info <- function(transport, metadata, scope, call = caller_env()) {
   oauth <- transport$oauth
 
-  if (!is.null(oauth$client_info)) {
-    return(oauth$client_info)
+  # (1) Pre-registration. An explicit `client_info` object, or the simpler
+  # `client_id` (+ optional `client_secret`) form, always wins: a client that
+  # holds credentials for this server should never register dynamically.
+  # NB: index with `[[` (exact) rather than `$`, whose partial matching would
+  # let `client_id` resolve to `client_id_metadata_document`.
+  if (!is.null(oauth[["client_info"]])) {
+    return(oauth[["client_info"]])
+  }
+  if (!is.null(oauth[["client_id"]])) {
+    info <- list(client_id = oauth[["client_id"]])
+    if (!is.null(oauth[["client_secret"]])) {
+      info$client_secret <- oauth[["client_secret"]]
+    }
+    return(info)
   }
 
+  # (2) Client ID Metadata Documents. The client presents its hosted metadata
+  # document's HTTPS URL as the `client_id`; the authorization server
+  # dereferences it, so no registration round-trip is made. Only used when the
+  # server advertises `client_id_metadata_document_supported`, per the spec.
+  if (
+    !is.null(oauth[["client_id_metadata_document"]]) &&
+      isTRUE(metadata$client_id_metadata_document_supported)
+  ) {
+    return(list(client_id = oauth[["client_id_metadata_document"]]))
+  }
+
+  # (3) Dynamic Client Registration (RFC 7591). Deprecated by the MCP spec;
+  # kept as a fallback for authorization servers that expose a
+  # `registration_endpoint` but support neither pre-registration nor CIMD.
   registration_endpoint <- metadata$registration_endpoint %||% NULL
   if (!is.null(registration_endpoint)) {
     key <- mcp_oauth_cache_key(transport, kind = "client")
@@ -421,7 +460,33 @@ mcp_oauth_client_info <- function(transport, metadata, scope, call = caller_env(
     return(client_info)
   }
 
+  # (4) Manual fallback: a client info object supplied out of band.
   oauth$manual_client_info
+}
+
+# A CIMD `client_id` is an HTTPS URL that the authorization server dereferences,
+# so the spec requires the "https" scheme and a path component (for example,
+# https://app.example.com/client.json). A loopback `http` URL is permitted only
+# under the explicit `allow_http` opt-out, mirroring the endpoint checks above.
+mcp_validate_oauth_client_id_metadata_url <- function(url, allow_http = FALSE, call = caller_env()) {
+  parsed <- url_parse_or_null(url)
+  scheme <- if (is.null(parsed)) NULL else tolower(parsed$scheme %||% "")
+  path <- if (is.null(parsed)) NULL else parsed$path %||% ""
+  scheme_ok <- identical(scheme, "https") ||
+    (isTRUE(allow_http) && identical(scheme, "http"))
+  has_path <- !is.null(path) && nzchar(gsub("/", "", path, fixed = TRUE))
+
+  if (is.null(parsed) || is.null(parsed$hostname) || !scheme_ok || !has_path) {
+    cli::cli_abort(
+      c(
+        "OAuth {.field client_id_metadata_document} is invalid.",
+        i = "It must be an {.val https} URL with a path component, e.g. {.url https://app.example.com/client.json}."
+      ),
+      call = call
+    )
+  }
+
+  invisible(TRUE)
 }
 
 mcp_oauth_register_client <- function(

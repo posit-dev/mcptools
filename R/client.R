@@ -89,12 +89,27 @@ the$mcp_servers <- list()
 #' * `oauth`: OAuth settings.
 #'
 #' OAuth settings may include `authorization_server`, `resource`, `scope` with
-#' `scope_mode = "override"`, `client_info`, `manual_client_info`,
+#' `scope_mode = "override"`, `client_id`/`client_secret`,
+#' `client_id_metadata_document`, `client_info`, `manual_client_info`,
 #' `client_metadata`, `redirect_uri` or `callback_host`/`callback_port`/
 #' `callback_path`, `cache_dir`, and `allow_http`. mcptools supports OAuth 2.1
 #' with PKCE: it discovers the authorization server from the protected-resource
-#' metadata advertised in a `401` challenge, registers a client dynamically when
-#' the server supports it, and caches tokens (refreshing them automatically).
+#' metadata advertised in a `401` challenge and caches tokens (refreshing them
+#' automatically).
+#'
+#' To obtain a client identity, mcptools follows the MCP authorization spec's
+#' registration priority:
+#'
+#' 1. **Pre-registration**: static credentials via `client_id` (and, for
+#'    confidential clients, `client_secret`), or a full `client_info` object.
+#' 2. **Client ID Metadata Documents (CIMD)**: set `client_id_metadata_document`
+#'    to the HTTPS URL of your hosted client-metadata document. Used when the
+#'    authorization server advertises `client_id_metadata_document_supported`;
+#'    this is the spec's preferred mechanism when client and server have no
+#'    prior relationship.
+#' 3. **Dynamic Client Registration** (RFC 7591): used as a fallback when the
+#'    server exposes a `registration_endpoint`. DCR is deprecated by the MCP
+#'    authorization spec and retained only for backwards compatibility.
 #'
 #' Remote HTTP requests use httr2 and curl. Proxy and corporate CA settings
 #' should generally use the standard curl environment variables, such as
@@ -630,12 +645,35 @@ mcp_config_oauth <- function(config, call = caller_env()) {
     resource <- mcp_oauth_resource(resource, call = call)
   }
 
+  # a CIMD client_id is an HTTPS URL the authorization server dereferences
+  client_id_metadata_document <- oauth$client_id_metadata_document %||% NULL
+  if (!is.null(client_id_metadata_document)) {
+    mcp_validate_oauth_client_id_metadata_url(
+      client_id_metadata_document,
+      allow_http = isTRUE(mcp_config_allow_http(config, call = call)),
+      call = call
+    )
+  }
+
+  if (!is.null(oauth[["client_secret"]]) && is.null(oauth[["client_id"]])) {
+    cli::cli_abort(
+      c(
+        "MCP OAuth configuration failed.",
+        i = "{.field oauth.client_secret} requires {.field oauth.client_id}."
+      ),
+      call = call
+    )
+  }
+
   oauth <- named_list(
     authorization_server = oauth$authorization_server %||% NULL,
     resource = resource,
     scope = scope,
     scope_mode = scope_mode,
     client_info = oauth$client_info %||% NULL,
+    client_id = oauth[["client_id"]] %||% NULL,
+    client_secret = oauth[["client_secret"]] %||% NULL,
+    client_id_metadata_document = client_id_metadata_document,
     manual_client_info = oauth$manual_client_info %||% NULL,
     client_metadata = oauth$client_metadata %||% NULL,
     allow_authorization_header = oauth$allow_authorization_header %||% NULL,
