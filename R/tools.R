@@ -315,7 +315,13 @@ execute_tool_call <- function(data) {
     error = function(e) {
       jsonrpc_response(
         data$id,
-        error = list(code = -32603, message = conditionMessage(e))
+        result = list(
+          content = list(list(
+            type = "text",
+            text = conditionMessage(e)
+          )),
+          isError = TRUE
+        )
       )
     }
   )

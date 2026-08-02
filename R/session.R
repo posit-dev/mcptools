@@ -135,6 +135,10 @@ as_mcp_content <- function(result, structured_content = NULL, restrict_private =
 }
 
 as_mcp_content_block <- function(result, restrict_private = FALSE) {
+  if (is_mcp_content_block_list(result)) {
+    return(result)
+  }
+
   if (inherits(result, "ellmer::ContentImageInline")) {
     return(list(type = "image", data = result@data, mimeType = result@type))
   }
@@ -342,9 +346,16 @@ has_mcp_content <- function(result) {
 }
 
 is_mcp_content <- function(result) {
-  inherits(result, "ellmer::ContentImageInline") ||
+  is_mcp_content_block_list(result) ||
+    inherits(result, "ellmer::ContentImageInline") ||
     inherits(result, "ellmer::ContentImageRemote") ||
     inherits(result, "ellmer::ContentText")
+}
+
+is_mcp_content_block_list <- function(result) {
+  is.list(result) &&
+    is_string(result$type) &&
+    result$type %in% c("text", "image", "audio", "resource")
 }
 
 schedule_handle_message_from_server <- function() {

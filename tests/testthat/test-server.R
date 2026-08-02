@@ -135,6 +135,31 @@ test_that("HTTP requests reject unsupported MCP-Protocol-Version headers", {
   expect_match(res$body, "Invalid or unsupported MCP-Protocol-Version")
 })
 
+test_that("HTTP ping returns an empty object", {
+  res <- handle_http_request_message(
+    list(jsonrpc = "2.0", id = 1, method = "ping"),
+    protocol_version = "2025-11-25"
+  )
+
+  expect_equal(as.character(to_json(res$result)), "{}")
+})
+
+test_that("HTTP initialize issues a visible ASCII session ID", {
+  res <- handle_http_request(local_http_post_request(list(
+    jsonrpc = "2.0",
+    id = 1,
+    method = "initialize",
+    params = list(
+      protocolVersion = "2025-11-25",
+      capabilities = named_list(),
+      clientInfo = list(name = "test", version = "1")
+    )
+  )))
+
+  expect_equal(res$status, 200L)
+  expect_match(res$headers$`MCP-Session-Id`, "^[!-~]+$")
+})
+
 test_that("HTTP tools/list honors MCP-Protocol-Version header", {
   old_server_tools <- the$server_tools
   withr::defer(the$server_tools <- old_server_tools)
@@ -195,6 +220,167 @@ test_that("HTTP tools/call honors MCP-Protocol-Version header", {
   expect_equal(res$status, 200L)
   expect_null(body$result$structuredContent)
   expect_equal(body$result$content[[1]]$text, "0.92")
+})
+
+test_that("HTTP logging tool returns notifications and result as buffered SSE", {
+  old_server_tools <- the$server_tools
+  old_sessions_enabled <- the$sessions_enabled
+  withr::defer({
+    the$server_tools <- old_server_tools
+    the$sessions_enabled <- old_sessions_enabled
+  })
+
+  tool <- ellmer::tool(
+    function() "ok",
+    "Logging tool",
+    name = "test_tool_with_logging"
+  )
+  set_server_tools(list(tool), session_tools = FALSE)
+  the$sessions_enabled <- FALSE
+
+  res <- handle_http_request(local_http_post_request(
+    list(
+      jsonrpc = "2.0",
+      id = 1,
+      method = "tools/call",
+      params = list(
+        name = "test_tool_with_logging",
+        arguments = named_list()
+      )
+    ),
+    HTTP_ACCEPT = "application/json, text/event-stream"
+  ))
+
+  expect_equal(res$status, 200L)
+  expect_equal(res$headers$`Content-Type`, "text/event-stream")
+  expect_equal(
+    lengths(regmatches(
+      res$body,
+      gregexpr("notifications/message", res$body, fixed = TRUE)
+    )),
+    3L
+  )
+  expect_match(
+    res$body,
+    "Tool with logging executed successfully",
+    fixed = TRUE
+  )
+})
+
+test_that("HTTP progress tool echoes its token after buffered notifications", {
+  old_server_tools <- the$server_tools
+  old_sessions_enabled <- the$sessions_enabled
+  withr::defer({
+    the$server_tools <- old_server_tools
+    the$sessions_enabled <- old_sessions_enabled
+  })
+
+  tool <- ellmer::tool(
+    function() "ok",
+    "Progress tool",
+    name = "test_tool_with_progress"
+  )
+  set_server_tools(list(tool), session_tools = FALSE)
+  the$sessions_enabled <- FALSE
+
+  res <- handle_http_request(local_http_post_request(
+    list(
+      jsonrpc = "2.0",
+      id = 1,
+      method = "tools/call",
+      params = list(
+        name = "test_tool_with_progress",
+        arguments = named_list(),
+        `_meta` = list(progressToken = "progress-test-1")
+      )
+    ),
+    HTTP_ACCEPT = "text/event-stream"
+  ))
+
+  expect_equal(res$status, 200L)
+  expect_equal(res$headers$`Content-Type`, "text/event-stream")
+  expect_equal(
+    lengths(regmatches(
+      res$body,
+      gregexpr("notifications/progress", res$body, fixed = TRUE)
+    )),
+    3L
+  )
+  expect_match(res$body, '"progress":0', fixed = TRUE)
+  expect_match(res$body, '"progress":50', fixed = TRUE)
+  expect_match(res$body, '"progress":100', fixed = TRUE)
+  expect_match(res$body, '"text":"progress-test-1"', fixed = TRUE)
+})
+
+test_that("HTTP only buffers SSE for opted-in conformance tools", {
+  old_server_tools <- the$server_tools
+  old_sessions_enabled <- the$sessions_enabled
+  withr::defer({
+    the$server_tools <- old_server_tools
+    the$sessions_enabled <- old_sessions_enabled
+  })
+
+  tool <- ellmer::tool(function() "ok", "Other tool", name = "other_tool")
+  set_server_tools(list(tool), session_tools = FALSE)
+  the$sessions_enabled <- FALSE
+
+  res <- handle_http_request(local_http_post_request(
+    list(
+      jsonrpc = "2.0",
+      id = 1,
+      method = "tools/call",
+      params = list(name = "other_tool", arguments = named_list())
+    ),
+    HTTP_ACCEPT = "application/json, text/event-stream"
+  ))
+
+  expect_equal(res$headers$`Content-Type`, "application/json")
+  expect_equal(
+    jsonlite::parse_json(res$body)$result$content[[1]]$text,
+    "ok"
+  )
+})
+
+test_that("raw HTTP parsing waits for a complete UTF-8 request body", {
+  body <- charToRaw('{"message":"caf\u00e9"}')
+  headers <- charToRaw(paste0(
+    "POST /mcp HTTP/1.1\r\n",
+    "Host: 127.0.0.1\r\n",
+    "Content-Length: ", length(body), "\r\n\r\n"
+  ))
+  split <- which(body == as.raw(0xc3))[[1]]
+
+  expect_null(raw_http_parse_request(c(headers, body[seq_len(split)])))
+
+  parsed <- raw_http_parse_request(c(headers, body))
+  expect_equal(parsed$body, '{"message":"caf\u00e9"}')
+})
+
+test_that("raw HTTP parsing rejects embedded NUL bytes", {
+  body <- as.raw(c(0x7b, 0x22, 0x61, 0x22, 0x3a, 0x00, 0x7d))
+  request <- c(
+    charToRaw(paste0(
+      "POST /mcp HTTP/1.1\r\n",
+      "Host: 127.0.0.1\r\n",
+      "Content-Length: ", length(body), "\r\n\r\n"
+    )),
+    body
+  )
+
+  parsed <- raw_http_parse_request(request)
+  expect_s3_class(parsed, "raw_http_parse_error")
+  expect_equal(parsed$message, "Invalid HTTP request body")
+})
+
+test_that("buffered HTTP parsing rejects embedded NUL bytes", {
+  body <- as.raw(c(0x7b, 0x22, 0x61, 0x22, 0x3a, 0x00, 0x7d))
+  res <- handle_http_request(list(
+    REQUEST_METHOD = "POST",
+    rook.input = list(read = function() body)
+  ))
+
+  expect_equal(res$status, 400L)
+  expect_match(res$body, "Invalid HTTP request body", fixed = TRUE)
 })
 
 test_that("HTTP missing MCP-Protocol-Version does not inherit global state", {
@@ -357,7 +543,8 @@ test_that("forward_request returns append_tool_fn errors", {
   ))
 
   expect_s3_class(res, "jsonrpc_error")
-  expect_equal(res$error$message, "Method not found")
+  expect_equal(res$error$code, -32602)
+  expect_equal(res$error$message, "Unknown tool: missing_tool")
 })
 
 test_that("forward_request times out when session does not respond", {

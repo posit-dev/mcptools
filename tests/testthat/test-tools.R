@@ -102,6 +102,34 @@ test_that("tool_as_json includes annotations", {
   expect_equal(res$annotations[names(expected_annotations)], expected_annotations)
 })
 
+test_that("tool_as_json preserves raw input schemas", {
+  tool <- ellmer::tool(
+    function() "ok",
+    "Uses a raw schema",
+    name = "raw_schema"
+  )
+  schema <- list(
+    `$schema` = "https://json-schema.org/draft/2020-12/schema",
+    type = "object",
+    `$defs` = list(
+      value = list(`$anchor` = "valueDef", type = "string")
+    ),
+    allOf = list(list(anyOf = list(
+      list(required = list("phone")),
+      list(required = list("email"))
+    ))),
+    `if` = list(properties = list(mode = list(const = "phone"))),
+    then = list(required = list("phone")),
+    `else` = list(required = list("email")),
+    additionalProperties = FALSE
+  )
+  attr(tool, "mcp_input_schema") <- schema
+
+  res <- tool_as_json(tool)
+
+  expect_identical(res$inputSchema, schema)
+})
+
 test_that("tool_as_json gates top-level title on protocol version", {
   tool <- ellmer::tool(
     function() "ok",
@@ -241,6 +269,28 @@ test_that("handle_http_request_message marks tools/call as network-facing", {
   expect_match(
     res$error$message,
     "must not reference a private or loopback address"
+  )
+})
+
+test_that("execute_tool_call reports tool failures in the result", {
+  tool <- ellmer::tool(
+    function() stop("intentional tool failure", call. = FALSE),
+    "Always fails",
+    name = "failing_tool"
+  )
+
+  res <- execute_tool_call(list(
+    id = 1,
+    protocolVersion = "2025-11-25",
+    params = list(name = "failing_tool", arguments = list()),
+    tool = tool
+  ))
+
+  expect_null(res$error)
+  expect_true(res$result$isError)
+  expect_identical(
+    res$result$content,
+    list(list(type = "text", text = "intentional tool failure"))
   )
 })
 

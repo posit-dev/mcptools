@@ -8,3 +8,12 @@ docs
 
 .claude/
 plans/
+
+# transient conformance run artifacts
+conformance/last-run.txt
+conformance/server.log
+conformance/last-run-*.txt
+conformance/server-*.log
+
+# worktree-local package library (conformance harness isolation)
+.Rlib/

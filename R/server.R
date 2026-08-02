@@ -52,7 +52,9 @@
 #' mcp_server(type = "http", host = "127.0.0.1", port = 9000)
 #' ```
 #'
-#' The server will listen for HTTP POST requests containing JSON-RPC messages.
+#' The server implements MCP Streamable HTTP, including stateful sessions,
+#' streaming POST responses, and resumable GET event streams on local IPv4
+#' listeners.
 #'
 #' ## Posit Connect
 #'
@@ -232,6 +234,14 @@ mcp_server_http <- function(host = "127.0.0.1", port = 8080) {
     on.exit(nanonext::reap(the$server_socket), add = TRUE)
   }
 
+  if (host %in% c("127.0.0.1", "0.0.0.0")) {
+    return(mcp_server_http_raw(host = host, port = port))
+  }
+
+  mcp_server_http_buffered(host = host, port = port)
+}
+
+mcp_server_http_buffered <- function(host, port) {
   app <- list(
     call = function(req) {
       handle_http_request(req)
@@ -247,6 +257,25 @@ mcp_server_http <- function(host = "127.0.0.1", port = 8080) {
 }
 
 handle_http_request <- function(req) {
+  validation_error <- http_request_validation_error(req)
+  if (!is.null(validation_error)) {
+    return(validation_error)
+  }
+
+  if (req$REQUEST_METHOD == "POST") {
+    return(handle_http_post(req))
+  } else if (req$REQUEST_METHOD == "GET") {
+    return(handle_http_get(req))
+  } else {
+    return(list(
+      status = 405L,
+      headers = list("Allow" = "POST"),
+      body = "Method Not Allowed"
+    ))
+  }
+}
+
+http_request_validation_error <- function(req) {
   if (!validate_shared_secret(req)) {
     return(http_forbidden("Invalid shared secret"))
   }
@@ -263,17 +292,7 @@ handle_http_request <- function(req) {
     return(http_bad_request("Invalid or unsupported MCP-Protocol-Version"))
   }
 
-  if (req$REQUEST_METHOD == "POST") {
-    return(handle_http_post(req))
-  } else if (req$REQUEST_METHOD == "GET") {
-    return(handle_http_get(req))
-  } else {
-    return(list(
-      status = 405L,
-      headers = list("Allow" = "POST"),
-      body = "Method Not Allowed"
-    ))
-  }
+  NULL
 }
 
 http_forbidden <- function(error) {
@@ -362,12 +381,24 @@ http_allowed_origins <- function() {
 
 validate_http_protocol_version <- function(req) {
   version <- req$HTTP_MCP_PROTOCOL_VERSION
-  is.null(version) || is_supported_protocol_version(version)
+  is.null(version) ||
+    is_supported_protocol_version(version) ||
+    (
+      identical(req$REQUEST_METHOD, "POST") &&
+        is.null(req$HTTP_MCP_SESSION_ID)
+    )
 }
 
 handle_http_post <- function(req) {
   body_raw <- req$rook.input$read()
-  body_text <- rawToChar(body_raw)
+  body_text <- tryCatch(
+    rawToChar(body_raw),
+    error = function(e) NULL
+  )
+
+  if (is.null(body_text)) {
+    return(http_bad_request("Invalid HTTP request body"))
+  }
 
   data <- tryCatch(
     jsonlite::parse_json(body_text),
@@ -376,6 +407,15 @@ handle_http_post <- function(req) {
 
   if (is.null(data)) {
     return(http_bad_request("Invalid JSON"))
+  }
+
+  if (is_stateless_http_request(req, data)) {
+    return(handle_stateless_http_post(req, data))
+  }
+
+  version <- req$HTTP_MCP_PROTOCOL_VERSION
+  if (!is.null(version) && !is_supported_protocol_version(version)) {
+    return(http_bad_request("Invalid or unsupported MCP-Protocol-Version"))
   }
 
   if (is.null(data$id)) {
@@ -387,14 +427,24 @@ handle_http_post <- function(req) {
     ))
   }
 
+  buffered_sse <- buffered_tool_sse_response(data, req)
+  if (!is.null(buffered_sse)) {
+    return(buffered_sse)
+  }
+
   result <- handle_http_request_message(
     data,
     protocol_version = http_message_protocol_version(data, req)
   )
 
+  headers <- list("Content-Type" = "application/json")
+  if (identical(data$method, "initialize")) {
+    headers[["MCP-Session-Id"]] <- new_mcp_session_id()
+  }
+
   list(
     status = 200L,
-    headers = list("Content-Type" = "application/json"),
+    headers = headers,
     body = to_json(result)
   )
 }
@@ -416,6 +466,13 @@ handle_http_get <- function(req) {
 }
 
 handle_http_notification_or_response <- function(data) {
+  if (is.list(data) && !is.null(data$method)) {
+    dispatch_mcp_notification(
+      data,
+      the$protocol_version %||% latest_protocol_version,
+      transport = "http"
+    )
+  }
   NULL
 }
 
@@ -471,6 +528,10 @@ handle_http_request_message <- function(
       return(forward_request(data))
     }
   } else {
+    handled <- dispatch_mcp_method(data, protocol_version, transport = "http")
+    if (!is.null(handled)) {
+      return(handled)
+    }
     return(jsonrpc_response(
       data$id,
       error = list(code = -32601, message = "Method not found")
@@ -548,12 +609,27 @@ handle_message_from_client <- function(line) {
   } else if (is.null(data$id)) {
     # If there is no `id` in the request, then this is a notification and the
     # client does not expect a response.
-    if (data$method == "notifications/initialized") {}
+    if (data$method == "notifications/initialized") {} else {
+      dispatch_mcp_notification(
+        data,
+        the$protocol_version %||% latest_protocol_version,
+        transport = "stdio"
+      )
+    }
   } else {
-    cat_json(jsonrpc_response(
-      data$id,
-      error = list(code = -32601, message = "Method not found")
-    ))
+    handled <- dispatch_mcp_method(
+      data,
+      the$protocol_version %||% latest_protocol_version,
+      transport = "stdio"
+    )
+    if (!is.null(handled)) {
+      cat_json(handled)
+    } else {
+      cat_json(jsonrpc_response(
+        data$id,
+        error = list(code = -32601, message = "Method not found")
+      ))
+    }
   }
 }
 
@@ -734,21 +810,22 @@ cat_json <- function(x) {
 }
 
 capabilities <- function(protocol_version = latest_protocol_version) {
+  # Base capabilities reflect what the server actually implements. Feature
+  # areas advertise their own capabilities via register_mcp_capability(); those
+  # fragments are merged over this base (see R/mcp-registry.R).
+  base_capabilities <- list(
+    tools = named_list(
+      listChanged = FALSE
+    )
+  )
+  merged <- utils::modifyList(
+    base_capabilities,
+    the$mcp_capabilities %||% list()
+  )
+
   res <- list(
     protocolVersion = protocol_version,
-    capabilities = list(
-      # logging = named_list(),
-      prompts = named_list(
-        listChanged = FALSE
-      ),
-      resources = named_list(
-        subscribe = FALSE,
-        listChanged = FALSE
-      ),
-      tools = named_list(
-        listChanged = FALSE
-      )
-    ),
+    capabilities = merged,
     serverInfo = list(
       name = "R mcptools server",
       version = "0.0.1"
@@ -764,17 +841,24 @@ capabilities <- function(protocol_version = latest_protocol_version) {
 }
 
 tool_as_json <- function(tool, protocol_version = latest_protocol_version) {
-  dummy_provider <- ellmer::Provider("dummy", "dummy", "dummy")
+  inputSchema <- attr(tool, "mcp_input_schema", exact = TRUE)
 
-  as_json <- getNamespace("ellmer")[["as_json"]]
-  inputSchema <- compact(as_json(dummy_provider, tool@arguments))
-  # This field is present but shouldn't be
-  inputSchema$description <- NULL
-  # compact() drops zero-length elements, so properties gets stripped for
+  if (is.null(inputSchema)) {
+    dummy_provider <- ellmer::Provider("dummy", "dummy", "dummy")
+    as_json <- getNamespace("ellmer")[["as_json"]]
+    inputSchema <- compact(as_json(dummy_provider, tool@arguments))
+    # This field is present but shouldn't be
+    inputSchema$description <- NULL
+    # compact() drops zero-length elements, so properties gets stripped for
 
-  # no-argument tools. Rather than reworking compact(), patch it here.
-  if (is.null(inputSchema$properties)) {
-    inputSchema$properties <- structure(list(), names = character())
+    # no-argument tools. Rather than reworking compact(), patch it here.
+    if (is.null(inputSchema$properties)) {
+      inputSchema$properties <- structure(list(), names = character())
+    }
+  } else if (!is.list(inputSchema) || is.null(names(inputSchema))) {
+    cli::cli_abort(
+      "The {.field mcp_input_schema} tool attribute must be a JSON object."
+    )
   }
 
   compact(list(
@@ -853,11 +937,16 @@ append_tool_fn <- function(data) {
 
   tool_name <- data$params$name
 
-  if (!tool_name %in% names(get_mcptools_tools())) {
+  if (!is_string(tool_name) || !tool_name %in% names(get_mcptools_tools())) {
+    message <- if (is_string(tool_name)) {
+      paste("Unknown tool:", tool_name)
+    } else {
+      "Tool name must be a string."
+    }
     return(structure(
       jsonrpc_response(
         data$id,
-        error = list(code = -32601, message = "Method not found")
+        error = list(code = -32602, message = message)
       ),
       class = c("jsonrpc_error", "list")
     ))

@@ -316,6 +316,47 @@ test_that("as_tool_call_result handles mixed ellmer content", {
   expect_false(output$result$isError)
 })
 
+test_that("as_tool_call_result preserves plain MCP content blocks", {
+  data <- list(id = 1, protocolVersion = "2025-11-25")
+  audio <- list(
+    type = "audio",
+    data = "audio-data",
+    mimeType = "audio/wav"
+  )
+  resource <- list(
+    type = "resource",
+    resource = list(
+      uri = "test://resource",
+      mimeType = "text/plain",
+      text = "resource text"
+    )
+  )
+
+  audio_output <- as_tool_call_result(data, audio)
+  mixed_output <- as_tool_call_result(
+    data,
+    list(
+      list(type = "text", text = "caption"),
+      audio,
+      resource
+    )
+  )
+
+  expect_identical(audio_output$result$content, list(audio))
+  expect_null(audio_output$result$structuredContent)
+  expect_false(audio_output$result$isError)
+  expect_identical(
+    mixed_output$result$content,
+    list(
+      list(type = "text", text = "caption"),
+      audio,
+      resource
+    )
+  )
+  expect_null(mixed_output$result$structuredContent)
+  expect_false(mixed_output$result$isError)
+})
+
 test_that("as_tool_call_result handles vector results", {
   data <- list(id = 1)
   result <- c("line1", "line2", "line3")

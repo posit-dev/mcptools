@@ -1,0 +1,54 @@
+# Workflow: run the official MCP conformance suite against the forked
+# mcptools everything-server (server mode, Streamable HTTP).
+#
+# This is the conformance-first CI for r-mcp. It installs the R package and
+# its dependencies, boots conformance/everything-server.R, and runs the
+# official `@modelcontextprotocol/conformance` harness against it.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+name: conformance.yaml
+
+permissions: read-all
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    name: MCP conformance (server mode)
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          needs: check
+
+      - name: Install forked mcptools
+        run: make install
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run MCP conformance matrix (server mode)
+        run: make conformance
+
+      - name: Upload conformance output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-output
+          path: |
+            conformance/last-run-*.txt
+            conformance/server-*.log
+          if-no-files-found: warn
