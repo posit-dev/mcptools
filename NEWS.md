@@ -1,4 +1,4 @@
-# mcptools (development version)
+# mcptools 1.0.2
 
 Only an internal testing change that addresses a temp directory cleanup NOTE.
 
