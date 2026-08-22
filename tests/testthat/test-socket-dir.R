@@ -249,7 +249,7 @@ test_that("reclaim_stale_socket() spares a live (even busy) listener", {
   skip_on_os("windows")
   skip_if_not_installed("callr")
   # short path to stay within the Unix socket path length limit
-  tmp <- file.path("/tmp", paste0("mcp-reclaim-", Sys.getpid()))
+  tmp <- tempfile()
   dir.create(tmp, showWarnings = FALSE, mode = "0700")
   withr::defer(unlink(tmp, recursive = TRUE))
 
@@ -283,7 +283,7 @@ test_that("reclaim_stale_socket() is FALSE when there is no file to reclaim", {
 
 test_that("mcp_session() advances past a live slot and reclaims a stale one", {
   skip_on_os("windows")
-  tmp <- file.path("/tmp", paste0("mcp-mixed-", Sys.getpid()))
+  tmp <- tempfile()
   dir.create(tmp, showWarnings = FALSE, mode = "0700")
   withr::defer(unlink(tmp, recursive = TRUE))
 
