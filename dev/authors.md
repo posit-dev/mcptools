@@ -18,13 +18,13 @@ Source:
 [`DESCRIPTION`](https://github.com/posit-dev/mcptools/blob/main/DESCRIPTION)
 
 Couch S, Chang W, Gao C (2026). *mcptools: Model Context Protocol
-Servers and Clients*. R package version 1.0.1.9000,
+Servers and Clients*. R package version 1.0.2.9000,
 <https://github.com/posit-dev/mcptools>.
 
     @Manual{,
       title = {mcptools: Model Context Protocol Servers and Clients},
       author = {Simon Couch and Winston Chang and Charlie Gao},
       year = {2026},
-      note = {R package version 1.0.1.9000},
+      note = {R package version 1.0.2.9000},
       url = {https://github.com/posit-dev/mcptools},
     }
