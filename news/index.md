@@ -1,6 +1,13 @@
 # Changelog
 
+## mcptools 1.0.2
+
+Only an internal testing change that addresses a temp directory cleanup
+NOTE.
+
 ## mcptools 1.0.1
+
+CRAN release: 2026-07-27
 
 This release includes several security-oriented fixes, in addition to a
 couple quality of life improvements for multi-user and multi-session

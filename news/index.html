@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mcptools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +36,11 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.0.1" id="mcptools-101">mcptools 1.0.1<a class="anchor" aria-label="anchor" href="#mcptools-101"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.0.2" id="mcptools-102">mcptools 1.0.2<a class="anchor" aria-label="anchor" href="#mcptools-102"></a></h2>
+<p>Only an internal testing change that addresses a temp directory cleanup NOTE.</p>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.1" id="mcptools-101">mcptools 1.0.1<a class="anchor" aria-label="anchor" href="#mcptools-101"></a></h2><p class="text-muted">CRAN release: 2026-07-27</p>
 <p>This release includes several security-oriented fixes, in addition to a couple quality of life improvements for multi-user and multi-session workspaces:</p>
 <ul><li><p>The server now chooses its R session at tool-call time rather than always connecting to the first session: it prefers the session whose working directory matches its own (clients like Claude Code and Posit Assistant launch the server in the project directory), falling back to the only running session. When several sessions are running and none matches, tools execute in the server’s own R process until the client calls <code>select_r_session</code>. Previously, a second client + session pair in another project window would silently execute tools in the first project’s session (<a href="https://github.com/posit-dev/mcptools/issues/114" class="external-link">#114</a>).</p></li>
 <li><p>Sessions now use per-user filesystem IPC sockets in an owner-only (0700) directory instead of a shared address. On multi-user Linux hosts (e.g. Posit Workbench) the previous default let any local user connect to another user’s <code><a href="../reference/server.html">mcp_session()</a></code> and execute tools in it; sessions are now isolated by Unix user. The socket directory follows <code>MCPTOOLS_SOCKET_DIR</code> &gt; <code>XDG_RUNTIME_DIR/mcptools/</code> &gt; <code>$TMPDIR/mcptools-&lt;user&gt;/</code> &gt; <code>/tmp/mcptools-&lt;user&gt;/</code> (<a href="https://github.com/kwbyron-lilly" class="external-link">@kwbyron-lilly</a>, <a href="https://github.com/posit-dev/mcptools/issues/114" class="external-link">#114</a>).</p></li>
