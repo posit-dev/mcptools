@@ -15,7 +15,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/posit-dev/mcptools/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/posit-dev/mcptools/blob/v1.0.2/DESCRIPTION)
 
 Couch S, Chang W, Gao C (2026). *mcptools: Model Context Protocol
 Servers and Clients*. R package version 1.0.2,
