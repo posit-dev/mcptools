@@ -1,6 +1,6 @@
 Package: mcptools
 Title: Model Context Protocol Servers and Clients
-Version: 1.0.2
+Version: 1.0.2.9000
 Authors@R: c(
     person("Simon", "Couch", , "simon.couch@posit.co", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-5676-5107")),
