@@ -110,8 +110,9 @@
 #' at <https://github.com/posit-dev/mcptools/issues/41#issuecomment-3036617046>.
 #'
 #' @param tools Optional collection of tools to expose. Supply either a list
-#'   of objects created by [ellmer::tool()] or a path to an `.R` file that,
-#'   when sourced, yields such a list. Defaults to `NULL`, which serves only
+#'   of objects created by [ellmer::tool()] (optionally wrapped with
+#'   [mcp_server_tool()] for MCP-specific metadata) or a path to an `.R` file
+#'   that, when sourced, yields such a list. Defaults to `NULL`, which serves only
 #'   the built-in session tools when `session_tools` is `TRUE`. Note that
 #'   **tools are associated with the `mcp_server()`** rather than with
 #'   `mcp_session()`s; to determine what tools are available in a session,
@@ -763,7 +764,11 @@ capabilities <- function(protocol_version = latest_protocol_version) {
   res
 }
 
-tool_as_json <- function(tool, protocol_version = latest_protocol_version) {
+tool_as_json <- function(
+  tool,
+  protocol_version = latest_protocol_version,
+  output_schema = NULL
+) {
   dummy_provider <- ellmer::Provider("dummy", "dummy", "dummy")
 
   as_json <- getNamespace("ellmer")[["as_json"]]
@@ -777,11 +782,23 @@ tool_as_json <- function(tool, protocol_version = latest_protocol_version) {
     inputSchema$properties <- structure(list(), names = character())
   }
 
+  outputSchema <- NULL
+  if (
+    !is.null(output_schema) &&
+      protocol_version_gte(protocol_version, "2025-06-18")
+  ) {
+    outputSchema <- compact(as_json(dummy_provider, output_schema))
+    if (is.null(outputSchema$properties)) {
+      outputSchema$properties <- structure(list(), names = character())
+    }
+  }
+
   compact(list(
     name = tool@name,
     title = tool_title_as_json(tool@annotations, protocol_version),
     description = tool@description,
     inputSchema = inputSchema,
+    outputSchema = outputSchema,
     annotations = tool_annotations_as_json(tool@annotations)
   ))
 }
