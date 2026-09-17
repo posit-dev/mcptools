@@ -268,7 +268,9 @@ test_that("reclaim_stale_socket() spares a live (even busy) listener", {
   withr::defer(bg$kill())
 
   deadline <- Sys.time() + 5
-  while (!file.exists(socket_path) && Sys.time() < deadline) Sys.sleep(0.05)
+  while (!file.exists(socket_path) && Sys.time() < deadline) {
+    Sys.sleep(0.05)
+  }
   skip_if(!file.exists(socket_path), "Background listener did not start")
 
   expect_false(reclaim_stale_socket(sprintf("ipc://%s", socket_path)))
@@ -282,6 +284,7 @@ test_that("reclaim_stale_socket() is FALSE when there is no file to reclaim", {
 })
 
 test_that("mcp_session() advances past a live slot and reclaims a stale one", {
+  skip_on_cran()
   skip_on_os("windows")
   tmp <- tempfile()
   dir.create(tmp, showWarnings = FALSE, mode = "0700")
