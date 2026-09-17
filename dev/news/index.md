@@ -4,6 +4,8 @@
 
 ## mcptools 1.0.2
 
+CRAN release: 2026-08-22
+
 Only an internal testing change that addresses a temp directory cleanup
 NOTE.
 
