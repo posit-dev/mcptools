@@ -1,4 +1,4 @@
-# mcptools (development version)
+# mcptools 1.0.3
 
 # mcptools 1.0.2
 
