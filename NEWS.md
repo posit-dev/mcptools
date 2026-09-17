@@ -1,5 +1,7 @@
 # mcptools 1.0.3
 
+Fix a test that failed on CRAN M1mac machines.
+
 # mcptools 1.0.2
 
 Only an internal testing change that addresses a temp directory cleanup NOTE.
