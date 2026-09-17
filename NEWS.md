@@ -1,4 +1,6 @@
-# mcptools (development version)
+# mcptools 1.0.3
+
+Fix a test that failed on CRAN M1mac machines.
 
 # mcptools 1.0.2
 
