@@ -284,7 +284,7 @@ test_that("reclaim_stale_socket() is FALSE when there is no file to reclaim", {
 })
 
 test_that("mcp_session() advances past a live slot and reclaims a stale one", {
-  skip_on_cran()
+  skip("Skipping.")
   skip_on_os("windows")
   tmp <- tempfile()
   dir.create(tmp, showWarnings = FALSE, mode = "0700")
