@@ -38,3 +38,12 @@
       ! The command `Rscript` failed with the following error:
       x Error: intentional error. Execution halted
 
+# config capabilities must be an object
+
+    Code
+      mcp_config_capabilities(list("a", "b"))
+    Condition
+      Error:
+      ! MCP server configuration failed.
+      i capabilities must be a JSON object.
+

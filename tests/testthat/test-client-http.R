@@ -532,6 +532,52 @@ test_that("HTTP requests transparently reinitialize after a session 404", {
   )
 })
 
+test_that("reinitializing after a session 404 declares the same capabilities", {
+  transport <- mcp_transport_http(list(url = "https://example.test/mcp"))
+  transport$session_id <- "old-session"
+  transport$protocol_version <- latest_protocol_version
+  transport$capabilities <- list(
+    extensions = list(`io.modelcontextprotocol/ui` = named_list())
+  )
+
+  initialize_params <- NULL
+  httr2::local_mocked_responses(function(req) {
+    message <- req$body$data
+    if (identical(req$headers$`MCP-Session-Id`, "old-session")) {
+      return(httr2::response(status_code = 404L, url = req$url, method = req$method))
+    }
+    if (identical(message$method, "initialize")) {
+      initialize_params <<- message$params
+      result <- list(
+        protocolVersion = latest_protocol_version,
+        capabilities = named_list(),
+        serverInfo = list(name = "remote-server", version = "1.0.0")
+      )
+      headers <- list(
+        "Content-Type" = "application/json",
+        "MCP-Session-Id" = "new-session"
+      )
+    } else {
+      result <- named_list()
+      headers <- list("Content-Type" = "application/json")
+    }
+    httr2::response(
+      status_code = 200L,
+      url = req$url,
+      method = req$method,
+      headers = headers,
+      body = charToRaw(to_json(jsonrpc_response(message$id, result = result)))
+    )
+  })
+
+  mcp_transport_request(transport, mcp_request_tools_list(id = 2L))
+
+  expect_named(
+    initialize_params$capabilities$extensions,
+    "io.modelcontextprotocol/ui"
+  )
+})
+
 test_that("HTTP requests surface a session-expired error when reinit can't recover", {
   transport <- mcp_transport_http(list(url = "https://example.test/mcp"))
   transport$session_id <- "session-1"
@@ -645,6 +691,44 @@ test_that("Streamable HTTP mock server supports JSON responses and cleanup", {
     function(request) identical(request$method, "DELETE"),
     logical(1)
   )))
+})
+
+test_that("Streamable HTTP roundtrip carries capabilities and _meta", {
+  server <- local_streamable_http_mock_server(meta = TRUE)
+  tmp_file <- withr::local_tempfile(fileext = ".json")
+  writeLines(
+    sprintf(
+      '{"mcpServers": {"mock_apps": {"url": "%s", "capabilities":
+        {"extensions": {"io.modelcontextprotocol/ui":
+          {"mimeTypes": ["text/html;profile=mcp-app"]}}}}}}',
+      server$url
+    ),
+    tmp_file
+  )
+  withr::defer({
+    if ("mock_apps" %in% names(the$mcp_servers)) {
+      mcp_transport_close(the$mcp_servers[["mock_apps"]]$transport)
+      the$mcp_servers[["mock_apps"]] <- NULL
+    }
+  })
+
+  tools <- mcp_tools(tmp_file)
+
+  expect_equal(
+    tools[[1]]@annotations[["_meta"]]$ui$resourceUri,
+    "ui://mock/echo"
+  )
+
+  result <- call_tool(text = "hi", server = "mock_apps", tool = "echo")
+  expect_equal(result@value, "echo: hi")
+  expect_equal(result@extra[["_meta"]]$trace, "mock-trace")
+
+  initialize <- server$requests()[[1]]$body
+  expect_equal(initialize$method, "initialize")
+  expect_equal(
+    initialize$params$capabilities$extensions$`io.modelcontextprotocol/ui`$mimeTypes,
+    list("text/html;profile=mcp-app")
+  )
 })
 
 test_that("Streamable HTTP mock server supports POST SSE", {

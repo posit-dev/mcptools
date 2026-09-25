@@ -18,6 +18,12 @@ the file path configured with the option \code{.mcptools_config}, falling back t
 \code{mcp_tools()} returns a list of ellmer tools that can be passed directly
 to the \verb{$set_tools()} method of an \link[ellmer:Chat]{ellmer::Chat} object. If the file at
 \code{config} doesn't exist, an error.
+
+Each tool's \code{annotations} hold the server's title and hints, named as in
+\code{\link[ellmer:tool_annotations]{ellmer::tool_annotations()}}, and the tool's \verb{_meta} as
+\code{annotations[["_meta"]]}. A result's \verb{_meta} is returned in the
+\link[ellmer:ContentToolResult]{ellmer::ContentToolResult}'s \code{extra[["_meta"]]}, which the model doesn't
+see.
 }
 \description{
 These functions implement R as an MCP \emph{client}, so that ellmer chats can
@@ -95,6 +101,9 @@ Remote server entries support these fields:
 \item \code{allow_http}: allow credentialed non-loopback HTTP endpoints.
 \item \code{ignore_tools}: tool names or \code{*} wildcards to hide and block.
 \item \code{oauth}: OAuth settings.
+\item \code{capabilities}: client capabilities sent in \code{initialize}. A host that
+renders MCP Apps would declare \verb{\{"extensions": \{"io.modelcontextprotocol/ui": \{"mimeTypes": ["text/html;profile=mcp-app"]\}\}\}}.
+Stdio server entries accept it too.
 }
 
 OAuth settings may include \code{authorization_server}, \code{resource}, \code{scope} with

@@ -79,6 +79,13 @@ the$mcp_servers <- list()
 #' must use HTTPS; HTTP is allowed only for loopback development servers or for
 #' explicit unsafe opt-out with `allow_http`.
 #'
+#' When no static `Authorization` header is configured and the server answers an
+#' unauthenticated request with a `401` OAuth challenge, mcptools automatically
+#' runs the OAuth authorization-code flow, opening a browser for sign-in. Tokens
+#' are cached and refreshed, so the browser step happens only until a cached
+#' token expires. An `oauth` block is optional and only needed to override the
+#' defaults described below.
+#'
 #' Remote server entries support these fields:
 #'
 #' * `url`: the Streamable HTTP MCP endpoint.
@@ -87,6 +94,10 @@ the$mcp_servers <- list()
 #' * `allow_http`: allow credentialed non-loopback HTTP endpoints.
 #' * `ignore_tools`: tool names or `*` wildcards to hide and block.
 #' * `oauth`: OAuth settings.
+#' * `capabilities`: client capabilities sent in `initialize`. A host that
+#'   renders MCP Apps would declare `{"extensions":
+#'   {"io.modelcontextprotocol/ui": {"mimeTypes": ["text/html;profile=mcp-app"]}}}`.
+#'   Stdio server entries accept it too.
 #'
 #' OAuth settings may include `authorization_server`, `resource`, `scope` with
 #' `scope_mode = "override"`, `client_info`, `manual_client_info`,
@@ -120,6 +131,12 @@ the$mcp_servers <- list()
 #' `mcp_tools()` returns a list of ellmer tools that can be passed directly
 #' to the `$set_tools()` method of an [ellmer::Chat] object. If the file at
 #' `config` doesn't exist, an error.
+#'
+#' Each tool's `annotations` hold the server's title and hints, named as in
+#' [ellmer::tool_annotations()], and the tool's `_meta` as
+#' `annotations[["_meta"]]`. A result's `_meta` is returned in the
+#' [ellmer::ContentToolResult]'s `extra[["_meta"]]`, which the model doesn't
+#' see.
 #'
 #' @examples
 #' # setup
@@ -204,7 +221,21 @@ read_mcp_config <- function(config, call = caller_env()) {
     )
   }
 
-  config$mcpServers
+  servers <- config$mcpServers
+
+  # `capabilities` is sent to the server as written, so re-read it without
+  # simplification to keep one-element arrays as arrays.
+  raw_servers <- jsonlite::fromJSON(
+    config_lines,
+    simplifyVector = FALSE
+  )$mcpServers
+  for (name in names(servers)) {
+    if (!is.null(raw_servers[[name]]$capabilities)) {
+      servers[[name]]$capabilities <- raw_servers[[name]]$capabilities
+    }
+  }
+
+  servers
 }
 
 error_no_mcp_config <- function(call) {
@@ -225,6 +256,10 @@ add_mcp_server <- function(config, name, call = caller_env()) {
   }
 
   transport <- mcp_transport(config, call = call)
+  transport$capabilities <- mcp_config_capabilities(
+    config$capabilities,
+    call = call
+  )
   ignore_tools <- mcp_ignore_tools(
     config$ignore_tools %||% character(),
     call = call
@@ -250,7 +285,10 @@ add_mcp_server <- function(config, name, call = caller_env()) {
     {
       response_initialize <- mcp_transport_request(
         transport,
-        mcp_request_initialize(id = next_id)
+        mcp_request_initialize(
+          id = next_id,
+          capabilities = transport$capabilities
+        )
       )
       next_id <- next_id + 1L
       mcp_transport_store_initialize(
@@ -675,6 +713,24 @@ mcp_config_oauth_callback_port <- function(callback_port, call = caller_env()) {
   as.integer(callback_port)
 }
 
+mcp_config_capabilities <- function(capabilities, call = caller_env()) {
+  if (length(capabilities) == 0) {
+    return(named_list())
+  }
+
+  if (!is.list(capabilities) || !is_named(capabilities)) {
+    cli::cli_abort(
+      c(
+        "MCP server configuration failed.",
+        i = "{.field capabilities} must be a JSON object."
+      ),
+      call = call
+    )
+  }
+
+  capabilities
+}
+
 # initialize and tool listing -------------------------------------------------
 mcp_transport_store_initialize <- function(
   transport,
@@ -941,13 +997,44 @@ server_as_ellmer_tools <- function(server) {
           ),
           description = tool$description,
           arguments = tool_arguments,
-          name = tool$name
+          name = tool$name,
+          annotations = mcp_tool_annotations_as_ellmer(tool)
         )
       )
     )
   }
 
   tools_out
+}
+
+# Server annotations in ellmer's naming, plus the tool's `_meta`, which hosts
+# read for extensions such as MCP Apps (`_meta$ui$resourceUri`). Malformed
+# hints are dropped rather than raised; they're only hints.
+mcp_tool_annotations_as_ellmer <- function(tool) {
+  annotations <- tool$annotations %||% list()
+  hint_names <- c(
+    readOnlyHint = "read_only_hint",
+    destructiveHint = "destructive_hint",
+    idempotentHint = "idempotent_hint",
+    openWorldHint = "open_world_hint"
+  )
+
+  out <- list()
+  title <- tool$title %||% annotations$title
+  if (is_string(title)) {
+    out$title <- title
+  }
+  for (hint in names(hint_names)) {
+    value <- annotations[[hint]]
+    if (is.logical(value) && length(value) == 1 && !is.na(value)) {
+      out[[hint_names[[hint]]]] <- value
+    }
+  }
+  if (length(tool[["_meta"]]) > 0) {
+    out[["_meta"]] <- tool[["_meta"]]
+  }
+
+  out
 }
 
 as_ellmer_types <- function(tool) {
@@ -1152,7 +1239,22 @@ mcp_tool_result_as_ellmer <- function(response) {
     mcp_abort_jsonrpc_error(response$error)
   }
 
-  result <- response$result
+  out <- mcp_tool_result_value(response$result)
+
+  meta <- response$result[["_meta"]]
+  if (length(meta) == 0) {
+    return(out)
+  }
+
+  # `_meta` is for the client. `extra` keeps it out of what the model sees.
+  if (!inherits(out, "ellmer::ContentToolResult")) {
+    out <- ellmer::ContentToolResult(value = out)
+  }
+  out@extra[["_meta"]] <- meta
+  out
+}
+
+mcp_tool_result_value <- function(result) {
   if (is.null(result$content) && is.null(result$structuredContent)) {
     return(result)
   }
@@ -1372,14 +1474,14 @@ mcp_transport_stdio_close <- function(transport) {
 
 # protocol messages ------------------------------------------------------------
 # step 1: initialize the MCP connection
-mcp_request_initialize <- function(id = 1L) {
+mcp_request_initialize <- function(id = 1L, capabilities = named_list()) {
   list(
     jsonrpc = "2.0",
     id = id,
     method = "initialize",
     params = list(
       protocolVersion = latest_protocol_version,
-      capabilities = named_list(),
+      capabilities = capabilities,
       clientInfo = list(
         name = "mcptools",
         version = as.character(utils::packageVersion("mcptools"))

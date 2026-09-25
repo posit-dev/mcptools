@@ -1,5 +1,13 @@
 # mcptools (development version)
 
+* `mcp_tools()` no longer drops `_meta`, which MCP Apps hosts need. Tools
+  carry the server's title and hints in their annotations, along with the
+  tool's `_meta` as `annotations[["_meta"]]`. When a result has `_meta`, the
+  tool returns a `ContentToolResult` with it in `extra`; the model sees the
+  same value as before. A server entry in the config can also set
+  `capabilities`, which are sent in `initialize`, for example to declare the
+  MCP Apps extension `io.modelcontextprotocol/ui`.
+
 # mcptools 1.0.2
 
 Only an internal testing change that addresses a temp directory cleanup NOTE.

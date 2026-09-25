@@ -108,7 +108,10 @@ mcp_transport_http_send <- function(
 mcp_transport_http_reinitialize <- function(transport, call = caller_env()) {
   response <- mcp_transport_http_send(
     transport,
-    mcp_request_initialize(id = 1L),
+    mcp_request_initialize(
+      id = 1L,
+      capabilities = transport$capabilities %||% named_list()
+    ),
     expect_response = TRUE,
     call = call,
     session_retry = FALSE,
