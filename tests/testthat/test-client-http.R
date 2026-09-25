@@ -647,6 +647,44 @@ test_that("Streamable HTTP mock server supports JSON responses and cleanup", {
   )))
 })
 
+test_that("Streamable HTTP roundtrip carries capabilities and _meta", {
+  server <- local_streamable_http_mock_server(meta = TRUE)
+  tmp_file <- withr::local_tempfile(fileext = ".json")
+  writeLines(
+    sprintf(
+      '{"mcpServers": {"mock_apps": {"url": "%s", "capabilities":
+        {"extensions": {"io.modelcontextprotocol/ui":
+          {"mimeTypes": ["text/html;profile=mcp-app"]}}}}}}',
+      server$url
+    ),
+    tmp_file
+  )
+  withr::defer({
+    if ("mock_apps" %in% names(the$mcp_servers)) {
+      mcp_transport_close(the$mcp_servers[["mock_apps"]]$transport)
+      the$mcp_servers[["mock_apps"]] <- NULL
+    }
+  })
+
+  tools <- mcp_tools(tmp_file)
+
+  expect_equal(
+    tools[[1]]@annotations[["_meta"]]$ui$resourceUri,
+    "ui://mock/echo"
+  )
+
+  result <- call_tool(text = "hi", server = "mock_apps", tool = "echo")
+  expect_equal(result@value, "echo: hi")
+  expect_equal(result@extra[["_meta"]]$trace, "mock-trace")
+
+  initialize <- server$requests()[[1]]$body
+  expect_equal(initialize$method, "initialize")
+  expect_equal(
+    initialize$params$capabilities$extensions$`io.modelcontextprotocol/ui`$mimeTypes,
+    list("text/html;profile=mcp-app")
+  )
+})
+
 test_that("Streamable HTTP mock server supports POST SSE", {
   transport <- mcp_transport_http(list(
     url = local_streamable_http_mock_server(post_sse = TRUE)$url

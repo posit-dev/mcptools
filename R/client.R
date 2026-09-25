@@ -87,6 +87,10 @@ the$mcp_servers <- list()
 #' * `allow_http`: allow credentialed non-loopback HTTP endpoints.
 #' * `ignore_tools`: tool names or `*` wildcards to hide and block.
 #' * `oauth`: OAuth settings.
+#' * `capabilities`: client capabilities to declare in `initialize`, sent
+#'   verbatim. For example, a host that renders MCP Apps declares
+#'   `{"extensions": {"io.modelcontextprotocol/ui": {"mimeTypes":
+#'   ["text/html;profile=mcp-app"]}}}`. Stdio server entries accept it too.
 #'
 #' OAuth settings may include `authorization_server`, `resource`, `scope` with
 #' `scope_mode = "override"`, `client_info`, `manual_client_info`,
@@ -120,6 +124,12 @@ the$mcp_servers <- list()
 #' `mcp_tools()` returns a list of ellmer tools that can be passed directly
 #' to the `$set_tools()` method of an [ellmer::Chat] object. If the file at
 #' `config` doesn't exist, an error.
+#'
+#' Each tool's `annotations` carry the server's title and hints (snake-cased,
+#' as in [ellmer::tool_annotations()]) and the tool's `_meta`, verbatim, as
+#' `annotations[["_meta"]]`. When a tool result has `_meta`, the tool returns
+#' an [ellmer::ContentToolResult] with it in `extra[["_meta"]]`; the value the
+#' model sees is unchanged.
 #'
 #' @examples
 #' # setup
@@ -204,7 +214,21 @@ read_mcp_config <- function(config, call = caller_env()) {
     )
   }
 
-  config$mcpServers
+  servers <- config$mcpServers
+
+  # `capabilities` is sent to the server verbatim, so it is read without
+  # simplification: a one-element JSON array must stay an array.
+  raw_servers <- jsonlite::fromJSON(
+    config_lines,
+    simplifyVector = FALSE
+  )$mcpServers
+  for (name in names(servers)) {
+    if (!is.null(raw_servers[[name]]$capabilities)) {
+      servers[[name]]$capabilities <- raw_servers[[name]]$capabilities
+    }
+  }
+
+  servers
 }
 
 error_no_mcp_config <- function(call) {
@@ -225,6 +249,10 @@ add_mcp_server <- function(config, name, call = caller_env()) {
   }
 
   transport <- mcp_transport(config, call = call)
+  transport$capabilities <- mcp_config_capabilities(
+    config$capabilities %||% named_list(),
+    call = call
+  )
   ignore_tools <- mcp_ignore_tools(
     config$ignore_tools %||% character(),
     call = call
@@ -250,7 +278,10 @@ add_mcp_server <- function(config, name, call = caller_env()) {
     {
       response_initialize <- mcp_transport_request(
         transport,
-        mcp_request_initialize(id = next_id)
+        mcp_request_initialize(
+          id = next_id,
+          capabilities = transport$capabilities
+        )
       )
       next_id <- next_id + 1L
       mcp_transport_store_initialize(
@@ -675,6 +706,24 @@ mcp_config_oauth_callback_port <- function(callback_port, call = caller_env()) {
   as.integer(callback_port)
 }
 
+mcp_config_capabilities <- function(capabilities, call = caller_env()) {
+  if (length(capabilities) == 0) {
+    return(named_list())
+  }
+
+  if (!is.list(capabilities) || !is_named(capabilities)) {
+    cli::cli_abort(
+      c(
+        "MCP server configuration failed.",
+        i = "{.field capabilities} must be a JSON object."
+      ),
+      call = call
+    )
+  }
+
+  capabilities
+}
+
 # initialize and tool listing -------------------------------------------------
 mcp_transport_store_initialize <- function(
   transport,
@@ -941,13 +990,45 @@ server_as_ellmer_tools <- function(server) {
           ),
           description = tool$description,
           arguments = tool_arguments,
-          name = tool$name
+          name = tool$name,
+          annotations = mcp_tool_annotations_as_ellmer(tool)
         )
       )
     )
   }
 
   tools_out
+}
+
+# The server's annotations, snake-cased as in ellmer::tool_annotations(), plus
+# the tool's `_meta` verbatim under `_meta`. Hosts read `_meta` for protocol
+# extensions such as MCP Apps (`_meta$ui$resourceUri`). Only well-formed hints
+# are kept: they are hints from the server, not something to fail on.
+mcp_tool_annotations_as_ellmer <- function(tool) {
+  annotations <- tool$annotations %||% list()
+  hint_names <- c(
+    readOnlyHint = "read_only_hint",
+    destructiveHint = "destructive_hint",
+    idempotentHint = "idempotent_hint",
+    openWorldHint = "open_world_hint"
+  )
+
+  out <- list()
+  title <- tool$title %||% annotations$title
+  if (is_string(title)) {
+    out$title <- title
+  }
+  for (hint in names(hint_names)) {
+    value <- annotations[[hint]]
+    if (is.logical(value) && length(value) == 1 && !is.na(value)) {
+      out[[hint_names[[hint]]]] <- value
+    }
+  }
+  if (length(tool[["_meta"]]) > 0) {
+    out[["_meta"]] <- tool[["_meta"]]
+  }
+
+  out
 }
 
 as_ellmer_types <- function(tool) {
@@ -1152,7 +1233,25 @@ mcp_tool_result_as_ellmer <- function(response) {
     mcp_abort_jsonrpc_error(response$error)
   }
 
-  result <- response$result
+  out <- mcp_tool_result_value(response$result)
+
+  meta <- response$result[["_meta"]]
+  if (length(meta) == 0) {
+    return(out)
+  }
+
+  # The result's `_meta` is for the client, not the model, so it travels in
+  # `extra` and the value the model sees is unchanged.
+  if (!inherits(out, "ellmer::ContentToolResult")) {
+    return(ellmer::ContentToolResult(value = out, extra = list(`_meta` = meta)))
+  }
+
+  extra <- out@extra
+  extra[["_meta"]] <- meta
+  ellmer::ContentToolResult(value = out@value, error = out@error, extra = extra)
+}
+
+mcp_tool_result_value <- function(result) {
   if (is.null(result$content) && is.null(result$structuredContent)) {
     return(result)
   }
@@ -1372,14 +1471,14 @@ mcp_transport_stdio_close <- function(transport) {
 
 # protocol messages ------------------------------------------------------------
 # step 1: initialize the MCP connection
-mcp_request_initialize <- function(id = 1L) {
+mcp_request_initialize <- function(id = 1L, capabilities = named_list()) {
   list(
     jsonrpc = "2.0",
     id = id,
     method = "initialize",
     params = list(
       protocolVersion = latest_protocol_version,
-      capabilities = named_list(),
+      capabilities = capabilities,
       clientInfo = list(
         name = "mcptools",
         version = as.character(utils::packageVersion("mcptools"))

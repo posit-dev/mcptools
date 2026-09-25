@@ -129,7 +129,7 @@ initialize_result <- function(id) {
 }
 
 tools_list_result <- function(id) {
-  list(
+  result <- list(
     jsonrpc = '2.0',
     id = id,
     result = list(
@@ -146,10 +146,16 @@ tools_list_result <- function(id) {
       ))
     )
   )
+  if (isTRUE(config$meta)) {
+    result$result$tools[[1]][['_meta']] <- list(
+      ui = list(resourceUri = 'ui://mock/echo')
+    )
+  }
+  result
 }
 
 tool_result <- function(id, text) {
-  list(
+  result <- list(
     jsonrpc = '2.0',
     id = id,
     result = list(
@@ -157,6 +163,10 @@ tool_result <- function(id, text) {
       isError = FALSE
     )
   )
+  if (isTRUE(config$meta)) {
+    result$result[['_meta']] <- list(trace = 'mock-trace')
+  }
+  result
 }
 
 post_sse_result <- function(message) {

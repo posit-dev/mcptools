@@ -350,3 +350,154 @@ test_that("mcp_tools() errors informatively when process exits", {
     transform = function(x) gsub(rscript_binary(), "Rscript", x, fixed = TRUE)
   )
 })
+
+# _meta and client capabilities ------------------------------------------------
+test_that("mcp_tool_result_as_ellmer keeps result _meta out of the value", {
+  response <- list(
+    result = list(
+      content = list(list(type = "text", text = "hello")),
+      isError = FALSE,
+      `_meta` = list(ui = list(resourceUri = "ui://mock/app"))
+    )
+  )
+
+  result <- mcp_tool_result_as_ellmer(response)
+
+  expect_s3_class(result, "ellmer::ContentToolResult")
+  expect_equal(result@value, "hello")
+  expect_equal(result@extra[["_meta"]]$ui$resourceUri, "ui://mock/app")
+})
+
+test_that("mcp_tool_result_as_ellmer keeps _meta alongside structuredContent", {
+  response <- list(
+    result = list(
+      content = list(list(type = "text", text = "2 rows")),
+      structuredContent = list(rows = 2L),
+      `_meta` = list(trace = "t-1")
+    )
+  )
+
+  result <- mcp_tool_result_as_ellmer(response)
+
+  expect_equal(result@value, list(rows = 2L))
+  expect_s3_class(result@extra$content[[1]], "ellmer::ContentText")
+  expect_equal(result@extra[["_meta"]], list(trace = "t-1"))
+})
+
+test_that("mcp_tool_result_as_ellmer keeps _meta on error results", {
+  response <- list(
+    result = list(
+      content = list(list(type = "text", text = "bad input")),
+      isError = TRUE,
+      `_meta` = list(trace = "t-2")
+    )
+  )
+
+  result <- mcp_tool_result_as_ellmer(response)
+
+  expect_equal(result@error, "bad input")
+  expect_equal(result@extra[["_meta"]], list(trace = "t-2"))
+})
+
+test_that("mixed MCP content with _meta expands like content without it", {
+  content <- list(
+    list(type = "text", text = "caption"),
+    list(type = "image", data = "abc123", mimeType = "image/png")
+  )
+  request <- ellmer::ContentToolRequest(
+    id = "call_1",
+    name = "get_reference_image",
+    arguments = list()
+  )
+  expand <- function(result) {
+    result <- ellmer:::new_tool_result(
+      request,
+      mcp_tool_result_as_ellmer(result)
+    )
+    ellmer:::turn_contents_expand(ellmer:::user_turn(result))@contents
+  }
+
+  plain <- expand(list(result = list(content = content)))
+  with_meta <- expand(list(
+    result = list(content = content, `_meta` = list(a = 1))
+  ))
+
+  expect_equal(
+    vapply(with_meta, function(x) class(x)[[1]], character(1)),
+    vapply(plain, function(x) class(x)[[1]], character(1))
+  )
+})
+
+test_that("tool annotations and _meta reach the ellmer tool", {
+  tool <- list(
+    name = "open_app",
+    title = "Open the app",
+    annotations = list(
+      readOnlyHint = TRUE,
+      destructiveHint = "sometimes",
+      openWorldHint = FALSE
+    ),
+    `_meta` = list(
+      ui = list(
+        resourceUri = "ui://mock/app",
+        visibility = list("model", "app")
+      )
+    )
+  )
+
+  annotations <- mcp_tool_annotations_as_ellmer(tool)
+
+  expect_equal(annotations$title, "Open the app")
+  expect_true(annotations$read_only_hint)
+  expect_false(annotations$open_world_hint)
+  expect_null(annotations$destructive_hint)
+  expect_equal(annotations[["_meta"]]$ui$resourceUri, "ui://mock/app")
+
+  expect_equal(mcp_tool_annotations_as_ellmer(list(name = "bare")), list())
+})
+
+test_that("initialize sends configured client capabilities", {
+  capabilities <- list(
+    extensions = list(
+      `io.modelcontextprotocol/ui` = list(
+        mimeTypes = list("text/html;profile=mcp-app")
+      )
+    )
+  )
+
+  json <- to_json(mcp_request_initialize(id = 1L, capabilities = capabilities))
+  parsed <- jsonlite::parse_json(json, simplifyVector = FALSE)
+
+  expect_equal(
+    parsed$params$capabilities$extensions$`io.modelcontextprotocol/ui`$mimeTypes,
+    list("text/html;profile=mcp-app")
+  )
+  expect_match(
+    to_json(mcp_request_initialize(id = 1L)),
+    '"capabilities":{}',
+    fixed = TRUE
+  )
+})
+
+test_that("config capabilities keep one-element arrays", {
+  tmp_file <- withr::local_tempfile(fileext = ".json")
+  writeLines(
+    '{"mcpServers": {"apps": {"url": "https://example.test/mcp",
+      "capabilities": {"extensions": {"io.modelcontextprotocol/ui":
+        {"mimeTypes": ["text/html;profile=mcp-app"]}}}}}}',
+    tmp_file
+  )
+
+  config <- read_mcp_config(tmp_file)
+  capabilities <- mcp_config_capabilities(config$apps$capabilities)
+
+  expect_match(
+    to_json(capabilities),
+    '"mimeTypes":["text/html;profile=mcp-app"]',
+    fixed = TRUE
+  )
+})
+
+test_that("config capabilities must be an object", {
+  expect_snapshot(mcp_config_capabilities(list("a", "b")), error = TRUE)
+})

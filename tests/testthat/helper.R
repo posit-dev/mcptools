@@ -58,6 +58,7 @@ local_streamable_http_mock_server <- function(
   post_sse = FALSE,
   require_bearer = FALSE,
   bearer_token = "mock-token",
+  meta = FALSE,
   env = parent.frame()
 ) {
   port <- httpuv::randomPort()
@@ -71,7 +72,8 @@ local_streamable_http_mock_server <- function(
       session_id = "session-1",
       post_sse = post_sse,
       require_bearer = require_bearer,
-      bearer_token = bearer_token
+      bearer_token = bearer_token,
+      meta = meta
     ),
     config_file,
     auto_unbox = TRUE,
