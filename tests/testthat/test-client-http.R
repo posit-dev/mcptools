@@ -532,6 +532,52 @@ test_that("HTTP requests transparently reinitialize after a session 404", {
   )
 })
 
+test_that("reinitializing after a session 404 declares the same capabilities", {
+  transport <- mcp_transport_http(list(url = "https://example.test/mcp"))
+  transport$session_id <- "old-session"
+  transport$protocol_version <- latest_protocol_version
+  transport$capabilities <- list(
+    extensions = list(`io.modelcontextprotocol/ui` = named_list())
+  )
+
+  initialize_params <- NULL
+  httr2::local_mocked_responses(function(req) {
+    message <- req$body$data
+    if (identical(req$headers$`MCP-Session-Id`, "old-session")) {
+      return(httr2::response(status_code = 404L, url = req$url, method = req$method))
+    }
+    if (identical(message$method, "initialize")) {
+      initialize_params <<- message$params
+      result <- list(
+        protocolVersion = latest_protocol_version,
+        capabilities = named_list(),
+        serverInfo = list(name = "remote-server", version = "1.0.0")
+      )
+      headers <- list(
+        "Content-Type" = "application/json",
+        "MCP-Session-Id" = "new-session"
+      )
+    } else {
+      result <- named_list()
+      headers <- list("Content-Type" = "application/json")
+    }
+    httr2::response(
+      status_code = 200L,
+      url = req$url,
+      method = req$method,
+      headers = headers,
+      body = charToRaw(to_json(jsonrpc_response(message$id, result = result)))
+    )
+  })
+
+  mcp_transport_request(transport, mcp_request_tools_list(id = 2L))
+
+  expect_named(
+    initialize_params$capabilities$extensions,
+    "io.modelcontextprotocol/ui"
+  )
+})
+
 test_that("HTTP requests surface a session-expired error when reinit can't recover", {
   transport <- mcp_transport_http(list(url = "https://example.test/mcp"))
   transport$session_id <- "session-1"

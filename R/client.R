@@ -87,10 +87,10 @@ the$mcp_servers <- list()
 #' * `allow_http`: allow credentialed non-loopback HTTP endpoints.
 #' * `ignore_tools`: tool names or `*` wildcards to hide and block.
 #' * `oauth`: OAuth settings.
-#' * `capabilities`: client capabilities to declare in `initialize`, sent
-#'   verbatim. For example, a host that renders MCP Apps declares
-#'   `{"extensions": {"io.modelcontextprotocol/ui": {"mimeTypes":
-#'   ["text/html;profile=mcp-app"]}}}`. Stdio server entries accept it too.
+#' * `capabilities`: client capabilities sent in `initialize`. A host that
+#'   renders MCP Apps would declare `{"extensions":
+#'   {"io.modelcontextprotocol/ui": {"mimeTypes": ["text/html;profile=mcp-app"]}}}`.
+#'   Stdio server entries accept it too.
 #'
 #' OAuth settings may include `authorization_server`, `resource`, `scope` with
 #' `scope_mode = "override"`, `client_info`, `manual_client_info`,
@@ -125,11 +125,11 @@ the$mcp_servers <- list()
 #' to the `$set_tools()` method of an [ellmer::Chat] object. If the file at
 #' `config` doesn't exist, an error.
 #'
-#' Each tool's `annotations` carry the server's title and hints (snake-cased,
-#' as in [ellmer::tool_annotations()]) and the tool's `_meta`, verbatim, as
-#' `annotations[["_meta"]]`. When a tool result has `_meta`, the tool returns
-#' an [ellmer::ContentToolResult] with it in `extra[["_meta"]]`; the value the
-#' model sees is unchanged.
+#' Each tool's `annotations` hold the server's title and hints, named as in
+#' [ellmer::tool_annotations()], and the tool's `_meta` as
+#' `annotations[["_meta"]]`. A result's `_meta` is returned in the
+#' [ellmer::ContentToolResult]'s `extra[["_meta"]]`, which the model doesn't
+#' see.
 #'
 #' @examples
 #' # setup
@@ -216,8 +216,8 @@ read_mcp_config <- function(config, call = caller_env()) {
 
   servers <- config$mcpServers
 
-  # `capabilities` is sent to the server verbatim, so it is read without
-  # simplification: a one-element JSON array must stay an array.
+  # `capabilities` is sent to the server as written, so re-read it without
+  # simplification to keep one-element arrays as arrays.
   raw_servers <- jsonlite::fromJSON(
     config_lines,
     simplifyVector = FALSE
@@ -250,7 +250,7 @@ add_mcp_server <- function(config, name, call = caller_env()) {
 
   transport <- mcp_transport(config, call = call)
   transport$capabilities <- mcp_config_capabilities(
-    config$capabilities %||% named_list(),
+    config$capabilities,
     call = call
   )
   ignore_tools <- mcp_ignore_tools(
@@ -1000,10 +1000,9 @@ server_as_ellmer_tools <- function(server) {
   tools_out
 }
 
-# The server's annotations, snake-cased as in ellmer::tool_annotations(), plus
-# the tool's `_meta` verbatim under `_meta`. Hosts read `_meta` for protocol
-# extensions such as MCP Apps (`_meta$ui$resourceUri`). Only well-formed hints
-# are kept: they are hints from the server, not something to fail on.
+# Server annotations in ellmer's naming, plus the tool's `_meta`, which hosts
+# read for extensions such as MCP Apps (`_meta$ui$resourceUri`). Malformed
+# hints are dropped rather than raised; they're only hints.
 mcp_tool_annotations_as_ellmer <- function(tool) {
   annotations <- tool$annotations %||% list()
   hint_names <- c(
@@ -1240,15 +1239,12 @@ mcp_tool_result_as_ellmer <- function(response) {
     return(out)
   }
 
-  # The result's `_meta` is for the client, not the model, so it travels in
-  # `extra` and the value the model sees is unchanged.
+  # `_meta` is for the client. `extra` keeps it out of what the model sees.
   if (!inherits(out, "ellmer::ContentToolResult")) {
-    return(ellmer::ContentToolResult(value = out, extra = list(`_meta` = meta)))
+    out <- ellmer::ContentToolResult(value = out)
   }
-
-  extra <- out@extra
-  extra[["_meta"]] <- meta
-  ellmer::ContentToolResult(value = out@value, error = out@error, extra = extra)
+  out@extra[["_meta"]] <- meta
+  out
 }
 
 mcp_tool_result_value <- function(result) {
