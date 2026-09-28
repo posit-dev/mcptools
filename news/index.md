@@ -1,6 +1,14 @@
 # Changelog
 
+## mcptools 1.0.3
+
+CRAN release: 2026-09-18
+
+Fix a test that failed on CRAN M1mac machines.
+
 ## mcptools 1.0.2
+
+CRAN release: 2026-08-22
 
 Only an internal testing change that addresses a temp directory cleanup
 NOTE.
