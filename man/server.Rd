@@ -19,8 +19,9 @@ mcp_session()
 }
 \arguments{
 \item{tools}{Optional collection of tools to expose. Supply either a list
-of objects created by \code{\link[ellmer:tool]{ellmer::tool()}} or a path to an \code{.R} file that,
-when sourced, yields such a list. Defaults to \code{NULL}, which serves only
+of objects created by \code{\link[ellmer:tool]{ellmer::tool()}} (optionally wrapped with
+\code{\link[=mcp_server_tool]{mcp_server_tool()}} for MCP-specific metadata) or a path to an \code{.R} file
+that, when sourced, yields such a list. Defaults to \code{NULL}, which serves only
 the built-in session tools when \code{session_tools} is \code{TRUE}. Note that
 \strong{tools are associated with the \code{mcp_server()}} rather than with
 \code{mcp_session()}s; to determine what tools are available in a session,

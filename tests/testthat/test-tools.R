@@ -58,6 +58,55 @@ test_that("set_server_tools errors informatively", {
   expect_snapshot(set_server_tools(list(tls$value[[1]])), error = TRUE)
 })
 
+test_that("mcp_server_tool validates MCP-specific metadata", {
+  tool <- ellmer::tool(
+    function() "ok",
+    "Returns ok",
+    name = "plain_tool"
+  )
+
+  expect_error(
+    mcp_server_tool("not a tool"),
+    "must be a tool created with"
+  )
+  expect_error(
+    mcp_server_tool(tool, ellmer::type_number()),
+    "output_schema.*type_object"
+  )
+
+  wrapped <- mcp_server_tool(
+    tool,
+    output_schema = ellmer::type_object(value = ellmer::type_number())
+  )
+  expect_s3_class(wrapped, "mcptools_server_tool")
+  expect_identical(wrapped$tool, tool)
+  expect_true(inherits(wrapped$output_schema, "ellmer::TypeObject"))
+})
+
+test_that("set_server_tools unwraps MCP metadata without changing ToolDef execution", {
+  old_server_tools <- the$server_tools
+  old_output_schemas <- the$server_tool_output_schemas
+  withr::defer({
+    the$server_tools <- old_server_tools
+    the$server_tool_output_schemas <- old_output_schemas
+  })
+
+  tool <- ellmer::tool(
+    function() "ok",
+    "Returns ok",
+    name = "wrapped_tool"
+  )
+  schema <- ellmer::type_object(value = ellmer::type_string())
+
+  set_server_tools(
+    mcp_server_tool(tool, output_schema = schema),
+    session_tools = FALSE
+  )
+
+  expect_identical(the$server_tools[[1]], tool)
+  expect_identical(the$server_tool_output_schemas$wrapped_tool, schema)
+})
+
 test_that("get_mcptools_tools works", {
   res <- get_mcptools_tools()
   expect_true(all(
@@ -114,6 +163,150 @@ test_that("tool_as_json gates top-level title on protocol version", {
 
   expect_false("title" %in% names(res))
   expect_equal(res$annotations$title, "Read Project")
+})
+
+test_that("tool_as_json emits outputSchema only for supported protocols", {
+  tool <- ellmer::tool(
+    function() list(auc = 0.92, tss = 0.81),
+    "Evaluate model performance",
+    name = "evaluate_model"
+  )
+  schema <- ellmer::type_object(
+    auc = ellmer::type_number(),
+    tss = ellmer::type_number()
+  )
+
+  current <- tool_as_json(
+    tool,
+    protocol_version = "2025-06-18",
+    output_schema = schema
+  )
+  expect_equal(current$outputSchema$type, "object")
+  expect_setequal(names(current$outputSchema$properties), c("auc", "tss"))
+
+  newer <- tool_as_json(
+    tool,
+    protocol_version = "2025-11-25",
+    output_schema = schema
+  )
+  expect_equal(newer$outputSchema, current$outputSchema)
+
+  older <- tool_as_json(
+    tool,
+    protocol_version = "2025-03-26",
+    output_schema = schema
+  )
+  expect_false("outputSchema" %in% names(older))
+
+  plain <- tool_as_json(tool, protocol_version = "2025-06-18")
+  expect_false("outputSchema" %in% names(plain))
+})
+
+test_that("tools/list preserves wrapped output schemas", {
+  old_server_tools <- the$server_tools
+  old_output_schemas <- the$server_tool_output_schemas
+  withr::defer({
+    the$server_tools <- old_server_tools
+    the$server_tool_output_schemas <- old_output_schemas
+  })
+
+  tool <- ellmer::tool(
+    function() list(auc = 0.92, tss = 0.81),
+    "Evaluate model performance",
+    name = "evaluate_model"
+  )
+  schema <- ellmer::type_object(
+    auc = ellmer::type_number(),
+    tss = ellmer::type_number()
+  )
+  set_server_tools(
+    mcp_server_tool(tool, output_schema = schema),
+    session_tools = FALSE
+  )
+
+  current <- handle_http_request_message(
+    list(id = 1, method = "tools/list"),
+    protocol_version = "2025-06-18"
+  )
+  expect_equal(current$result$tools[[1]]$outputSchema$type, "object")
+  expect_setequal(
+    names(current$result$tools[[1]]$outputSchema$properties),
+    c("auc", "tss")
+  )
+
+  older <- handle_http_request_message(
+    list(id = 2, method = "tools/list"),
+    protocol_version = "2025-03-26"
+  )
+  expect_false("outputSchema" %in% names(older$result$tools[[1]]))
+})
+
+test_that("tools/call executes the underlying ToolDef for wrapped tools", {
+  old_server_tools <- the$server_tools
+  old_output_schemas <- the$server_tool_output_schemas
+  old_sessions_enabled <- the$sessions_enabled
+  withr::defer({
+    the$server_tools <- old_server_tools
+    the$server_tool_output_schemas <- old_output_schemas
+    the$sessions_enabled <- old_sessions_enabled
+  })
+  the$sessions_enabled <- FALSE
+
+  called <- FALSE
+  tool <- ellmer::tool(
+    function() {
+      called <<- TRUE
+      list(value = 42)
+    },
+    "Return a structured value",
+    name = "structured_value"
+  )
+  set_server_tools(
+    mcp_server_tool(
+      tool,
+      output_schema = ellmer::type_object(value = ellmer::type_number())
+    ),
+    session_tools = FALSE
+  )
+
+  res <- handle_http_request_message(list(
+    id = 1,
+    method = "tools/call",
+    params = list(name = "structured_value", arguments = list())
+  ))
+
+  expect_true(called)
+  expect_null(res$error)
+  expect_equal(res$result$structuredContent, list(value = 42))
+})
+
+test_that("session tools remain unwrapped and have no outputSchema", {
+  old_server_tools <- the$server_tools
+  old_output_schemas <- the$server_tool_output_schemas
+  withr::defer({
+    the$server_tools <- old_server_tools
+    the$server_tool_output_schemas <- old_output_schemas
+  })
+
+  tool <- ellmer::tool(
+    function() list(value = 42),
+    "Return a structured value",
+    name = "structured_value"
+  )
+  set_server_tools(
+    mcp_server_tool(
+      tool,
+      output_schema = ellmer::type_object(value = ellmer::type_number())
+    ),
+    session_tools = TRUE
+  )
+
+  json <- get_mcptools_tools_as_json(protocol_version = "2025-06-18")
+  json <- setNames(json, vapply(json, \(x) x$name, character(1)))
+
+  expect_true("outputSchema" %in% names(json$structured_value))
+  expect_false("outputSchema" %in% names(json$list_r_sessions))
+  expect_false("outputSchema" %in% names(json$select_r_session))
 })
 
 test_that("tools/list preserves tool annotations", {

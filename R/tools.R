@@ -1,3 +1,38 @@
+#' Add MCP-specific metadata to a server tool
+#'
+#' Wraps an [ellmer::tool()] definition with metadata that is specific to
+#' serving the tool over MCP. The underlying ellmer tool remains unchanged.
+#'
+#' @param tool An `ellmer::ToolDef` created with [ellmer::tool()].
+#' @param output_schema Optional [ellmer::type_object()] describing the structured
+#'   output returned by the tool. It is advertised as MCP `outputSchema` for
+#'   protocol version `2025-06-18` and later.
+#' @return An MCP server tool wrapper accepted by [mcp_server()].
+#' @export
+mcp_server_tool <- function(tool, output_schema = NULL) {
+  if (!inherits(tool, "ellmer::ToolDef")) {
+    cli::cli_abort(
+      "{.arg tool} must be a tool created with {.fn ellmer::tool}.",
+      call = caller_env()
+    )
+  }
+  if (!is.null(output_schema) && !inherits(output_schema, "ellmer::TypeObject")) {
+    cli::cli_abort(
+      "{.arg output_schema} must be an object created with {.fn ellmer::type_object} or {.code NULL}.",
+      call = caller_env()
+    )
+  }
+
+  structure(
+    list(tool = tool, output_schema = output_schema),
+    class = "mcptools_server_tool"
+  )
+}
+
+is_mcp_server_tool <- function(x) {
+  inherits(x, "mcptools_server_tool")
+}
+
 set_server_tools <- function(
   x,
   session_tools = TRUE,
@@ -7,6 +42,10 @@ set_server_tools <- function(
   if (is.null(x)) {
     if (session_tools) {
       the$server_tools <- c(list(list_r_sessions_tool, select_r_session_tool))
+      the$server_tool_output_schemas <- setNames(
+        list(NULL, NULL),
+        c("list_r_sessions", "select_r_session")
+      )
       return()
     } else {
       cli::cli_abort("No tools selected to serve.", call = call)
@@ -31,19 +70,28 @@ set_server_tools <- function(
     )
   }
 
-  if (!is.list(x)) {
+  if (inherits(x, "ellmer::ToolDef") || is_mcp_server_tool(x)) {
+    x <- list(x)
+  } else if (!is.list(x)) {
     x <- list(x)
   }
 
-  if (!all(vapply(x, inherits, logical(1), "ellmer::ToolDef"))) {
+  valid_tool <- function(x) {
+    inherits(x, "ellmer::ToolDef") || is_mcp_server_tool(x)
+  }
+  if (!all(vapply(x, valid_tool, logical(1)))) {
     msg <-
       "{.arg {x_arg}} must be a list of tools created with {.fn ellmer::tool}
-       or a .R file path that returns a list of ellmer tools when sourced."
-    if (inherits(x, "ellmer::ToolDef")) {
-      msg <- c(msg, "i" = "Did you mean to wrap {.arg {x_arg}} in `list()`?")
-    }
+       (optionally wrapped with {.fn mcp_server_tool}) or a .R file path that
+       returns a list of server tools when sourced."
     cli::cli_abort(msg, call = call)
   }
+
+  output_schemas <- lapply(
+    x,
+    function(x) if (is_mcp_server_tool(x)) x$output_schema else NULL
+  )
+  x <- lapply(x, function(x) if (is_mcp_server_tool(x)) x$tool else x)
 
   if (
     any(
@@ -66,8 +114,11 @@ set_server_tools <- function(
         select_r_session_tool
       )
     )
+    output_schemas <- c(output_schemas, list(NULL, NULL))
   }
   the$server_tools <- x
+  names(output_schemas) <- vapply(x, \(.x) .x@name, character(1))
+  the$server_tool_output_schemas <- output_schemas
 }
 
 looks_like_r_file <- function(x) {
@@ -281,10 +332,23 @@ get_mcptools_tools <- function() {
 get_mcptools_tools_as_json <- function(
   protocol_version = the$protocol_version %||% latest_protocol_version
 ) {
-  tools <- lapply(
-    unname(get_mcptools_tools()),
-    tool_as_json,
-    protocol_version = protocol_version
+  named_tools <- get_mcptools_tools()
+  tools <- unname(named_tools)
+  output_schemas <- the$server_tool_output_schemas[names(named_tools)]
+  if (length(output_schemas) != length(tools)) {
+    output_schemas <- rep(list(NULL), length(tools))
+  }
+
+  tools <- Map(
+    function(tool, output_schema) {
+      tool_as_json(
+        tool,
+        protocol_version = protocol_version,
+        output_schema = output_schema
+      )
+    },
+    tools,
+    output_schemas
   )
 
   compact(tools)
