@@ -15,13 +15,20 @@ test_that("HTTP header interpolation errors when environment variables are unset
   withr::local_envvar(MCPTOOLS_MISSING_TOKEN = NA)
 
   expect_error(
-    mcp_config_headers(list(Authorization = "Bearer ${MCPTOOLS_MISSING_TOKEN}")),
+    mcp_config_headers(list(
+      Authorization = "Bearer ${MCPTOOLS_MISSING_TOKEN}"
+    )),
     "MCPTOOLS_MISSING_TOKEN"
   )
 })
 
 test_that("HTTP config reserves protocol-owned headers", {
-  for (header in c("Accept", "Content-Type", "MCP-Session-Id", "MCP-Protocol-Version")) {
+  for (header in c(
+    "Accept",
+    "Content-Type",
+    "MCP-Session-Id",
+    "MCP-Protocol-Version"
+  )) {
     headers <- list("manual")
     names(headers) <- header
 
@@ -102,7 +109,10 @@ test_that("credentialed public HTTP endpoints require explicit opt-out", {
 })
 
 test_that("HTTP transport timeout must be a single positive number", {
-  transport <- mcp_transport_http(list(url = "https://example.test/mcp", timeout = 10))
+  transport <- mcp_transport_http(list(
+    url = "https://example.test/mcp",
+    timeout = 10
+  ))
   expect_equal(transport$timeout, 10)
 
   req <- mcp_transport_http_request(
@@ -112,7 +122,10 @@ test_that("HTTP transport timeout must be a single positive number", {
   expect_equal(req$options$timeout_ms, 10000)
 
   expect_error(
-    mcp_transport_http(list(url = "https://example.test/mcp", timeout = list(request = 1))),
+    mcp_transport_http(list(
+      url = "https://example.test/mcp",
+      timeout = list(request = 1)
+    )),
     "single positive number"
   )
   expect_error(
@@ -297,14 +310,36 @@ test_that("client logs redact token-shaped fields", {
   expect_false(grepl("secret-access|secret-refresh", log_text))
 })
 
+test_that("mcp_redact_secrets() preserves null-valued fields (#135)", {
+  schema <- list(
+    additionalProperties = TRUE,
+    default = NULL,
+    title = "Dimension Filter",
+    type = "object"
+  )
+  x <- list(params = list(dimension_filter = schema, token = "secret"))
+
+  expect_equal(
+    mcp_redact_secrets(x),
+    list(params = list(dimension_filter = schema, token = "<redacted>"))
+  )
+
+  trailing <- list(a = 1, b = NULL)
+  expect_equal(mcp_redact_secrets(trailing), trailing)
+})
+
 # JSON roundtrip ---------------------------------------------------------------
 test_that("mcp_tools() supports Streamable HTTP JSON responses", {
   tmp_file <- withr::local_tempfile(fileext = ".json")
   jsonlite::write_json(
-    list(mcpServers = list(remote = list(
-      url = "https://example.test/mcp",
-      headers = list("X-Test" = "yes")
-    ))),
+    list(
+      mcpServers = list(
+        remote = list(
+          url = "https://example.test/mcp",
+          headers = list("X-Test" = "yes")
+        )
+      )
+    ),
     tmp_file,
     auto_unbox = TRUE
   )
@@ -341,11 +376,19 @@ test_that("mcp_tools() supports Streamable HTTP JSON responses", {
     }
 
     if (!identical(req$headers$`MCP-Session-Id`, "session-1")) {
-      return(httr2::response(status_code = 400L, url = req$url, method = req$method))
+      return(httr2::response(
+        status_code = 400L,
+        url = req$url,
+        method = req$method
+      ))
     }
 
     if (identical(message$method, "notifications/initialized")) {
-      return(httr2::response(status_code = 202L, url = req$url, method = req$method))
+      return(httr2::response(
+        status_code = 202L,
+        url = req$url,
+        method = req$method
+      ))
     }
 
     if (identical(message$method, "tools/list")) {
@@ -356,15 +399,19 @@ test_that("mcp_tools() supports Streamable HTTP JSON responses", {
         headers = list("Content-Type" = "application/json"),
         body = charToRaw(to_json(jsonrpc_response(
           message$id,
-          result = list(tools = list(list(
-            name = "echo",
-            description = "Echo text.",
-            inputSchema = list(
-              type = "object",
-              properties = list(text = list(type = "string", description = "Text to echo.")),
-              required = "text"
-            )
-          )))
+          result = list(
+            tools = list(list(
+              name = "echo",
+              description = "Echo text.",
+              inputSchema = list(
+                type = "object",
+                properties = list(
+                  text = list(type = "string", description = "Text to echo.")
+                ),
+                required = "text"
+              )
+            ))
+          )
         )))
       ))
     }
@@ -378,7 +425,10 @@ test_that("mcp_tools() supports Streamable HTTP JSON responses", {
         body = charToRaw(to_json(jsonrpc_response(
           message$id,
           result = list(
-            content = list(list(type = "text", text = paste("echo:", message$params$arguments$text))),
+            content = list(list(
+              type = "text",
+              text = paste("echo:", message$params$arguments$text)
+            )),
             isError = FALSE
           )
         )))
@@ -392,7 +442,10 @@ test_that("mcp_tools() supports Streamable HTTP JSON responses", {
 
   expect_length(tools, 1)
   expect_equal(tools[[1]]@name, "echo")
-  expect_equal(call_tool(text = "hi", server = "remote", tool = "echo"), "echo: hi")
+  expect_equal(
+    call_tool(text = "hi", server = "remote", tool = "echo"),
+    "echo: hi"
+  )
   expect_equal(
     seen$methods,
     c("initialize", "notifications/initialized", "tools/list", "tools/call")
@@ -490,7 +543,11 @@ test_that("HTTP requests transparently reinitialize after a session 404", {
 
     # the stale session is rejected; a fresh session starts without one
     if (identical(req$headers$`MCP-Session-Id`, "old-session")) {
-      return(httr2::response(status_code = 404L, url = req$url, method = req$method))
+      return(httr2::response(
+        status_code = 404L,
+        url = req$url,
+        method = req$method
+      ))
     }
 
     if (identical(message$method, "initialize")) {
@@ -518,7 +575,10 @@ test_that("HTTP requests transparently reinitialize after a session 404", {
       url = req$url,
       method = req$method,
       headers = list("Content-Type" = "application/json"),
-      body = charToRaw(to_json(jsonrpc_response(message$id, result = named_list())))
+      body = charToRaw(to_json(jsonrpc_response(
+        message$id,
+        result = named_list()
+      )))
     )
   })
 
@@ -541,7 +601,11 @@ test_that("HTTP requests surface a session-expired error when reinit can't recov
   httr2::local_mocked_responses(function(req) {
     message <- req$body$data
     if (!is.null(req$headers$`MCP-Session-Id`)) {
-      return(httr2::response(status_code = 404L, url = req$url, method = req$method))
+      return(httr2::response(
+        status_code = 404L,
+        url = req$url,
+        method = req$method
+      ))
     }
 
     httr2::response(
@@ -580,7 +644,10 @@ test_that("Streamable HTTP serializes response-bearing requests", {
       url = req$url,
       method = req$method,
       headers = list("Content-Type" = "application/json"),
-      body = charToRaw(to_json(jsonrpc_response(req$body$data$id, result = named_list())))
+      body = charToRaw(to_json(jsonrpc_response(
+        req$body$data$id,
+        result = named_list()
+      )))
     )
   })
 
@@ -595,7 +662,10 @@ test_that("the active request guard is released after errors", {
     httr2::response(status_code = 500L, url = req$url, method = req$method)
   })
 
-  expect_error(mcp_transport_request(transport, mcp_request_tools_list(id = 2L)))
+  expect_error(mcp_transport_request(
+    transport,
+    mcp_request_tools_list(id = 2L)
+  ))
   expect_false(transport$http_request_active)
 })
 
@@ -659,7 +729,11 @@ test_that("Streamable HTTP mock server supports POST SSE", {
 
   result <- mcp_transport_request(
     transport,
-    mcp_request_tool_call(id = 2L, tool = "echo", arguments = list(text = "from sse"))
+    mcp_request_tool_call(
+      id = 2L,
+      tool = "echo",
+      arguments = list(text = "from sse")
+    )
   )
 
   expect_equal(result$result$content[[1]]$text, "echo: from sse")
@@ -672,9 +746,10 @@ test_that("HTTP transport cleanup is a no-op without a session", {
 
 # SSE parsing ------------------------------------------------------------------
 test_that("buffered SSE events are parsed into data payloads", {
-  events <- mcp_parse_sse_events("id: 1\ndata: {\"a\":1}\n\ndata: {\"b\":2}\n\n")
+  events <- mcp_parse_sse_events(
+    "id: 1\ndata: {\"a\":1}\n\ndata: {\"b\":2}\n\n"
+  )
   expect_length(events, 2)
   expect_equal(events[[1]]$data, "{\"a\":1}")
   expect_equal(events[[2]]$data, "{\"b\":2}")
 })
-

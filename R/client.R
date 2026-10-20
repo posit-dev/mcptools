@@ -1294,7 +1294,7 @@ mcp_redact_secrets <- function(x) {
     if (nzchar(name) && name %in% secret_fields) {
       x[[i]] <- "<redacted>"
     } else {
-      x[[i]] <- mcp_redact_secrets(x[[i]])
+      x[i] <- list(mcp_redact_secrets(x[[i]]))
     }
   }
 
