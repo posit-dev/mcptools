@@ -109,4 +109,24 @@ Users might be interested in extending these tools or supplying completely diffe
 
 You can configure any set of tools that could be passed to the `$set_tools()` method of an ellmer Chat object as the tools that mcptools will supply to clients. To do so, supply a list of outputs from `ellmer::tool()` to the `tools` argument of `mcp_server()`. Relatedly, you'll need to make sure that your code that specifies the new tools can run in a fresh R session; be sure to either namespace functions from libraries (like `ellmer::tool()` instead of `tool()`) or load the libraries entirely.
 
+For MCP-specific metadata that does not belong to the general ellmer tool definition, wrap the tool with `mcp_server_tool()`. For example, MCP protocol versions 2025-06-18 and later support an `outputSchema` describing structured tool results:
+
+```r
+evaluate_model <- mcptools::mcp_server_tool(
+  ellmer::tool(
+    function() list(auc = 0.92, tss = 0.81),
+    name = "evaluate_model",
+    description = "Evaluate model performance"
+  ),
+  output_schema = ellmer::type_object(
+    auc = ellmer::type_number(),
+    tss = ellmer::type_number()
+  )
+)
+
+mcptools::mcp_server(tools = list(evaluate_model))
+```
+
+The wrapper affects only the MCP description advertised to clients; tool execution still uses the underlying `ellmer::ToolDef`. `outputSchema` is omitted automatically when an older MCP protocol version is negotiated.
+
 <!--# \[TODO: provide an example of registering the `rnorm()` tool.\] -->
