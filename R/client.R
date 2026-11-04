@@ -1158,6 +1158,7 @@ mcp_tool_result_as_ellmer <- function(response) {
   }
 
   content <- lapply(result$content %||% list(), mcp_content_as_ellmer)
+  meta <- result[["_meta"]]
 
   if (isTRUE(result$isError)) {
     return(ellmer::ContentToolResult(
@@ -1167,12 +1168,18 @@ mcp_tool_result_as_ellmer <- function(response) {
 
   if (!is.null(result$structuredContent)) {
     if (length(content) == 0) {
+      if (!is.null(meta)) {
+        return(ellmer::ContentToolResult(
+          value = result$structuredContent,
+          extra = meta
+        ))
+      }
       return(result$structuredContent)
     }
 
     return(ellmer::ContentToolResult(
       value = result$structuredContent,
-      extra = list(content = content)
+      extra = utils::modifyList(meta %||% list(), list(content = content))
     ))
   }
 
@@ -1185,11 +1192,22 @@ mcp_tool_result_as_ellmer <- function(response) {
       logical(1)
     ))
   ) {
-    return(mcp_content_as_text(result$content))
+    text <- mcp_content_as_text(result$content)
+    if (!is.null(meta)) {
+      return(ellmer::ContentToolResult(value = text, extra = meta))
+    }
+    return(text)
   }
 
   if (length(content) == 1) {
+    if (!is.null(meta)) {
+      return(ellmer::ContentToolResult(value = content[[1]], extra = meta))
+    }
     return(content[[1]])
+  }
+
+  if (!is.null(meta)) {
+    return(ellmer::ContentToolResult(value = content, extra = meta))
   }
 
   content
