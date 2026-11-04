@@ -310,6 +310,116 @@ test_that("mcp_tool_result_as_ellmer handles tool errors", {
   expect_equal(result@error, "bad input")
 })
 
+test_that("mcp_tool_result_as_ellmer passes _meta through with text content", {
+  response <- list(
+    result = list(
+      content = list(list(type = "text", text = "hello")),
+      isError = FALSE,
+      `_meta` = list(display = list(open = TRUE))
+    )
+  )
+
+  result <- mcp_tool_result_as_ellmer(response)
+
+  expect_s3_class(result, "ellmer::ContentToolResult")
+  expect_equal(result@value, "hello")
+  expect_true(result@extra$display$open)
+})
+
+test_that("mcp_tool_result_as_ellmer passes _meta through with image content", {
+  response <- list(
+    result = list(
+      content = list(list(
+        type = "image",
+        data = "abc123",
+        mimeType = "image/png"
+      )),
+      isError = FALSE,
+      `_meta` = list(display = list(open = TRUE))
+    )
+  )
+
+  result <- mcp_tool_result_as_ellmer(response)
+
+  expect_s3_class(result, "ellmer::ContentToolResult")
+  expect_s3_class(result@value, "ellmer::ContentImageInline")
+  expect_equal(result@value@data, "abc123")
+  expect_true(result@extra$display$open)
+})
+
+test_that("mcp_tool_result_as_ellmer passes _meta through with mixed content", {
+  response <- list(
+    result = list(
+      content = list(
+        list(type = "text", text = "caption"),
+        list(type = "image", data = "abc123", mimeType = "image/png")
+      ),
+      isError = FALSE,
+      `_meta` = list(display = list(open = TRUE))
+    )
+  )
+
+  result <- mcp_tool_result_as_ellmer(response)
+
+  expect_s3_class(result, "ellmer::ContentToolResult")
+  expect_length(result@value, 2)
+  expect_s3_class(result@value[[1]], "ellmer::ContentText")
+  expect_s3_class(result@value[[2]], "ellmer::ContentImageInline")
+  expect_true(result@extra$display$open)
+})
+
+test_that("mcp_tool_result_as_ellmer merges _meta with structuredContent", {
+  response <- list(
+    result = list(
+      content = list(list(type = "text", text = '{"answer": 42}')),
+      structuredContent = list(answer = 42),
+      isError = FALSE,
+      `_meta` = list(display = list(open = TRUE))
+    )
+  )
+
+  result <- mcp_tool_result_as_ellmer(response)
+
+  expect_s3_class(result, "ellmer::ContentToolResult")
+  expect_equal(result@value, list(answer = 42))
+  expect_length(result@extra$content, 1)
+  expect_s3_class(result@extra$content[[1]], "ellmer::ContentText")
+  expect_true(result@extra$display$open)
+})
+
+test_that("mcp_tool_result_as_ellmer wraps structuredContent with _meta when content is empty", {
+  response <- list(
+    result = list(
+      content = list(),
+      structuredContent = list(answer = 42),
+      isError = FALSE,
+      `_meta` = list(display = list(open = TRUE))
+    )
+  )
+
+  result <- mcp_tool_result_as_ellmer(response)
+
+  expect_s3_class(result, "ellmer::ContentToolResult")
+  expect_equal(result@value, list(answer = 42))
+  expect_equal(result@extra, list(display = list(open = TRUE)))
+})
+
+test_that("mcp_tool_result_as_ellmer does not surface _meta on tool errors", {
+  response <- list(
+    result = list(
+      content = list(list(type = "text", text = "bad input")),
+      isError = TRUE,
+      `_meta` = list(display = list(open = TRUE))
+    )
+  )
+
+  result <- mcp_tool_result_as_ellmer(response)
+
+  expect_s3_class(result, "ellmer::ContentToolResult")
+  expect_equal(result@error, "bad input")
+  expect_equal(result@extra, list())
+})
+
 test_that("initialize server error messages are surfaced literally, never evaluated", {
   withr::local_envvar(MCPTOOLS_INJECTION_CANARY = NA)
   payload <- "{Sys.setenv(MCPTOOLS_INJECTION_CANARY = 'pwned')}"

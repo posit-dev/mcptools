@@ -1,5 +1,7 @@
 # mcptools (development version)
 
+* The MCP client now passes the protocol-level `_meta` field on tool results through to the `extra` field of the returned `ellmer::ContentToolResult`, so MCP servers can supply client-side metadata (e.g. display hints) alongside tool results. When a result also carries `structuredContent`, `_meta` is merged into `extra` alongside the synthesized `content` entry.
+
 # mcptools 1.0.3
 
 Fix a test that failed on CRAN M1mac machines.
